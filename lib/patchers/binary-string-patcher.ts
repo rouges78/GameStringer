@@ -240,7 +240,14 @@ export function extractStringsFromBuffer(
       const text = new TextDecoder('utf-8').decode(new Uint8Array(chars));
 
       // Deve contenere lettere minuscole (non solo simboli/numeri)
-      if (/[a-z]{3,}/i.test(text) && /\s/.test(text)) {
+      // I byte devono tornare identici dopo decodifica e ricodifica. Sequenze
+      // non valide (C0 89, overlong: di solito codice macchina) diventano
+      // U+FFFD e un BOM iniziale sparisce: riscritte, cambierebbero byte che
+      // nessuno ha tradotto. Non sono testo patchabile, quindi non si estraggono.
+      const reencoded = new TextEncoder().encode(text);
+      const roundTrips = reencoded.length === byteLen && reencoded.every((v, k) => v === chars[k]);
+
+      if (roundTrips && /[a-z]{3,}/i.test(text) && /\s/.test(text)) {
         // Filtra noise
         if (!filterNoise || !isNoiseString(text)) {
           const entry: BinaryString = {

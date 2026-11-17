@@ -9,7 +9,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { 
   Upload,
@@ -21,7 +20,6 @@ import {
   ZoomIn,
   ZoomOut,
   CheckCircle2,
-  Loader2,
   Layers,
   Search,
   FolderOpen,
@@ -30,10 +28,10 @@ import {
   Grid3X3,
   ScanLine,
   Replace,
-  Save
+  Save,
+  AlertTriangle
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface DetectedTextRegion {
@@ -87,9 +85,6 @@ export function TextureTranslator() {
   const [selectedFont, setSelectedFont] = useState('arial');
   const [zoom, setZoom] = useState(100);
   const [showOriginal, setShowOriginal] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStep, setProcessingStep] = useState('');
-  const [progress, setProgress] = useState(0);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [preserveStyle, setPreserveStyle] = useState(true);
@@ -157,161 +152,11 @@ export function TextureTranslator() {
     setTextures(prev => [...prev, ...newTextures]);
   }, []);
 
-  const detectTextInTexture = async () => {
-    if (!currentTexture) return;
-    
-    setIsProcessing(true);
-    setProcessingStep('Scansione texture...');
-    setProgress(0);
-
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setProgress(20);
-    setProcessingStep('Rilevamento testo con OCR...');
-
-    await new Promise(resolve => setTimeout(resolve, 600));
-    setProgress(50);
-
-    // Mock detected regions
-    const mockRegions: DetectedTextRegion[] = [
-      {
-        id: 'region-1',
-        x: 20,
-        y: 15,
-        width: 120,
-        height: 30,
-        text: 'START GAME',
-        translatedText: '',
-        confidence: 0.97,
-        backgroundColor: '#1a1a2e',
-        textColor: '#ffffff',
-        fontSize: 18,
-        fontFamily: 'Arial',
-      },
-      {
-        id: 'region-2',
-        x: 20,
-        y: 55,
-        width: 100,
-        height: 25,
-        text: 'OPTIONS',
-        translatedText: '',
-        confidence: 0.95,
-        backgroundColor: '#1a1a2e',
-        textColor: '#cccccc',
-        fontSize: 16,
-        fontFamily: 'Arial',
-      },
-      {
-        id: 'region-3',
-        x: 20,
-        y: 90,
-        width: 80,
-        height: 25,
-        text: 'EXIT',
-        translatedText: '',
-        confidence: 0.98,
-        backgroundColor: '#1a1a2e',
-        textColor: '#ff6666',
-        fontSize: 16,
-        fontFamily: 'Arial',
-      },
-      {
-        id: 'region-4',
-        x: 150,
-        y: 200,
-        width: 140,
-        height: 20,
-        text: 'LOADING...',
-        translatedText: '',
-        confidence: 0.92,
-        backgroundColor: '#000000',
-        textColor: '#00ff00',
-        fontSize: 14,
-        fontFamily: 'Pixel',
-      },
-    ];
-
-    setProgress(70);
-    setProcessingStep('Traduzione testi...');
-
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Translate
-    const translatedRegions = mockRegions.map(region => ({
-      ...region,
-      translatedText: translateText(region.text),
-    }));
-
-    setProgress(100);
-    setProcessingStep('Completato!');
-
-    setTextures(prev => prev.map((tex, idx) => 
-      idx === currentTextureIndex 
-        ? { ...tex, regions: translatedRegions, processed: true }
-        : tex
-    ));
-
-    setIsProcessing(false);
-  };
-
-  const translateText = (text: string): string => {
-    const translations: Record<string, string> = {
-      'START GAME': 'INIZIA GIOCO',
-      'OPTIONS': 'OPZIONI',
-      'EXIT': 'ESCI',
-      'LOADING...': 'CARICAMENTO...',
-      'NEW GAME': 'NUOVA PARTITA',
-      'CONTINUE': 'CONTINUA',
-      'SETTINGS': 'IMPOSTAZIONI',
-      'QUIT': 'ESCI',
-      'PAUSE': 'PAUSA',
-      'RESUME': 'RIPRENDI',
-    };
-    return translations[text] || text;
-  };
-
-  const applyTranslation = async () => {
-    if (!currentTexture) return;
-    
-    setIsProcessing(true);
-    setProcessingStep('Applicazione traduzioni...');
-    setProgress(0);
-
-    for (let i = 0; i <= 100; i += 20) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      setProgress(i);
-    }
-
-    setTextures(prev => prev.map((tex, idx) => 
-      idx === currentTextureIndex 
-        ? { ...tex, modified: true }
-        : tex
-    ));
-
-    setIsProcessing(false);
-    setProcessingStep('');
-  };
-
-  const processAllTextures = async () => {
-    setIsProcessing(true);
-    
-    for (let i = 0; i < textures.length; i++) {
-      setCurrentTextureIndex(i);
-      setProcessingStep(`Elaborazione ${i + 1}/${textures.length}...`);
-      setProgress(Math.round((i / textures.length) * 100));
-      await detectTextInTexture();
-    }
-    
-    setIsProcessing(false);
-  };
-
-  const exportTexture = () => {
-    clientLogger.debug('Exporting texture:', currentTexture);
-  };
-
-  const exportAll = () => {
-    clientLogger.debug('Exporting all textures:', textures);
-  };
+  // OCR, traduzione, applicazione ed export NON sono collegati a questo strumento.
+  // Prima "Rileva testo" restituiva sempre le stesse 4 regioni (START GAME,
+  // OPTIONS, EXIT, LOADING...) tradotte da una mappa fissa, per qualunque
+  // immagine. Finché non c'è una pipeline vera, le azioni restano disabilitate
+  // e la pagina lo dice.
 
   const filteredTextures = textures.filter(tex => 
     tex.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -320,7 +165,7 @@ export function TextureTranslator() {
   return (
     <div className="space-y-4">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -343,22 +188,16 @@ export function TextureTranslator() {
             {textures.length > 0 && (
               <>
                 <Button 
-                  onClick={detectTextInTexture}
-                  disabled={isProcessing}
+                  disabled
                   variant="outline"
                   className="border-white/50 text-white hover:bg-white/10 hover:border-white"
                   size="sm"
                 >
-                  {isProcessing ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <ScanLine className="h-4 w-4 mr-2" />
-                  )}
+                  <ScanLine className="h-4 w-4 mr-2" />
                   {t('textureTranslator.detectText')}
                 </Button>
                 <Button 
-                  onClick={applyTranslation}
-                  disabled={isProcessing || !currentTexture?.processed}
+                  disabled
                   variant="outline"
                   className="border-white/50 text-white hover:bg-white/10 hover:border-white"
                   size="sm"
@@ -372,30 +211,20 @@ export function TextureTranslator() {
         </div>
       </div>
 
-      {/* Progress Bar */}
-      {isProcessing && (
-        <Card className="border-teal-500/30 bg-teal-500/10">
-          <CardContent className="py-3">
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-4 w-4 animate-spin text-teal-400" />
-              <span className="text-sm text-teal-300">{processingStep}</span>
-              <div className="flex-1">
-                <Progress value={progress} className="h-2" />
-              </div>
-              <span className="text-sm text-teal-400">{progress}%</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Strumento non ancora collegato a OCR/traduzione */}
+      <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+        <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+        <p className="text-sm text-amber-500">{t('textureTranslator.notConnected')}</p>
+      </div>
 
       <div className="grid grid-cols-12 gap-4">
         {/* Left Sidebar - File Browser */}
         <div className="col-span-3">
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-sm flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <FolderOpen className="h-4 w-4 text-teal-400" />
+                  <FolderOpen className="h-4 w-4 text-noir-400" />
                   {t('textureTranslator.textures')} ({textures.length})
                 </span>
                 <div className="flex gap-1">
@@ -421,27 +250,27 @@ export function TextureTranslator() {
               />
               
               <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-teal-400/50" />
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-noir-400/50" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('common.search') + '...'}
-                  className="h-7 text-xs pl-7 bg-black/20 border-teal-500/30"
+                  className="h-7 text-xs pl-7 bg-black/20 border-noir-500/30"
                 />
               </div>
               
               {textures.length === 0 ? (
                 <div 
-                  className="border-2 border-dashed border-teal-500/30 rounded-lg p-4 text-center cursor-pointer hover:border-teal-500/50 transition-colors"
+                  className="border-2 border-dashed border-noir-500/30 rounded-lg p-4 text-center cursor-pointer hover:border-noir-500/50 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
                 >
-                  <Upload className="h-8 w-8 mx-auto text-teal-400/50 mb-2" />
-                  <p className="text-xs text-teal-400/70">
+                  <Upload className="h-8 w-8 mx-auto text-noir-400/50 mb-2" />
+                  <p className="text-xs text-noir-400/70">
                     {t('textureTranslator.dropTextures')}
                   </p>
-                  <p className="text-2xs text-teal-400/50 mt-1">
+                  <p className="text-2xs text-noir-400/50 mt-1">
                     PNG, DDS, TGA, JPG
                   </p>
                 </div>
@@ -453,7 +282,7 @@ export function TextureTranslator() {
                         key={texture.id}
                         className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all ${
                           textures.indexOf(texture) === currentTextureIndex 
-                            ? 'bg-teal-500/30 border border-teal-500' 
+                            ? 'bg-noir-500/30 border border-noir-500' 
                             : 'bg-white/5 hover:bg-white/10'
                         }`}
                         onClick={() => setCurrentTextureIndex(textures.indexOf(texture))}
@@ -468,7 +297,7 @@ export function TextureTranslator() {
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-white truncate">{texture.name}</p>
                           <div className="flex items-center gap-1 mt-0.5">
-                            <Badge className="h-4 text-2xs bg-teal-500/30 px-1">
+                            <Badge className="h-4 text-2xs bg-noir-500/30 px-1">
                               {texture.format.toUpperCase()}
                             </Badge>
                             {texture.processed && (
@@ -493,9 +322,8 @@ export function TextureTranslator() {
               {textures.length > 0 && (
                 <Button 
                   size="sm" 
-                  variant="outline" className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
-                  onClick={processAllTextures}
-                  disabled={isProcessing}
+                  variant="outline" className="w-full border-noir-500/50 text-noir-400 hover:bg-noir-500/10 hover:border-noir-400"
+                  disabled
                 >
                   <Wand2 className="h-3 w-3 mr-1" />
                   {t('textureTranslator.processAll')} ({textures.length})
@@ -507,12 +335,12 @@ export function TextureTranslator() {
 
         {/* Main Preview */}
         <div className="col-span-6">
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardHeader className="py-2 px-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <FileImage className="h-4 w-4 text-teal-400" />
-                  <span className="text-sm text-teal-300">
+                  <FileImage className="h-4 w-4 text-noir-400" />
+                  <span className="text-sm text-noir-300">
                     {currentTexture ? currentTexture.name : t('textureTranslator.noTexture')}
                   </span>
                 </div>
@@ -528,7 +356,7 @@ export function TextureTranslator() {
                     {showOriginal ? t('textureTranslator.translated') : t('textureTranslator.original')}
                   </Button>
                   <div className="flex items-center gap-1 bg-white/5 rounded-md px-2">
-                    <ZoomOut className="h-3 w-3 text-teal-400" />
+                    <ZoomOut className="h-3 w-3 text-noir-400" />
                     <Slider
                       value={[zoom]}
                       onValueChange={(v) => setZoom(v[0])}
@@ -537,8 +365,8 @@ export function TextureTranslator() {
                       step={10}
                       className="w-20"
                     />
-                    <ZoomIn className="h-3 w-3 text-teal-400" />
-                    <span className="text-xs text-teal-400 w-8">{zoom}%</span>
+                    <ZoomIn className="h-3 w-3 text-noir-400" />
+                    <span className="text-xs text-noir-400 w-8">{zoom}%</span>
                   </div>
                 </div>
               </div>
@@ -546,7 +374,7 @@ export function TextureTranslator() {
             <CardContent className="p-2">
               {currentTexture ? (
                 <div 
-                  className="relative overflow-auto bg-[repeating-conic-gradient(#1a1a2e_0%_25%,#0d0d1a_0%_50%)] bg-[length:20px_20px] rounded-lg"
+                  className="relative overflow-auto bg-[repeating-conic-gradient(#161618_0%_25%,#0d0d1a_0%_50%)] bg-[length:20px_20px] rounded-lg"
                   style={{ maxHeight: '450px' }}
                 >
                   <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top left' }}>
@@ -561,8 +389,8 @@ export function TextureTranslator() {
                         key={region.id}
                         className={`absolute border-2 cursor-pointer transition-all ${
                           selectedRegion === region.id 
-                            ? 'border-cyan-400 shadow-lg shadow-cyan-500/30' 
-                            : 'border-teal-500/50 hover:border-teal-400'
+                            ? 'border-noir-400 shadow-lg shadow-noir-500/30' 
+                            : 'border-noir-500/50 hover:border-noir-400'
                         }`}
                         style={{
                           left: region.x,
@@ -589,14 +417,14 @@ export function TextureTranslator() {
                 </div>
               ) : (
                 <div 
-                  className="h-[450px] border-2 border-dashed border-teal-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-teal-500/50 transition-colors"
+                  className="h-[450px] border-2 border-dashed border-noir-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-noir-500/50 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
                 >
-                  <Layers className="h-16 w-16 text-teal-400/30 mb-4" />
-                  <p className="text-teal-400/70 text-lg mb-2">{t('textureTranslator.dropTextures')}</p>
-                  <p className="text-teal-400/50 text-sm">PNG, DDS, TGA, JPG</p>
+                  <Layers className="h-16 w-16 text-noir-400/30 mb-4" />
+                  <p className="text-noir-400/70 text-lg mb-2">{t('textureTranslator.dropTextures')}</p>
+                  <p className="text-noir-400/50 text-sm">PNG, DDS, TGA, JPG</p>
                 </div>
               )}
             </CardContent>
@@ -606,17 +434,17 @@ export function TextureTranslator() {
         {/* Right Sidebar - Settings & Regions */}
         <div className="col-span-3 space-y-4">
           {/* Language Settings */}
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Languages className="h-4 w-4 text-teal-400" />
+                <Languages className="h-4 w-4 text-noir-400" />
                 {t('textureTranslator.languages')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-2xs text-teal-400 mb-1 block">{t('common.from')}</label>
+                  <label className="text-2xs text-noir-400 mb-1 block">{t('common.from')}</label>
                   <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
@@ -634,7 +462,7 @@ export function TextureTranslator() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-2xs text-teal-400 mb-1 block">{t('common.to')}</label>
+                  <label className="text-2xs text-noir-400 mb-1 block">{t('common.to')}</label>
                   <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
@@ -656,30 +484,30 @@ export function TextureTranslator() {
           </Card>
 
           {/* Font & Style Settings */}
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Settings className="h-4 w-4 text-teal-400" />
+                <Settings className="h-4 w-4 text-noir-400" />
                 {t('textureTranslator.settings')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-teal-300">{t('textureTranslator.preserveStyle')}</span>
+                <span className="text-xs text-noir-300">{t('textureTranslator.preserveStyle')}</span>
                 <Switch
                   checked={preserveStyle}
                   onCheckedChange={setPreserveStyle}
                 />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-teal-300">{t('textureTranslator.autoFontMatch')}</span>
+                <span className="text-xs text-noir-300">{t('textureTranslator.autoFontMatch')}</span>
                 <Switch
                   checked={autoMatchFont}
                   onCheckedChange={setAutoMatchFont}
                 />
               </div>
               <div>
-                <label className="text-2xs text-teal-400 mb-1 block">{t('textureTranslator.fontFallback')}</label>
+                <label className="text-2xs text-noir-400 mb-1 block">{t('textureTranslator.fontFallback')}</label>
                 <Select value={selectedFont} onValueChange={setSelectedFont}>
                   <SelectTrigger className="h-7 text-xs">
                     <SelectValue />
@@ -698,10 +526,10 @@ export function TextureTranslator() {
 
           {/* Detected Regions */}
           {currentTexture?.regions.length > 0 && (
-            <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+            <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
               <CardHeader className="py-2 px-3">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Grid3X3 className="h-4 w-4 text-teal-400" />
+                  <Grid3X3 className="h-4 w-4 text-noir-400" />
                   {t('textureTranslator.detectedTexts')} ({currentTexture.regions.length})
                 </CardTitle>
               </CardHeader>
@@ -713,7 +541,7 @@ export function TextureTranslator() {
                         key={region.id}
                         className={`p-2 rounded-lg cursor-pointer transition-all ${
                           selectedRegion === region.id
-                            ? 'bg-teal-500/30 border border-teal-500'
+                            ? 'bg-noir-500/30 border border-noir-500'
                             : 'bg-white/5 hover:bg-white/10'
                         }`}
                         onClick={() => setSelectedRegion(region.id)}
@@ -724,7 +552,7 @@ export function TextureTranslator() {
                               className="w-3 h-3 rounded border"
                               style={{ backgroundColor: region.backgroundColor }}
                             />
-                            <span className="text-2xs text-teal-400">
+                            <span className="text-2xs text-noir-400">
                               {region.fontSize}px
                             </span>
                           </div>
@@ -745,14 +573,13 @@ export function TextureTranslator() {
           )}
 
           {/* Export */}
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardContent className="p-3 space-y-2">
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
-                onClick={exportTexture}
-                disabled={!currentTexture?.modified}
+                className="w-full border-noir-500/50 text-noir-400 hover:bg-noir-500/10 hover:border-noir-400"
+                disabled
               >
                 <Save className="h-4 w-4 mr-2" />
                 {t('textureTranslator.save')}
@@ -760,9 +587,8 @@ export function TextureTranslator() {
               <Button 
                 size="sm" 
                 variant="outline"
-                className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
-                onClick={exportAll}
-                disabled={textures.length === 0}
+                className="w-full border-noir-500/50 text-noir-400 hover:bg-noir-500/10 hover:border-noir-400"
+                disabled
               >
                 <Download className="h-4 w-4 mr-2" />
                 {t('textureTranslator.exportAll')}

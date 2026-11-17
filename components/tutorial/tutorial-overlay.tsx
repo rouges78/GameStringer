@@ -125,8 +125,8 @@ export function TutorialOverlay() {
                 width: highlightRect.width + 12,
                 height: highlightRect.height + 12,
                 borderRadius: 10,
-                border: '2px solid rgba(168, 85, 247, 0.8)',
-                boxShadow: '0 0 24px rgba(168, 85, 247, 0.45), inset 0 0 16px rgba(168, 85, 247, 0.1)',
+                border: '2px solid rgba(255, 59, 74, 0.8)',
+                boxShadow: '0 0 24px rgba(255, 59, 74, 0.45), inset 0 0 16px rgba(255, 59, 74, 0.1)',
               }}
             />
           )}
@@ -145,11 +145,11 @@ export function TutorialOverlay() {
             style={!isCentered ? cardStyle : undefined}
           >
             <div
-              className="bg-gradient-to-br from-slate-900 via-slate-900 to-purple-950/50 backdrop-blur-xl border border-purple-500/40 rounded-2xl shadow-2xl shadow-purple-500/25 w-[340px]"
+              className="bg-gradient-to-br from-noir-900 via-noir-900 to-rouge-950/50 backdrop-blur-xl border border-rouge-500/40 rounded-2xl shadow-2xl shadow-rouge-500/25 w-[340px]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header con progress dots */}
-              <div className="flex items-center justify-between p-3 border-b border-slate-800/50">
+              <div className="flex items-center justify-between p-3 border-b border-noir-800/50">
                 <div className="flex items-center gap-1">
                   {Array.from({ length: totalSteps }).map((_, i) => (
                     <div
@@ -157,10 +157,10 @@ export function TutorialOverlay() {
                       className={cn(
                         'h-1.5 rounded-full transition-all duration-300',
                         i === currentStep
-                          ? 'bg-purple-500 w-4'
+                          ? 'bg-rouge-500 w-4'
                           : i < currentStep
-                            ? 'bg-purple-500/50 w-1.5'
-                            : 'bg-slate-700 w-1.5',
+                            ? 'bg-rouge-500/50 w-1.5'
+                            : 'bg-noir-700 w-1.5',
                       )}
                     />
                   ))}
@@ -170,7 +170,7 @@ export function TutorialOverlay() {
                     variant="ghost"
                     size="sm"
                     onClick={skipTutorial}
-                    className="h-7 px-2 text-slate-500 hover:text-slate-300 text-xs"
+                    className="h-7 px-2 text-noir-500 hover:text-noir-300 text-xs"
                   >
                     <X className="h-3.5 w-3.5 mr-1" />
                     {t('tutorial.overlay.skip')}
@@ -189,14 +189,14 @@ export function TutorialOverlay() {
                   <h3 className="text-lg font-bold text-white mb-2">
                     {currentStepData.title}
                   </h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">
+                  <p className="text-noir-400 text-sm leading-relaxed">
                     {currentStepData.description}
                   </p>
                 </motion.div>
               </div>
 
               {/* Footer con navigazione */}
-              <div className="flex items-center justify-between p-3 border-t border-slate-800/50">
+              <div className="flex items-center justify-between p-3 border-t border-noir-800/50">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -211,14 +211,14 @@ export function TutorialOverlay() {
                   {t('tutorial.overlay.back')}
                 </Button>
 
-                <span className="text-2xs text-slate-600">
+                <span className="text-2xs text-noir-600">
                   {currentStep + 1} / {totalSteps}
                 </span>
 
                 <Button
                   size="sm"
                   onClick={nextStep}
-                  className="h-8 text-xs bg-purple-600 hover:bg-purple-500"
+                  className="h-8 text-xs bg-rouge-600 hover:bg-rouge-500"
                 >
                   {isLastStep ? (
                     <>
@@ -236,7 +236,7 @@ export function TutorialOverlay() {
 
               {/* Hint */}
               <div className="px-3 pb-2 text-center">
-                <span className="text-micro text-slate-600">
+                <span className="text-micro text-noir-600">
                   {t('tutorial.overlay.hint')}
                 </span>
               </div>

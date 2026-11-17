@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -19,17 +18,24 @@ import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
+import { isOcrLanguageMissing, OCR_OVERLAY_TEXTS_EVENT, type OcrOverlayText } from '@/lib/ocr-overlay-payload';
 
-interface DetectedText {
+// Niente `confidence`: Windows OCR non la fornisce, e il badge mostrava un 90% fisso.
+interface DetectedText extends OcrOverlayText {
   id: string;
-  original: string;
-  translated: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  confidence: number;
   timestamp: number;
+}
+
+// Nasconde davvero la finestra overlay (il backend emette anche
+// `overlay-visibility` false). Prima Stop emetteva solo l'evento, e alla
+// ripartenza nessuno lo rimetteva a true: l'overlay restava vuoto.
+async function hideOverlayWindow() {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('toggle_ocr_overlay', { show: false });
+  } catch (e: unknown) {
+    clientLogger.warn('Could not hide overlay window:', e);
+  }
 }
 
 interface CaptureRegion {
@@ -94,10 +100,12 @@ export function LiveOcrOverlay() {
         y: number;
         width: number;
         height: number;
-        confidence: number;
       }>>('ocr_recognize_png', {
         imageData: captureResult.image_data,
-        language: sourceLanguage === 'auto' ? 'en' : sourceLanguage
+        // "auto" arriva così al backend, che usa le lingue del profilo Windows.
+        // "zh" ha scrittura indeterminata per Windows OCR: serve zh-Hans. Solo
+        // qui: i traduttori (DeepL, MyMemory) si aspettano ancora "zh".
+        language: sourceLanguage === 'zh' ? 'zh-Hans' : sourceLanguage
       });
 
       if (ocrResult.length === 0) return;
@@ -127,7 +135,6 @@ export function LiveOcrOverlay() {
                   original: t.text,
                   translated,
                   x: t.x, y: t.y, width: t.width, height: t.height,
-                  confidence: t.confidence,
                   timestamp: Date.now()
                 };
               });
@@ -139,14 +146,14 @@ export function LiveOcrOverlay() {
             translatedTexts = ocrResult.map((t, i) => ({
               id: `${Date.now()}-${i}`, original: t.text, translated: t.text,
               x: t.x, y: t.y, width: t.width, height: t.height,
-              confidence: t.confidence, timestamp: Date.now()
+              timestamp: Date.now()
             }));
           }
         } catch {
           translatedTexts = ocrResult.map((t, i) => ({
             id: `${Date.now()}-${i}`, original: t.text, translated: t.text,
             x: t.x, y: t.y, width: t.width, height: t.height,
-            confidence: t.confidence, timestamp: Date.now()
+            timestamp: Date.now()
           }));
         }
       } else {
@@ -158,7 +165,6 @@ export function LiveOcrOverlay() {
           y: t.y,
           width: t.width,
           height: t.height,
-          confidence: t.confidence,
           timestamp: Date.now()
         }));
       }
@@ -170,13 +176,20 @@ export function LiveOcrOverlay() {
       // Invia all'overlay se attivo
       if (showOverlay) {
         const { emit } = await import('@tauri-apps/api/event');
-        await emit('ocr-translations', translatedTexts);
+        await emit<OcrOverlayText[]>(OCR_OVERLAY_TEXTS_EVENT, translatedTexts);
       }
 
     } catch (error: unknown) {
       clientLogger.error('OCR capture error:', error);
+      // Lingua senza riconoscimento del testo in Windows: riprovare a ogni
+      // intervallo non cambia niente, quindi ci si ferma e si dice come rimediare.
+      if (isOcrLanguageMissing(error)) {
+        setIsRunning(false);
+        void hideOverlayWindow();
+        toast.error(t('ocrTranslator.languagePackMissing').replace('{lang}', sourceLanguage), { id: 'ocr-language-missing' });
+      }
     }
-  }, [isPaused, captureMode, captureRegion, sourceLanguage, targetLanguage, autoTranslate, showOverlay]);
+  }, [isPaused, captureMode, captureRegion, sourceLanguage, targetLanguage, autoTranslate, showOverlay, t]);
 
   // Start/Stop capture loop
   useEffect(() => {
@@ -201,11 +214,14 @@ export function LiveOcrOverlay() {
     setIsPaused(false);
     toast.success(t('common.liveOcrAvviato'));
     
-    // Apri finestra overlay
+    // Apri finestra overlay sull'area catturata (regione o monitor principale):
+    // le coordinate dei testi sono relative a quella.
     if (showOverlay) {
       try {
         const { invoke } = await import('@tauri-apps/api/core');
-        await invoke('open_ocr_overlay');
+        await invoke('open_ocr_overlay', {
+          region: captureMode === 'region' && captureRegion ? captureRegion : null,
+        });
       } catch (e: unknown) {
         clientLogger.warn('Could not open overlay window:', e);
       }
@@ -219,10 +235,7 @@ export function LiveOcrOverlay() {
     toast.info(t('common.liveOcrFermato'));
     
     // Chiudi overlay
-    try {
-      const { emit } = await import('@tauri-apps/api/event');
-      await emit('overlay-visibility', false);
-    } catch {}
+    await hideOverlayWindow();
   };
 
   const handlePause = () => {
@@ -256,8 +269,7 @@ export function LiveOcrOverlay() {
     const data = detectedTexts.map(t => ({
       original: t.original,
       translated: t.translated,
-      position: { x: t.x, y: t.y },
-      confidence: t.confidence
+      position: { x: t.x, y: t.y }
     }));
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -273,7 +285,7 @@ export function LiveOcrOverlay() {
   return (
     <div className="space-y-4">
       {/* Hero Header - stile ai-translator */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
@@ -389,7 +401,7 @@ export function LiveOcrOverlay() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label className="text-xs">{t('liveOcrOverlay.captureInterval')}</Label>
-                <span className="text-xs text-gray-400">{captureInterval}{t('liveOcrOverlay.msUnit')}</span>
+                <span className="text-xs text-noir-400">{captureInterval}{t('liveOcrOverlay.msUnit')}</span>
               </div>
               <Slider
                 value={[captureInterval]}
@@ -419,7 +431,7 @@ export function LiveOcrOverlay() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <Label className="text-xs">{t('common.opacitàOverlay')}</Label>
-                  <span className="text-xs text-gray-400">{Math.round(overlayOpacity * 100)}%</span>
+                  <span className="text-xs text-noir-400">{Math.round(overlayOpacity * 100)}%</span>
                 </div>
                 <Slider
                   value={[overlayOpacity]}
@@ -458,7 +470,7 @@ export function LiveOcrOverlay() {
           <CardContent>
             <ScrollArea className="h-[400px]">
               {detectedTexts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <div className="flex flex-col items-center justify-center h-full text-noir-500">
                   <Eye className="h-12 w-12 mb-4 opacity-30" />
                   <p className="text-sm">{t('common.nessunTestoRilevato')}</p>
                   <p className="text-xs opacity-70">{t('common.avviaLaCatturaPerVedereITesti')}</p>
@@ -472,14 +484,11 @@ export function LiveOcrOverlay() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-400 truncate">{text.original}</p>
+                          <p className="text-xs text-noir-400 truncate">{text.original}</p>
                           <p className="text-sm text-white font-medium mt-1">{text.translated}</p>
                         </div>
-                        <Badge variant="outline" className="text-2xs shrink-0">
-                          {Math.round(text.confidence * 100)}%
-                        </Badge>
                       </div>
-                      <div className="flex items-center gap-2 mt-2 text-2xs text-gray-500">
+                      <div className="flex items-center gap-2 mt-2 text-2xs text-noir-500">
                         <span>📍 {text.x}, {text.y}</span>
                         <span>📐 {text.width}x{text.height}</span>
                       </div>
@@ -496,26 +505,26 @@ export function LiveOcrOverlay() {
       <div className="grid grid-cols-4 gap-2">
         <Card className="bg-card/50 border-border/50 p-3">
           <div className="text-center">
-            <div className="text-2xl font-bold text-cyan-400">{fps}</div>
-            <div className="text-2xs text-gray-400">FPS</div>
+            <div className="text-2xl font-bold text-noir-400">{fps}</div>
+            <div className="text-2xs text-noir-400">FPS</div>
           </div>
         </Card>
         <Card className="bg-card/50 border-border/50 p-3">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-400">{detectedTexts.length}</div>
-            <div className="text-2xs text-gray-400">{t('liveOcrOverlay.currentTexts')}</div>
+            <div className="text-2xs text-noir-400">{t('liveOcrOverlay.currentTexts')}</div>
           </div>
         </Card>
         <Card className="bg-card/50 border-border/50 p-3">
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-400">{totalDetected}</div>
-            <div className="text-2xs text-gray-400">{t('liveOcrOverlay.sessionTotal')}</div>
+            <div className="text-2xl font-bold text-rouge-400">{totalDetected}</div>
+            <div className="text-2xs text-noir-400">{t('liveOcrOverlay.sessionTotal')}</div>
           </div>
         </Card>
         <Card className="bg-card/50 border-border/50 p-3">
           <div className="text-center">
             <div className="text-2xl font-bold text-amber-400">{captureInterval}{t('liveOcrOverlay.msUnit')}</div>
-            <div className="text-2xs text-gray-400">{t('liveOcrOverlay.interval')}</div>
+            <div className="text-2xs text-noir-400">{t('liveOcrOverlay.interval')}</div>
           </div>
         </Card>
       </div>

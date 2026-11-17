@@ -402,11 +402,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       case NotificationPriority.HIGH:
         return 'border-l-orange-500 bg-orange-50 dark:bg-orange-950/20';
       case NotificationPriority.NORMAL:
-        return 'border-l-blue-500 bg-blue-50 dark:bg-blue-950/20';
+        return 'border-l-noir-500 bg-noir-50 dark:bg-noir-950/20';
       case NotificationPriority.LOW:
-        return 'border-l-gray-500 bg-gray-50 dark:bg-gray-950/20';
+        return 'border-l-noir-500 bg-noir-50 dark:bg-noir-950/20';
       default:
-        return 'border-l-blue-500 bg-blue-50 dark:bg-blue-950/20';
+        return 'border-l-noir-500 bg-noir-50 dark:bg-noir-950/20';
     }
   };
 
@@ -461,16 +461,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       aria-label={t('common.notificationCenter')}
     >
       <div 
-        className="fixed top-16 right-4 w-[420px] max-h-[80vh] bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl shadow-2xl shadow-purple-500/10 overflow-hidden"
+        className="fixed top-16 right-4 w-[420px] max-h-[80vh] bg-gradient-to-br from-noir-900 via-noir-900 to-noir-800 border border-noir-700/50 rounded-2xl shadow-2xl shadow-rouge-500/10 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         role="document"
         aria-labelledby="notification-center-title"
         aria-describedby="notification-center-description"
       >
         {/* Header con gradiente */}
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-cyan-500/10 border-b border-slate-700/50">
+        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-rouge-500/10 via-noir-500/10 to-noir-500/10 border-b border-noir-700/50">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rouge-500 to-noir-600 flex items-center justify-center shadow-lg shadow-rouge-500/30">
               <Bell className="h-4 w-4 text-white" aria-hidden="true" />
             </div>
             <h3 id="notification-center-title" className="font-semibold text-white">{t('common.notifications')}</h3>
@@ -665,15 +665,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
           {t('notificationCenter.filtersHelp')}</div>
 
         {/* Barra di ricerca */}
-        <div className="p-3 border-b border-slate-700/50">
+        <div className="p-3 border-b border-noir-700/50">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" aria-hidden="true" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-noir-500" aria-hidden="true" />
             <Input
               id="notification-search"
               placeholder={t('notificationCenter.searchPh')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-slate-800/50 border-slate-700 focus:border-purple-500/50 focus:ring-purple-500/20 placeholder:text-slate-500"
+              className="pl-10 bg-noir-800/50 border-noir-700 focus:border-rouge-500/50 focus:ring-rouge-500/20 placeholder:text-noir-500"
               aria-label={t('notificationCenter.searchAria')}
               aria-describedby="search-help"
             />
@@ -708,13 +708,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </div>
           ) : processedNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-700 flex items-center justify-center mb-4 shadow-lg">
-                <Bell className="h-8 w-8 text-slate-500" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-noir-800 to-noir-700 flex items-center justify-center mb-4 shadow-lg">
+                <Bell className="h-8 w-8 text-noir-500" />
               </div>
-              <h4 className="font-semibold text-slate-300 mb-2">
+              <h4 className="font-semibold text-noir-300 mb-2">
                 {hasActiveFilters ? "No matching notifications" : "No notifications"}
               </h4>
-              <p className="text-sm text-slate-500 max-w-[200px]">
+              <p className="text-sm text-noir-500 max-w-[200px]">
                 {hasActiveFilters 
                   ? "Try adjusting filters to see more notifications"
                   : "Your notifications will appear here"
@@ -725,7 +725,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   variant="outline" 
                   size="sm" 
                   onClick={clearAllFilters}
-                  className="mt-4 border-slate-700 hover:bg-slate-800"
+                  className="mt-4 border-noir-700 hover:bg-noir-800"
                 >
                   {t('notificationCenter.clearFilters')}</Button>
               )}
@@ -818,11 +818,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       case NotificationPriority.HIGH:
         return 'border-l-orange-500 bg-orange-50 dark:bg-orange-950/20';
       case NotificationPriority.NORMAL:
-        return 'border-l-blue-500 bg-blue-50 dark:bg-blue-950/20';
+        return 'border-l-noir-500 bg-noir-50 dark:bg-noir-950/20';
       case NotificationPriority.LOW:
-        return 'border-l-gray-500 bg-gray-50 dark:bg-gray-950/20';
+        return 'border-l-noir-500 bg-noir-50 dark:bg-noir-950/20';
       default:
-        return 'border-l-blue-500 bg-blue-50 dark:bg-blue-950/20';
+        return 'border-l-noir-500 bg-noir-50 dark:bg-noir-950/20';
     }
   };
 
@@ -863,7 +863,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         getPriorityColor(notification.priority),
         isUnread && "ring-1 ring-primary/20",
         isSelected && "ring-2 ring-primary bg-primary/5",
-        isKeyboardSelected && "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950/20",
+        isKeyboardSelected && "ring-2 ring-noir-500 bg-noir-50 dark:bg-noir-950/20",
         isSelectMode && "hover:ring-2 hover:ring-primary/50"
       )}
       onClick={handleClick}

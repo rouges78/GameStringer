@@ -576,6 +576,14 @@ fn calculate_dir_size(path: &std::path::Path) -> u64 {
     size
 }
 
+/// Scrive nel log dell'app un avviso che nasce nel frontend. La console della
+/// webview non finisce nel log di Tauri: senza questo il motivo per cui la
+/// traduzione AI fallisce non lo ritrova nessuno.
+#[tauri::command]
+pub fn log_frontend_warning(message: String) {
+    log::warn!("[frontend] {}", message.chars().take(2000).collect::<String>());
+}
+
 #[tauri::command]
 pub async fn check_path_exists(path: String) -> Result<bool, String> {
     use std::path::Path;

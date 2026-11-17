@@ -30,26 +30,26 @@ export interface LogEntry {
 }
 
 const LOG_COLORS: Record<LogLevel, string> = {
-  info: 'text-blue-400',
+  info: 'text-noir-400',
   warn: 'text-amber-400',
   error: 'text-red-400',
-  debug: 'text-slate-400',
+  debug: 'text-noir-400',
   success: 'text-emerald-400',
 };
 
 const LOG_BG: Record<LogLevel, string> = {
-  info: 'border-blue-500/10',
+  info: 'border-noir-500/10',
   warn: 'border-amber-500/10 bg-amber-950/10',
   error: 'border-red-500/10 bg-red-950/10',
-  debug: 'border-slate-500/10',
+  debug: 'border-noir-500/10',
   success: 'border-emerald-500/10',
 };
 
 const LOG_BADGES: Record<LogLevel, string> = {
-  info: 'bg-blue-500/20 text-blue-300',
+  info: 'bg-noir-500/20 text-noir-300',
   warn: 'bg-amber-500/20 text-amber-300',
   error: 'bg-red-500/20 text-red-300',
-  debug: 'bg-slate-500/20 text-slate-300',
+  debug: 'bg-noir-500/20 text-noir-300',
   success: 'bg-emerald-500/20 text-emerald-300',
 };
 
@@ -168,7 +168,7 @@ export function DebugConsole({ defaultExpanded = false }: { defaultExpanded?: bo
     return (
       <button
         onClick={() => setExpanded(true)}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-900/90 border border-slate-700/50 hover:border-slate-600 transition-all text-xs text-slate-400 hover:text-white backdrop-blur-sm shadow-lg"
+        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg bg-noir-900/90 border border-noir-700/50 hover:border-noir-600 transition-all text-xs text-noir-400 hover:text-white backdrop-blur-sm shadow-lg"
       >
         <Terminal className="h-3.5 w-3.5" />
         Debug Console
@@ -183,14 +183,14 @@ export function DebugConsole({ defaultExpanded = false }: { defaultExpanded?: bo
   }
 
   return (
-    <Card className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-700/50 bg-slate-950/95 backdrop-blur-md shadow-2xl rounded-none max-h-[40vh]">
+    <Card className="fixed bottom-0 left-0 right-0 z-50 border-t border-noir-700/50 bg-noir-950/95 backdrop-blur-md shadow-2xl rounded-none max-h-[40vh]">
       <CardContent className="p-0">
         {/* Header */}
-        <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-700/30">
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-noir-700/30">
           <div className="flex items-center gap-2">
-            <Terminal className="h-4 w-4 text-slate-400" />
-            <span className="text-xs font-semibold text-slate-300">Debug Console</span>
-            <Badge variant="outline" className="text-micro px-1.5 py-0 h-4 border-slate-600">
+            <Terminal className="h-4 w-4 text-noir-400" />
+            <span className="text-xs font-semibold text-noir-300">Debug Console</span>
+            <Badge variant="outline" className="text-micro px-1.5 py-0 h-4 border-noir-600">
               {filteredLogs.length} / {logs.length}
             </Badge>
           </div>
@@ -201,13 +201,13 @@ export function DebugConsole({ defaultExpanded = false }: { defaultExpanded?: bo
                 key={level}
                 onClick={() => setFilterLevel(level)}
                 className={`text-micro px-1.5 py-0.5 rounded ${
-                  filterLevel === level ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-slate-300'
+                  filterLevel === level ? 'bg-noir-700 text-white' : 'text-noir-500 hover:text-noir-300'
                 }`}
               >
                 {level === 'all' ? 'ALL' : level.toUpperCase()}
               </button>
             ))}
-            <div className="w-px h-4 bg-slate-700/50 mx-1" />
+            <div className="w-px h-4 bg-noir-700/50 mx-1" />
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setPaused(!paused)} title={paused ? 'Riprendi' : 'Pausa'} aria-label={paused ? t('common.resume') : t('common.pause')}>
               {paused ? <Play className="h-3 w-3 text-emerald-400" /> : <Pause className="h-3 w-3" />}
             </Button>
@@ -224,14 +224,14 @@ export function DebugConsole({ defaultExpanded = false }: { defaultExpanded?: bo
         </div>
 
         {/* Search */}
-        <div className="px-3 py-1 border-b border-slate-700/20">
+        <div className="px-3 py-1 border-b border-noir-700/20">
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-500" />
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-noir-500" />
             <Input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               aria-label={t('common.cerca')} placeholder="Cerca nei log..."
-              className="h-6 text-2xs pl-7 bg-slate-900/50 border-slate-700/30"
+              className="h-6 text-2xs pl-7 bg-noir-900/50 border-noir-700/30"
             />
           </div>
         </div>
@@ -239,22 +239,22 @@ export function DebugConsole({ defaultExpanded = false }: { defaultExpanded?: bo
         {/* Log entries */}
         <div ref={scrollRef} className="overflow-y-auto max-h-[30vh] font-mono">
           {filteredLogs.length === 0 ? (
-            <div className="text-center py-8 text-slate-500 text-xs">
+            <div className="text-center py-8 text-noir-500 text-xs">
               {logs.length === 0 ? 'Nessun log. Le azioni dell\'app appariranno qui.' : 'Nessun risultato per il filtro corrente.'}
             </div>
           ) : (
             filteredLogs.map(entry => (
               <div
                 key={entry.id}
-                className={`flex items-start gap-2 px-3 py-1 border-b ${LOG_BG[entry.level]} hover:bg-slate-800/30 group`}
+                className={`flex items-start gap-2 px-3 py-1 border-b ${LOG_BG[entry.level]} hover:bg-noir-800/30 group`}
               >
-                <span className="text-micro text-slate-600 w-16 flex-shrink-0 pt-0.5">
+                <span className="text-micro text-noir-600 w-16 flex-shrink-0 pt-0.5">
                   {entry.timestamp.toLocaleTimeString('it-IT', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </span>
                 <span className={`text-micro px-1 py-0 rounded ${LOG_BADGES[entry.level]} flex-shrink-0 w-12 text-center`}>
                   {entry.level.toUpperCase()}
                 </span>
-                <span className="text-micro text-slate-500 flex-shrink-0 w-14 truncate">
+                <span className="text-micro text-noir-500 flex-shrink-0 w-14 truncate">
                   {entry.source}
                 </span>
                 <span className={`text-2xs ${LOG_COLORS[entry.level]} flex-1 break-all`}>
@@ -265,7 +265,7 @@ export function DebugConsole({ defaultExpanded = false }: { defaultExpanded?: bo
                   className="opacity-0 group-hover:opacity-100 transition-opacity"
                   title={t('common.copia')}
                 >
-                  <Copy className="h-3 w-3 text-slate-600 hover:text-slate-300" />
+                  <Copy className="h-3 w-3 text-noir-600 hover:text-noir-300" />
                 </button>
               </div>
             ))

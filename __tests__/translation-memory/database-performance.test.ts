@@ -36,7 +36,8 @@ const mockPrisma = vi.hoisted(() => ({
 }));
 
 vi.mock('@prisma/client', () => ({
-  PrismaClient: vi.fn(() => mockPrisma)
+  // `function` e non arrow: da Vitest 4 un mock usato con `new` deve essere costruibile.
+  PrismaClient: vi.fn(function () { return mockPrisma; })
 }));
 
 describe('Translation Memory Database Performance', () => {

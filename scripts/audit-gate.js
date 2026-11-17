@@ -29,47 +29,25 @@ const ROOT = path.resolve(__dirname, '..');
  * non è raggiungibile da input di terzi, e cosa sblocca la rimozione.
  */
 const ALLOWLIST = [
-  {
-    id: 'GHSA-ggr8-5vv4-36mx',
-    package: 'deepmerge-ts',
-    until: '2026-11-02',
-    reason: [
-      'CVE-2026-40345, pubblicata il 16/08/2026: deepmerge() va in stack',
-      'exhaustion su grafi di oggetti RICORSIVI. Impatto solo Availability',
-      '(crash), niente confidenzialità né integrità.',
-      '',
-      'Perché non è raggiungibile da input di terzi:',
-      '  - deepmerge-ts@7.1.5 arriva solo da @prisma/config, tirato dalla CLI',
-      '    `prisma` (devDependencies). Serve a fondere il file di',
-      '    configurazione Prisma: input LOCALE dello sviluppatore, non dati',
-      '    che arrivano da rete o da un gioco tradotto.',
-      '  - nessun sorgente dell\'app importa @prisma/config o deepmerge',
-      '    (verificato con grep su app/ components/ lib/ hooks/ scripts/',
-      '    src-tauri/src il 17/08/2026).',
-      '  - il gate lo marca PROD perché @prisma/client dichiara `prisma` come',
-      '    peer opzionale, ma la CLI non finisce nel bundle Tauri spedito.',
-      '',
-      'Perché non si aggiorna e basta: @prisma/config pinna ESATTAMENTE',
-      '"deepmerge-ts": "7.1.5" — anche nella sua ultima versione (7.9.1,',
-      'verificata sul registry il 17/08). Nessun `npm audit fix` possibile;',
-      'forzare 8.0.0 con overrides è un salto major su una libreria che',
-      'Prisma usa internamente, e `prisma generate` gira in postinstall: si',
-      'rischia di rompere la build di tutti per un DoS non raggiungibile.',
-      '',
-      'Cosa sblocca la rimozione: @prisma/config che passa a deepmerge-ts 8.x.',
-      'Riverificare a ogni giro (lezione di brace-expansion: i backport che',
-      'oggi non esistono domani ci sono).',
-      '',
-      'Riverificata il 02/10/2026, alla scadenza: l\'ultima 6.x (prisma e',
-      '@prisma/config 6.19.3) pinna ancora deepmerge-ts 7.1.5, e così il',
-      '@prisma/config più recente sul registry. Il «fix available» di npm',
-      'audit punta a prisma 8, ancora RC e salto major dal nostro ^6.10.1.',
-      'Le ragioni sopra reggono invariate: proroga di un mese, non di più.',
-    ].join('\n'),
-  },
+  // GHSA-vfj7-8cjw-p6xm (braces <=3.0.3, stack exhaustion) — pensionata il
+  // 05/11/2026, in anticipo sulla scadenza del 20/11. braces è ancora 3.0.3
+  // nel lockfile, ma l'advisory non compare più in `npm audit` (né in locale
+  // né in CI): il gate stesso chiedeva di toglierla. Se ricompare, il gate
+  // torna rosso e l'eccezione si riscrive con la motivazione di allora (solo
+  // devDependencies, glob scritti da noi: vedi git log di questo file).
+  //
+  // GHSA-ggr8-5vv4-36mx (deepmerge-ts, CVE-2026-40345) — pensionata il
+  // 20/10/2026, in anticipo sulla scadenza del 02/11. @prisma/config 6.x pinna
+  // ancora deepmerge-ts 7.1.5, ma l'unico uso è `deepmerge()` semplice come
+  // `merger` di c12 per fondere prisma.config: nessuna delle rotture della 8.x
+  // lo tocca (riguardano deepmergeInto, nomi di tipi e merge delle Map), e
+  // @prisma/config 7.10.1 è già passato da solo a deepmerge-ts 8.0.2. Quindi
+  // override in package.json invece di eccezione; verificato con
+  // `prisma validate` e `prisma generate`.
+  //
   // Vuota dal 04/08/2026 al 17/08/2026 — e che torni vuota il prima possibile.
   //
-  // Storia dell'unica eccezione avuta (GHSA-mh99-v99m-4gvg, brace-expansion,
+  // Storia della prima eccezione avuta (GHSA-mh99-v99m-4gvg, brace-expansion,
   // datata 30/09): al 27/07 il fix esisteva solo in 5.x, senza backport, e
   // l'override era impossibile (il build CJS di 5.x esporta un oggetto e
   // rompe minimatch 3.x a runtime). Il 04/08 i backport sono ARRIVATI

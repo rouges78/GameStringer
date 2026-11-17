@@ -248,7 +248,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-[#1b2838] rounded-lg flex items-center justify-center">
+          <div className="w-12 h-12 bg-noir-900 rounded-lg flex items-center justify-center">
             <img src="/logos/steam.png" alt={t('steamModal.steamLogoAlt')} className="w-8 h-8" />
           </div>
           <div>
@@ -291,7 +291,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
                     href={steamUser.profile_url} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-1"
+                    className="text-xs text-noir-500 hover:underline flex items-center gap-1 mt-1"
                   >
                     {t('steamModal.steamProfile')} <ExternalLink className="h-3 w-3" />
                   </a>
@@ -318,7 +318,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
                 href="https://steamcommunity.com/dev/apikey" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+                className="text-xs text-noir-500 hover:underline flex items-center gap-1"
               >
                 {t('steamModal.getApiKey')} <ExternalLink className="h-3 w-3" />
               </a>
@@ -364,9 +364,9 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
         ) : authStep === 'waiting' ? (
           /* Waiting for callback */
           <div className="space-y-4">
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+            <div className="bg-noir-500/10 border border-noir-500/20 rounded-lg p-4">
               <div className="flex items-center gap-3 mb-2">
-                <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                <Loader2 className="h-5 w-5 animate-spin text-noir-500" />
                 <span className="font-medium">{t('steamModalComp.inAttesaDelLoginSteam')}</span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -392,7 +392,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
             </p>
 
             <Button 
-              className="w-full bg-[#1b2838] hover:bg-[#2a475e] text-white"
+              className="w-full bg-noir-900 hover:bg-noir-700 text-white"
               size="lg"
               onClick={handleSteamLogin}
               disabled={isLoading}

@@ -68,14 +68,14 @@ export function ScreenshotLightbox({ screenshots, selectedIndex, onClose, onNavi
       ref={(el) => el?.focus()}
     >
       {/* Background with gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.08),transparent_70%)]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-noir-950 via-noir-900 to-noir-950" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,59,74,0.08),transparent_70%)]" />
       
       {/* Top bar */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3 bg-slate-900/80 backdrop-blur-sm border-b border-slate-800/50">
+      <div className="relative z-10 flex items-center justify-between px-4 py-3 bg-noir-900/80 backdrop-blur-sm border-b border-noir-800/50">
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-white">{t('common.screenshot')}</span>
-          <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-medium">
+          <span className="px-2 py-0.5 rounded-full bg-rouge-500/20 text-rouge-300 text-xs font-medium">
             {selectedIndex + 1} / {screenshots.length}
           </span>
         </div>
@@ -84,38 +84,38 @@ export function ScreenshotLightbox({ screenshots, selectedIndex, onClose, onNavi
         <div className="flex items-center gap-1">
           <button
             onClick={handleZoomOut}
-            className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            className="p-2 rounded-lg hover:bg-noir-800 text-noir-400 hover:text-white transition-colors"
             title={t('common.zoomOut') + ' (-)'}
           >
             <ZoomOut className="w-4 h-4" />
           </button>
-          <span className="px-2 text-xs text-slate-500 min-w-[3rem] text-center">{Math.round(zoom * 100)}%</span>
+          <span className="px-2 text-xs text-noir-500 min-w-[3rem] text-center">{Math.round(zoom * 100)}%</span>
           <button
             onClick={handleZoomIn}
-            className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            className="p-2 rounded-lg hover:bg-noir-800 text-noir-400 hover:text-white transition-colors"
             title={t('common.zoomIn') + ' (+)'}
           >
             <ZoomIn className="w-4 h-4" />
           </button>
-          <div className="w-px h-4 bg-slate-700 mx-2" />
+          <div className="w-px h-4 bg-noir-700 mx-2" />
           <button
             onClick={handleZoomReset}
-            className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            className="p-2 rounded-lg hover:bg-noir-800 text-noir-400 hover:text-white transition-colors"
             title={t('common.fitToScreen') + ' (0)'}
           >
             <Maximize2 className="w-4 h-4" />
           </button>
           <button
             onClick={handleDownload}
-            className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            className="p-2 rounded-lg hover:bg-noir-800 text-noir-400 hover:text-white transition-colors"
             title={t('common.download')}
           >
             <Download className="w-4 h-4" />
           </button>
-          <div className="w-px h-4 bg-slate-700 mx-2" />
+          <div className="w-px h-4 bg-noir-700 mx-2" />
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors"
+            className="p-2 rounded-lg hover:bg-red-500/20 text-noir-400 hover:text-red-400 transition-colors"
             title={t('common.close') + ' (Esc)'}
           >
             <X className="w-4 h-4" />
@@ -131,7 +131,7 @@ export function ScreenshotLightbox({ screenshots, selectedIndex, onClose, onNavi
             onClick={(e) => { e.stopPropagation(); onNavigate(selectedIndex - 1); }}
             className="absolute left-0 top-0 bottom-0 w-24 z-20 flex items-center justify-start pl-4 group"
           >
-            <div className="w-12 h-12 rounded-full bg-slate-900/80 backdrop-blur-sm border border-slate-700/50 flex items-center justify-center text-slate-400 group-hover:text-white group-hover:bg-slate-800 group-hover:border-slate-600 transition-all group-hover:scale-110">
+            <div className="w-12 h-12 rounded-full bg-noir-900/80 backdrop-blur-sm border border-noir-700/50 flex items-center justify-center text-noir-400 group-hover:text-white group-hover:bg-noir-800 group-hover:border-noir-600 transition-all group-hover:scale-110">
               <ChevronLeft className="w-6 h-6" />
             </div>
           </button>
@@ -142,7 +142,7 @@ export function ScreenshotLightbox({ screenshots, selectedIndex, onClose, onNavi
             onClick={(e) => { e.stopPropagation(); onNavigate(selectedIndex + 1); }}
             className="absolute right-0 top-0 bottom-0 w-24 z-20 flex items-center justify-end pr-4 group"
           >
-            <div className="w-12 h-12 rounded-full bg-slate-900/80 backdrop-blur-sm border border-slate-700/50 flex items-center justify-center text-slate-400 group-hover:text-white group-hover:bg-slate-800 group-hover:border-slate-600 transition-all group-hover:scale-110">
+            <div className="w-12 h-12 rounded-full bg-noir-900/80 backdrop-blur-sm border border-noir-700/50 flex items-center justify-center text-noir-400 group-hover:text-white group-hover:bg-noir-800 group-hover:border-noir-600 transition-all group-hover:scale-110">
               <ChevronRight className="w-6 h-6" />
             </div>
           </button>
@@ -162,7 +162,7 @@ export function ScreenshotLightbox({ screenshots, selectedIndex, onClose, onNavi
             {/* Loading skeleton */}
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full border-4 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+                <div className="w-16 h-16 rounded-full border-4 border-rouge-500/30 border-t-rouge-500 animate-spin" />
               </div>
             )}
             
@@ -177,13 +177,13 @@ export function ScreenshotLightbox({ screenshots, selectedIndex, onClose, onNavi
             />
             
             {/* Image frame glow */}
-            <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 blur-xl -z-10 opacity-50" />
+            <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-rouge-500/20 via-rouge-500/20 to-rouge-500/20 blur-xl -z-10 opacity-50" />
           </motion.div>
         </AnimatePresence>
       </div>
 
       {/* Thumbnail strip */}
-      <div className="relative z-10 bg-slate-900/80 backdrop-blur-sm border-t border-slate-800/50 px-4 py-3">
+      <div className="relative z-10 bg-noir-900/80 backdrop-blur-sm border-t border-noir-800/50 px-4 py-3">
         <div className="flex items-center justify-center gap-2 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent pb-1">
           {screenshots.map((screenshot, index) => (
             <motion.button
@@ -192,7 +192,7 @@ export function ScreenshotLightbox({ screenshots, selectedIndex, onClose, onNavi
               whileTap={{ scale: 0.95 }}
               className={`relative flex-shrink-0 rounded-lg overflow-hidden transition-all duration-200 ${
                 index === selectedIndex
-                  ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900'
+                  ? 'ring-2 ring-rouge-500 ring-offset-2 ring-offset-noir-900'
                   : 'opacity-50 hover:opacity-100'
               }`}
               onClick={() => onNavigate(index)}
@@ -205,7 +205,7 @@ export function ScreenshotLightbox({ screenshots, selectedIndex, onClose, onNavi
               {index === selectedIndex && (
                 <motion.div 
                   layoutId="thumbnail-indicator"
-                  className="absolute inset-0 bg-indigo-500/10"
+                  className="absolute inset-0 bg-rouge-500/10"
                 />
               )}
             </motion.button>
@@ -213,10 +213,10 @@ export function ScreenshotLightbox({ screenshots, selectedIndex, onClose, onNavi
         </div>
         
         {/* Keyboard hints */}
-        <div className="flex items-center justify-center gap-4 mt-2 text-xs text-slate-500">
-          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">←</kbd> <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">→</kbd> Naviga</span>
-          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">+</kbd> <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">-</kbd> Zoom</span>
-          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Esc</kbd> Chiudi</span>
+        <div className="flex items-center justify-center gap-4 mt-2 text-xs text-noir-500">
+          <span><kbd className="px-1.5 py-0.5 rounded bg-noir-800 text-noir-400">←</kbd> <kbd className="px-1.5 py-0.5 rounded bg-noir-800 text-noir-400">→</kbd> Naviga</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-noir-800 text-noir-400">+</kbd> <kbd className="px-1.5 py-0.5 rounded bg-noir-800 text-noir-400">-</kbd> Zoom</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-noir-800 text-noir-400">Esc</kbd> Chiudi</span>
         </div>
       </div>
     </motion.div>,

@@ -170,20 +170,20 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
     <div className="max-w-4xl mx-auto">
       {/* Header con gradient */}
       <div className="relative mb-8">
-        <div className="absolute inset-0 bg-gradient-to-r from-violet-600/20 via-indigo-600/20 to-purple-600/20 rounded-2xl blur-xl" />
-        <div className="relative flex items-center gap-4 p-6 rounded-2xl bg-slate-900/80 border border-slate-700/50 backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-r from-rouge-600/20 via-rouge-600/20 to-rouge-600/20 rounded-2xl blur-xl" />
+        <div className="relative flex items-center gap-4 p-6 rounded-2xl bg-noir-900/80 border border-noir-700/50 backdrop-blur-sm">
           {onBack && (
-            <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 hover:bg-slate-800">
+            <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 hover:bg-noir-800">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
           <div className="flex-1">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-violet-200 to-indigo-200 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-rouge-200 to-rouge-200 bg-clip-text text-transparent">
               {t('common.nuovoThread')}
             </h1>
-            <p className="text-sm text-slate-400 mt-1">Condividi con la community</p>
+            <p className="text-sm text-noir-400 mt-1">Condividi con la community</p>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rouge-500 to-rouge-600 flex items-center justify-center shadow-lg shadow-rouge-500/30">
             <Send className="h-5 w-5 text-white" />
           </div>
         </div>
@@ -203,15 +203,15 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
         {/* Main Form - 2 columns */}
         <div className="lg:col-span-2 space-y-6">
           {/* Category Card */}
-          <div className="rounded-xl bg-slate-900/60 border border-slate-800/60 p-5 backdrop-blur-sm">
-            <Label className="text-sm font-medium text-slate-300 mb-3 block">{t('common.categoria')} *</Label>
+          <div className="rounded-xl bg-noir-900/60 border border-noir-800/60 p-5 backdrop-blur-sm">
+            <Label className="text-sm font-medium text-noir-300 mb-3 block">{t('common.categoria')} *</Label>
             <Select value={categorySlug} onValueChange={setCategorySlug}>
-              <SelectTrigger className="h-12 bg-slate-800/80 border-slate-700/50 hover:border-violet-500/50 transition-colors">
+              <SelectTrigger className="h-12 bg-noir-800/80 border-noir-700/50 hover:border-rouge-500/50 transition-colors">
                 <SelectValue placeholder={t('common.selezionaUnaCategoria')} />
               </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-700">
+              <SelectContent className="bg-noir-900 border-noir-700">
                 {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.slug} className="hover:bg-slate-800">
+                  <SelectItem key={cat.id} value={cat.slug} className="hover:bg-noir-800">
                     <span className="flex items-center gap-3">
                       <span className="text-lg">{cat.icon}</span>
                       <span className="font-medium">{cat.name}</span>
@@ -223,19 +223,19 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
           </div>
           
           {/* Title Card */}
-          <div className="rounded-xl bg-slate-900/60 border border-slate-800/60 p-5 backdrop-blur-sm">
-            <Label className="text-sm font-medium text-slate-300 mb-3 block">{t('common.titolo')} *</Label>
+          <div className="rounded-xl bg-noir-900/60 border border-noir-800/60 p-5 backdrop-blur-sm">
+            <Label className="text-sm font-medium text-noir-300 mb-3 block">{t('common.titolo')} *</Label>
             <Input
               placeholder={t('common.unTitoloDescrittivoPerIlTuoThread')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="h-12 bg-slate-800/80 border-slate-700/50 focus:border-violet-500/50 text-lg"
+              className="h-12 bg-noir-800/80 border-noir-700/50 focus:border-rouge-500/50 text-lg"
             />
           </div>
           
           {/* Content Card */}
-          <div className="rounded-xl bg-slate-900/60 border border-slate-800/60 p-5 backdrop-blur-sm">
-            <Label className="text-sm font-medium text-slate-300 mb-3 block">{t('common.contenuto')} *</Label>
+          <div className="rounded-xl bg-noir-900/60 border border-noir-800/60 p-5 backdrop-blur-sm">
+            <Label className="text-sm font-medium text-noir-300 mb-3 block">{t('common.contenuto')} *</Label>
             <Textarea
               placeholder={isTranslationPack 
                 ? t('common.descrizionePackPlaceholder')
@@ -243,7 +243,7 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
               }
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[250px] bg-slate-800/80 border-slate-700/50 focus:border-violet-500/50 resize-none"
+              className="min-h-[250px] bg-noir-800/80 border-noir-700/50 focus:border-rouge-500/50 resize-none"
             />
           </div>
         </div>
@@ -252,14 +252,14 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
         <div className="space-y-6">
           {/* Translation Pack Toggle */}
           <div className="rounded-xl overflow-hidden">
-            <div className={`p-5 transition-all ${isTranslationPack ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/40' : 'bg-slate-900/60 border border-slate-800/60'}`}>
+            <div className={`p-5 transition-all ${isTranslationPack ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/40' : 'bg-noir-900/60 border border-noir-800/60'}`}>
               <div className="flex items-start gap-4">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isTranslationPack ? 'bg-amber-500/30' : 'bg-slate-800'}`}>
-                  <Package className={`h-5 w-5 ${isTranslationPack ? 'text-amber-400' : 'text-slate-500'}`} />
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isTranslationPack ? 'bg-amber-500/30' : 'bg-noir-800'}`}>
+                  <Package className={`h-5 w-5 ${isTranslationPack ? 'text-amber-400' : 'text-noir-500'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white">{t('common.questoÈUnPackDiTraduzione')}</p>
-                  <p className="text-xs text-slate-400 mt-1">{t('common.attivaPerCondividereUnPackScaricabile')}</p>
+                  <p className="text-xs text-noir-400 mt-1">{t('common.attivaPerCondividereUnPackScaricabile')}</p>
                 </div>
                 <Switch
                   checked={isTranslationPack}
@@ -280,30 +280,30 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
               
               <div className="space-y-4">
                 <div>
-                  <Label className="text-xs text-slate-400">{t('common.nomeGioco')} *</Label>
+                  <Label className="text-xs text-noir-400">{t('common.nomeGioco')} *</Label>
                   <Input
                     placeholder="es. The Witcher 3"
                     value={gameName}
                     onChange={(e) => setGameName(e.target.value)}
-                    className="mt-1.5 h-10 bg-slate-900/80 border-amber-500/30 focus:border-amber-400"
+                    className="mt-1.5 h-10 bg-noir-900/80 border-amber-500/30 focus:border-amber-400"
                   />
                 </div>
                 
                 <div>
-                  <Label className="text-xs text-slate-400">Engine</Label>
+                  <Label className="text-xs text-noir-400">Engine</Label>
                   <Input
                     placeholder="es. Unity, Unreal"
                     value={engine}
                     onChange={(e) => setEngine(e.target.value)}
-                    className="mt-1.5 h-10 bg-slate-900/80 border-amber-500/30 focus:border-amber-400"
+                    className="mt-1.5 h-10 bg-noir-900/80 border-amber-500/30 focus:border-amber-400"
                   />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs text-slate-400">{t('common.linguaOriginale')}</Label>
+                    <Label className="text-xs text-noir-400">{t('common.linguaOriginale')}</Label>
                     <Select value={sourceLang} onValueChange={setSourceLang}>
-                      <SelectTrigger className="mt-1.5 h-10 bg-slate-900/80 border-amber-500/30">
+                      <SelectTrigger className="mt-1.5 h-10 bg-noir-900/80 border-amber-500/30">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -316,9 +316,9 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs text-slate-400">{t('common.linguaTraduzione')}</Label>
+                    <Label className="text-xs text-noir-400">{t('common.linguaTraduzione')}</Label>
                     <Select value={targetLang} onValueChange={setTargetLang}>
-                      <SelectTrigger className="mt-1.5 h-10 bg-slate-900/80 border-amber-500/30">
+                      <SelectTrigger className="mt-1.5 h-10 bg-noir-900/80 border-amber-500/30">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -334,33 +334,33 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs text-slate-400">{t('common.numeroStringhe')}</Label>
+                    <Label className="text-xs text-noir-400">{t('common.numeroStringhe')}</Label>
                     <Input
                       type="number"
                       placeholder="15000"
                       value={stringCount}
                       onChange={(e) => setStringCount(e.target.value)}
-                      className="mt-1.5 h-10 bg-slate-900/80 border-amber-500/30"
+                      className="mt-1.5 h-10 bg-noir-900/80 border-amber-500/30"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-slate-400">{t('common.versione')}</Label>
+                    <Label className="text-xs text-noir-400">{t('common.versione')}</Label>
                     <Input
                       placeholder="1.0"
                       value={version}
                       onChange={(e) => setVersion(e.target.value)}
-                      className="mt-1.5 h-10 bg-slate-900/80 border-amber-500/30"
+                      className="mt-1.5 h-10 bg-noir-900/80 border-amber-500/30"
                     />
                   </div>
                 </div>
                 
                 <div>
-                  <Label className="text-xs text-slate-400">{t('common.linkDownload')} *</Label>
+                  <Label className="text-xs text-noir-400">{t('common.linkDownload')} *</Label>
                   <Input
                     placeholder="https://..."
                     value={downloadUrl}
                     onChange={(e) => setDownloadUrl(e.target.value)}
-                    className="mt-1.5 h-10 bg-slate-900/80 border-amber-500/30"
+                    className="mt-1.5 h-10 bg-noir-900/80 border-amber-500/30"
                   />
                 </div>
               </div>
@@ -368,11 +368,11 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
           )}
 
           {/* Submit Card */}
-          <div className="rounded-xl bg-slate-900/60 border border-slate-800/60 p-5 space-y-4">
+          <div className="rounded-xl bg-noir-900/60 border border-noir-800/60 p-5 space-y-4">
             <Button 
               onClick={handleSubmit} 
               disabled={loading || !userId || !categorySlug || !title.trim() || !content.trim()}
-              className="w-full h-12 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30 font-semibold"
+              className="w-full h-12 bg-gradient-to-r from-rouge-600 to-rouge-600 hover:from-rouge-500 hover:to-rouge-500 shadow-lg shadow-rouge-500/30 font-semibold"
             >
               {loading ? (
                 <>
@@ -387,11 +387,11 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
               )}
             </Button>
             {onBack && (
-              <Button variant="ghost" onClick={onBack} className="w-full h-10 text-slate-400 hover:text-white">
+              <Button variant="ghost" onClick={onBack} className="w-full h-10 text-noir-400 hover:text-white">
                 {t('common.annulla')}
               </Button>
             )}
-            <p className="text-2xs text-slate-500 text-center">
+            <p className="text-2xs text-noir-500 text-center">
               * {t('common.campiObbligatori')}
             </p>
           </div>

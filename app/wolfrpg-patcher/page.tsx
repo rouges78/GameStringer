@@ -366,7 +366,7 @@ export default function WolfRpgPatcherPage() {
           </div>
           
           {game && (
-            <p className="text-2xs text-muted-foreground font-mono bg-slate-950/50 p-2 rounded mt-3 border border-slate-800/50 truncate">
+            <p className="text-2xs text-muted-foreground font-mono bg-noir-950/50 p-2 rounded mt-3 border border-noir-800/50 truncate">
               {game.path}
             </p>
           )}
@@ -401,7 +401,7 @@ export default function WolfRpgPatcherPage() {
                     className={`flex items-center justify-between p-2 rounded text-sm border transition-all ${
                       selectedFile === file.path 
                         ? 'bg-orange-500/20 border-orange-500/40' 
-                        : 'hover:bg-slate-800/50 border-transparent'
+                        : 'hover:bg-noir-800/50 border-transparent'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -472,7 +472,7 @@ export default function WolfRpgPatcherPage() {
                 </Button>
               </div>
             </div>
-            <Progress value={stats.percentage} className="h-2 bg-slate-800" />
+            <Progress value={stats.percentage} className="h-2 bg-noir-800" />
           </CardContent>
         </Card>
       )}
@@ -497,7 +497,7 @@ export default function WolfRpgPatcherPage() {
                 aria-label={t('common.cerca')} placeholder={t('wolfrpgPatcherPage.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 h-8 bg-slate-950/50 border-slate-700"
+                className="pl-9 h-8 bg-noir-950/50 border-noir-700"
               />
             </div>
           )}
@@ -513,14 +513,14 @@ export default function WolfRpgPatcherPage() {
                   return (
                     <div
                       key={entry.id}
-                      className={`p-3 rounded-lg border ${isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-slate-800'}`}
+                      className={`p-3 rounded-lg border ${isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-noir-800'}`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <Badge variant="outline" className="text-2xs">{entry.file}</Badge>
                       </div>
                       
                       <div className="mb-2">
-                        <p className="text-sm font-mono bg-slate-950/50 p-2 rounded border border-slate-800">
+                        <p className="text-sm font-mono bg-noir-950/50 p-2 rounded border border-noir-800">
                           {entry.original}
                         </p>
                       </div>
@@ -531,7 +531,7 @@ export default function WolfRpgPatcherPage() {
                             <Textarea
                               value={editedTranslation}
                               onChange={(e) => setEditedTranslation(e.target.value)}
-                              className="font-mono text-sm bg-slate-950/50 border-slate-700"
+                              className="font-mono text-sm bg-noir-950/50 border-noir-700"
                               rows={2}
                             />
                             <div className="flex gap-2">
@@ -555,7 +555,7 @@ export default function WolfRpgPatcherPage() {
                               setEditingId(entry.id);
                               setEditedTranslation(entry.translated);
                             }}
-                            className={`p-2 rounded cursor-pointer hover:bg-slate-800/50 transition-colors text-sm ${
+                            className={`p-2 rounded cursor-pointer hover:bg-noir-800/50 transition-colors text-sm ${
                               isUntranslated ? 'text-muted-foreground italic' : 'font-mono'
                             }`}
                           >

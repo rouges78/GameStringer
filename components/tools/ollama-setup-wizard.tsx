@@ -171,25 +171,25 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
   };
 
   const stepConfig = {
-    check: { title: t('ollamaSetupWizardComp.verificaOllama'), icon: RefreshCw, color: 'text-blue-400' },
+    check: { title: t('ollamaSetupWizardComp.verificaOllama'), icon: RefreshCw, color: 'text-noir-400' },
     install: { title: t('ollamaSetupWizardComp.installaOllama'), icon: Download, color: 'text-amber-400' },
     start: { title: t('ollamaSetupWizardComp.avviaOllama'), icon: Play, color: 'text-emerald-400' },
-    model: { title: t('ollamaSetupWizardComp.scaricaModelloAi'), icon: Cpu, color: 'text-violet-400' },
+    model: { title: t('ollamaSetupWizardComp.scaricaModelloAi'), icon: Cpu, color: 'text-rouge-400' },
     done: { title: t('ollamaSetupWizardComp.tuttoPronto'), icon: CheckCircle2, color: 'text-emerald-400' },
   };
 
   const StepIcon = stepConfig[step].icon;
 
   return (
-    <Card className="border-violet-500/20 bg-violet-950/20 backdrop-blur-sm max-w-lg mx-auto">
+    <Card className="border-rouge-500/20 bg-rouge-950/20 backdrop-blur-sm max-w-lg mx-auto">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-violet-500/20">
-            <Wand2 className="h-5 w-5 text-violet-400" />
+          <div className="p-2 rounded-lg bg-rouge-500/20">
+            <Wand2 className="h-5 w-5 text-rouge-400" />
           </div>
           <div>
             <CardTitle className="text-base">{t('ollamaSetupWizardComp.setupWizardAi')}</CardTitle>
-            <p className="text-xs text-slate-400 mt-0.5">{t('ollamaSetupWizardComp.configuraLaiLocaleInPochiClick')}</p>
+            <p className="text-xs text-noir-400 mt-0.5">{t('ollamaSetupWizardComp.configuraLaiLocaleInPochiClick')}</p>
           </div>
         </div>
         {/* Step indicator */}
@@ -197,8 +197,8 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
           {(['check', 'install', 'start', 'model', 'done'] as WizardStep[]).map((s, i) => (
             <React.Fragment key={s}>
               <div className={`h-1.5 flex-1 rounded-full ${
-                step === s ? 'bg-violet-500' : 
-                (['check', 'install', 'start', 'model', 'done'].indexOf(step) > i ? 'bg-violet-500/50' : 'bg-slate-700/30')
+                step === s ? 'bg-rouge-500' : 
+                (['check', 'install', 'start', 'model', 'done'].indexOf(step) > i ? 'bg-rouge-500/50' : 'bg-noir-700/30')
               }`} />
             </React.Fragment>
           ))}
@@ -221,21 +221,21 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
         {/* Step: Check */}
         {step === 'check' && (
           <div className="text-center py-4">
-            <Loader2 className="h-8 w-8 text-violet-400 animate-spin mx-auto mb-2" />
-            <p className="text-xs text-slate-400">{t('ollamaSetupWizardComp.verificoSeOllamaÈInstallato')}</p>
+            <Loader2 className="h-8 w-8 text-rouge-400 animate-spin mx-auto mb-2" />
+            <p className="text-xs text-noir-400">{t('ollamaSetupWizardComp.verificoSeOllamaÈInstallato')}</p>
           </div>
         )}
 
         {/* Step: Install */}
         {step === 'install' && (
           <div className="space-y-3">
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-noir-400">
               {t('ollamaSetupWizardComp.ollamaNonInstallatoDesc')}
             </p>
             {progress > 0 && (
               <div className="space-y-1">
                 <Progress value={progress} className="h-2" />
-                <p className="text-2xs text-slate-500">{progressMessage}</p>
+                <p className="text-2xs text-noir-500">{progressMessage}</p>
               </div>
             )}
             <div className="flex gap-2">
@@ -258,7 +258,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
               <span className="text-xs text-emerald-300">{t('ollamaSetupWizardComp.ollamaInstallato')} ({status?.version})</span>
             </div>
-            <p className="text-xs text-slate-400">{t('ollamaSetupWizardComp.ollamaInstallatoNonInEsecuzione')}</p>
+            <p className="text-xs text-noir-400">{t('ollamaSetupWizardComp.ollamaInstallatoNonInEsecuzione')}</p>
             <Button onClick={handleStart} disabled={loading} className="w-full" size="sm">
               {loading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Play className="h-3 w-3 mr-1" />}
               {t('ollamaSetupWizardComp.avviaOllama')}
@@ -273,7 +273,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
               <span className="text-xs text-emerald-300">{t('ollamaSetupWizardComp.ollamaInEsecuzione')}</span>
             </div>
-            <p className="text-xs text-slate-400">{t('ollamaSetupWizardComp.scegliModelloAi')}</p>
+            <p className="text-xs text-noir-400">{t('ollamaSetupWizardComp.scegliModelloAi')}</p>
             
             <div className="space-y-1.5 max-h-48 overflow-y-auto">
               {models.map(model => (
@@ -282,15 +282,15 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
                   onClick={() => setSelectedModel(model.name)}
                   className={`w-full text-left p-2 rounded-lg border transition-all ${
                     selectedModel === model.name
-                      ? 'border-violet-500/50 bg-violet-500/10'
-                      : 'border-slate-700/30 hover:border-slate-600/50'
+                      ? 'border-rouge-500/50 bg-rouge-500/10'
+                      : 'border-noir-700/30 hover:border-noir-600/50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-slate-200">{model.name}</span>
+                    <span className="text-xs font-medium text-noir-200">{model.name}</span>
                     <Badge variant="outline" className="text-micro px-1.5 py-0 h-4">{model.size}</Badge>
                   </div>
-                  <p className="text-2xs text-slate-400 mt-0.5">{model.description}</p>
+                  <p className="text-2xs text-noir-400 mt-0.5">{model.description}</p>
                 </button>
               ))}
             </div>
@@ -298,7 +298,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
             {progress > 0 && (
               <div className="space-y-1">
                 <Progress value={progress} className="h-2" />
-                <p className="text-2xs text-slate-500">{progressMessage}</p>
+                <p className="text-2xs text-noir-500">{progressMessage}</p>
               </div>
             )}
 
@@ -319,7 +319,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
             </div>
             <div>
               <p className="text-sm font-semibold text-emerald-300">{t('ollamaSetupWizardComp.aiLocaleConfigurata')}</p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-noir-400 mt-1">
                 {status?.models.length || 0} {t('ollamaSetupWizardComp.modelliInstallatiPuoiIniziare')}
               </p>
             </div>
@@ -342,7 +342,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
           <div className="mt-3 text-center">
             <button
               onClick={onComplete}
-              className="text-2xs text-slate-500 hover:text-slate-300 transition-colors"
+              className="text-2xs text-noir-500 hover:text-noir-300 transition-colors"
             >
               {t('ollamaSetupWizardComp.saltaUseroProviderCloud')}
             </button>

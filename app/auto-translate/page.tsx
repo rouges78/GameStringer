@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useCallback, useRef, useEffect, type ComponentType } from "react"
+import { useState, useCallback, useRef, useEffect, useMemo, type ComponentType } from "react"
 import { TARGET_LANGUAGES } from "@/lib/translation/target-languages"
 import { get, set, del } from 'idb-keyval'
 import { useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -113,6 +114,35 @@ interface TranslationProgress {
   percent: number
   startTime: number
   errors: string[]
+  /** Auto-stop per provider esauriti: un codice, non il testo tradotto dell'errore */
+  providersExhausted?: boolean
+}
+
+/** Esito di una traduzione finita con 0 stringhe tradotte (si torna alla scelta del gioco) */
+interface TranslationFailure {
+  reason: 'exhausted' | 'failed' | 'nothing'
+  errors: string[]
+}
+
+/** Voce di get_games / scan_all_steam_games_fast (models.rs GameInfo, campi snake_case) */
+interface LibraryGame {
+  id: string
+  title: string
+  platform?: string
+  install_path?: string | null
+  header_image?: string | null
+  is_installed?: boolean
+  steam_app_id?: number | null
+}
+
+/**
+ * Trova un gioco della libreria dal gameId degli ingressi (Dashboard, Progetti,
+ * job in background), che può essere l'id di libreria o l'appid Steam nudo.
+ */
+function findLibraryGame(games: LibraryGame[], gameId: string): LibraryGame | undefined {
+  const bare = gameId.replace(/^steam_/, '')
+  return games.find(g => g.id === gameId)
+    || games.find(g => g.id === `steam_${bare}` || (g.steam_app_id != null && String(g.steam_app_id) === bare))
 }
 
 // ============================================================================
@@ -201,13 +231,18 @@ export default function AutoTranslatePage() {
   const [gameInfo, setGameInfo] = useState<GameInfo | null>(null)
   const [isLoadingGame, setIsLoadingGame] = useState(false)
   const [gameError, setGameError] = useState<string | null>(null)
+  // Risoluzione del gioco da gameId (ingressi senza installPath) + selettore
+  const [isResolvingGame, setIsResolvingGame] = useState(false)
+  const [libraryGames, setLibraryGames] = useState<LibraryGame[] | null>(null)
+  const [libraryError, setLibraryError] = useState(false)
+  const libraryPromiseRef = useRef<Promise<LibraryGame[]> | null>(null)
 
   // Wizard state
   const [step, setStep] = useState<WizardStep>('select_game')
   const [files, setFiles] = useState<LoadedFile[]>([])
   const [sourceLang, setSourceLang] = useState('en')
   const [targetLang, setTargetLang] = useState('en')
-  useDefaultTargetLang(setTargetLang);
+  const { markTouched: markTargetLangTouched } = useDefaultTargetLang(setTargetLang);
   const [translator, _setTranslator] = useState('')
 
   // Carica lingua target dalle settings
@@ -231,6 +266,7 @@ export default function AutoTranslatePage() {
   const [stoppedByUser, setStoppedByUser] = useState(false)
   const [lastTranslatedPair, setLastTranslatedPair] = useState<{ original: string; translation: string; provider?: string } | null>(null)
   const [providerStats, setProviderStats] = useState<Record<string, { calls: number; success: number; totalMs: number }>>({})
+  const [translationFailure, setTranslationFailure] = useState<TranslationFailure | null>(null)
 
   // Review state
   const [reviewFilter, setReviewFilter] = useState<'all' | 'issues' | 'edited' | 'untranslated'>('issues')
@@ -265,8 +301,51 @@ export default function AutoTranslatePage() {
 
   // Checkpoint/resume state
   const [savedCheckpoint, setSavedCheckpoint] = useState<{ translatedStrings: Map<string, TranslatedString[]>; translatedCount: number; totalCount: number; savedAt: number; targetLang: string } | null>(null)
+  // Risultati di un job in background ("Apri risultati" nel widget), in attesa dei file del gioco
+  const [pendingBgResults, setPendingBgResults] = useState<Map<string, TranslatedString[]> | null>(null)
 
   const totalStrings = files.reduce((sum, f) => sum + f.parsed.strings.length, 0)
+  const installedGames = useMemo(
+    () => (libraryGames || []).filter(g => g.is_installed && g.install_path).sort((a, b) => a.title.localeCompare(b.title)),
+    [libraryGames]
+  )
+
+  // Libreria caricata una volta e condivisa tra risoluzione da gameId e selettore.
+  // get_games da solo non basta: i giochi Steam li legge da localconfig.vdf con
+  // install_path None e is_installed false. Quelli installati, con cartella e nome,
+  // arrivano da scan_all_steam_games_fast, la stessa fonte della Libreria; a parità
+  // di id vince quella.
+  const loadLibraryGames = useCallback((): Promise<LibraryGame[]> => {
+    if (!libraryPromiseRef.current) {
+      setLibraryError(false)
+      const p = Promise.allSettled([
+        invoke<LibraryGame[]>('scan_all_steam_games_fast'),
+        invoke<LibraryGame[]>('get_games'),
+      ]).then(results => {
+        const byId = new Map<string, LibraryGame>()
+        for (const r of results) {
+          if (r.status === 'rejected') {
+            clientLogger.warn(`[AutoTranslate] Fonte della libreria non disponibile: ${String(r.reason)}`)
+            continue
+          }
+          for (const g of Array.isArray(r.value) ? r.value : []) {
+            if (g?.id && !byId.has(g.id)) byId.set(g.id, g)
+          }
+        }
+        if (results.every(r => r.status === 'rejected')) throw new Error('scan_all_steam_games_fast e get_games falliti')
+        const list = [...byId.values()]
+        setLibraryGames(list)
+        return list
+      })
+      p.catch((err: unknown) => {
+        clientLogger.warn(`[AutoTranslate] Libreria non caricata: ${String(err)}`)
+        libraryPromiseRef.current = null
+        setLibraryError(true)
+      })
+      libraryPromiseRef.current = p
+    }
+    return libraryPromiseRef.current
+  }, [])
 
   // ============================================================================
   // CHECKPOINT: SAVE / LOAD / CLEAR
@@ -325,24 +404,106 @@ export default function AutoTranslatePage() {
   // ============================================================================
 
   useEffect(() => {
-    const gameId = searchParams.get('gameId')
-    const gameName = searchParams.get('gameName')
+    // "Apri risultati" dal widget dei job in background: il job dà gioco, lingue e risultati
+    const bgJobId = searchParams.get('bgJobId')
+    const bgManager = bgJobId ? getBackgroundTranslationManager() : null
+    const bgJob = bgJobId ? bgManager?.getJob(bgJobId) : undefined
+    if (bgJobId) {
+      const bgResults = bgJob ? bgManager?.getResults(bgJob.id) : undefined
+      if (bgJob && bgResults && bgResults.size > 0) {
+        setPendingBgResults(new Map<string, TranslatedString[]>(bgResults))
+        setSourceLang(bgJob.sourceLang)
+      } else {
+        clientLogger.warn(`[AutoTranslate] Job in background ${bgJobId} non trovato o senza risultati`)
+        toast.error(t('autoTranslatePage.bgJobNotFound'), { id: 'bg-job-not-found' })
+      }
+    }
+
+    // searchParams.get() restituisce già valori decodificati: un secondo
+    // decodeURIComponent rompeva i nomi con '%' (es. "100% Orange Juice").
+    const gameId = searchParams.get('gameId') || bgJob?.gameId || null
+    const gameName = searchParams.get('gameName') || bgJob?.gameName || null
     const installPath = searchParams.get('installPath')
-    const gameImage = searchParams.get('gameImage')
+    const gameImage = searchParams.get('gameImage') || bgJob?.gameImage || null
     const platform = searchParams.get('platform')
+    // Lingua del checkpoint/job da riprendere: senza, il banner "Riprendi" cercava la lingua di default
+    const urlTargetLang = bgJob?.targetLang || searchParams.get('targetLang')
+    if (urlTargetLang) {
+      markTargetLangTouched()
+      setTargetLang(urlTargetLang)
+    }
 
     if (gameId && gameName && installPath) {
       setGameInfo({
         gameId,
-        gameName: decodeURIComponent(gameName),
-        installPath: decodeURIComponent(installPath),
-        gameImage: gameImage ? decodeURIComponent(gameImage) : undefined,
-        platform: platform ? decodeURIComponent(platform) : undefined,
+        gameName,
+        installPath,
+        gameImage: gameImage || undefined,
+        platform: platform || undefined,
       })
       // Auto-scan file del gioco
-      scanGameFiles(decodeURIComponent(installPath))
+      scanGameFiles(installPath)
+      return
+    }
+
+    if (!gameId) {
+      // Nessun gioco passato ("Nuovo progetto"): serve la libreria per il selettore
+      loadLibraryGames().catch(() => { /* esito già in libraryError */ })
+      return
+    }
+
+    // Solo l'id (Dashboard, Progetti, job in background): risolvi il gioco
+    // dalla libreria invece di lasciare la pagina senza gioco né checkpoint.
+    // Il widget dei job vive nel layout, quindi qui si può arrivare con un gioco
+    // già caricato. Se è lo stesso, si tengono la sua cartella e i suoi file,
+    // anche se caricati a mano (i risultati del job vanno su quelli). Se è un
+    // altro, i suoi file non devono ricevere i risultati del job né finire sotto
+    // il gameId nuovo.
+    if (gameInfo?.gameId === gameId) return
+    if (gameInfo) {
+      setStep('select_game'); setGameInfo(null); setFiles([]); setGameError(null); setUnityDetected(false); setTranslationFailure(null)
+    }
+    let cancelled = false
+    setIsResolvingGame(true)
+    ;(async () => {
+      let game: LibraryGame | undefined
+      try {
+        game = findLibraryGame(await loadLibraryGames(), gameId)
+      } catch {
+        // già loggato in loadLibraryGames: il path resta sconosciuto
+      }
+      if (cancelled) return
+      setIsResolvingGame(false)
+      const path = game?.install_path || ''
+      setGameInfo({
+        gameId,
+        gameName: gameName || game?.title || gameId,
+        installPath: path,
+        gameImage: gameImage || game?.header_image || undefined,
+        platform: platform || game?.platform || undefined,
+      })
+      if (path) {
+        scanGameFiles(path)
+      } else {
+        clientLogger.warn(`[AutoTranslate] Cartella di installazione sconosciuta per ${gameId}`)
+        setGameError(t('autoTranslatePage.gamePathUnknown'))
+      }
+    })()
+    return () => {
+      cancelled = true
+      setIsResolvingGame(false)
     }
   }, [searchParams])
+
+  // I risultati del job in background si aprono in revisione appena ci sono i
+  // file del gioco: la revisione e la patch lavorano sui file caricati.
+  useEffect(() => {
+    if (!pendingBgResults || files.length === 0) return
+    setTranslatedStrings(pendingBgResults)
+    setSelectedFile(files[0].name)
+    setStep('review')
+    setPendingBgResults(null)
+  }, [pendingBgResults, files])
 
   // Controlla se esiste un checkpoint salvato quando cambia gameInfo o targetLang
   useEffect(() => {
@@ -418,7 +579,7 @@ export default function AutoTranslatePage() {
         } catch {}
         if (hasBepInEx) {
           try {
-            const translations = await invoke<Record<string, string>>('extractXunityTranslations', { gamePath: installPath, targetLang: targetLang || 'it' })
+            const translations = await invoke<Record<string, string>>('extract_xunity_translations', { gamePath: installPath, targetLang: targetLang || 'it' })
             stringCount = Object.keys(translations || {}).length
           } catch {}
         }
@@ -697,6 +858,20 @@ export default function AutoTranslatePage() {
     setGameError(null)
   }, [])
 
+  // Selettore nello stato vuoto: stessa strada dell'ingresso dalla libreria
+  const handlePickGame = useCallback((game: LibraryGame) => {
+    if (!game.install_path) return
+    setTranslationFailure(null)
+    setGameInfo({
+      gameId: game.id,
+      gameName: game.title,
+      installPath: game.install_path,
+      gameImage: game.header_image || undefined,
+      platform: game.platform || undefined,
+    })
+    scanGameFiles(game.install_path)
+  }, [scanGameFiles])
+
   // ============================================================================
   // START TRANSLATION
   // ============================================================================
@@ -748,6 +923,7 @@ export default function AutoTranslatePage() {
     setStoppedByUser(false)
     setLastTranslatedPair(null)
     setProviderStats({})
+    setTranslationFailure(null)
     setStep('translating')
     setIsTranslating(true)
     const startTime = Date.now()
@@ -755,6 +931,10 @@ export default function AutoTranslatePage() {
     const totalStrCount = files.reduce((s, f) => s + f.parsed.strings.length, 0)
     let globalTranslated = 0
     let consecutiveFailedBatches = 0
+    // Stop automatici distinti da quello dell'utente; esaurimento provider come codice
+    let autoStopped = false
+    let providersExhausted = false
+    let attemptedStrings = 0
 
     // 🎯 Crea/recupera progetto automaticamente
     let currentProject = null
@@ -846,7 +1026,7 @@ export default function AutoTranslatePage() {
           translatedStrings: globalTranslated, totalStrings: totalStrCount,
           currentStep: t('autoTranslatePage.translatingBatch').replace('{file}', file.name).replace('{n}', String(bi + 1)).replace('{total}', String(totalBatches)),
           percent: Math.round((globalTranslated / totalStrCount) * 100),
-          startTime, errors,
+          startTime, errors, providersExhausted,
         })
 
         // Check abort
@@ -854,6 +1034,7 @@ export default function AutoTranslatePage() {
           clientLogger.debug(`[AutoTranslate] Fermato dall'utente a ${globalTranslated} stringhe`)
           break
         }
+        attemptedStrings += batch.length
 
         try {
           let harvestedContext
@@ -894,6 +1075,8 @@ export default function AutoTranslatePage() {
             }
             if (consecutiveFailedBatches >= 3) {
               errors.push(t('autoTranslatePage.allProvidersBlocked'))
+              providersExhausted = true
+              autoStopped = true
               abortRef.current = true
               clientLogger.error('[AutoTranslate] Auto-stop: 3 batch consecutivi senza traduzioni')
             }
@@ -925,6 +1108,8 @@ export default function AutoTranslatePage() {
               clientLogger.warn(`[AutoTranslate] Batch con 0 output (${consecutiveFailedBatches}/5) — provider: ${result.provider}`)
               if (consecutiveFailedBatches >= 5) {
                 errors.push(t('autoTranslatePage.allProvidersBlocked'))
+                providersExhausted = true
+                autoStopped = true
                 abortRef.current = true
                 clientLogger.error('[AutoTranslate] Auto-stop: 5 batch consecutivi senza output')
               }
@@ -944,6 +1129,7 @@ export default function AutoTranslatePage() {
           consecutiveFailedBatches++
           if (consecutiveFailedBatches >= 3) {
             errors.push(t('autoTranslatePage.tooManyErrors'))
+            autoStopped = true
             abortRef.current = true
           }
         }
@@ -960,8 +1146,10 @@ export default function AutoTranslatePage() {
     setTranslatedStrings(allTranslated)
     saveCheckpoint(allTranslated)
     const wasStopped = abortRef.current
+    const userStopped = wasStopped && !autoStopped
     const actualTranslated = [...allTranslated.values()].flat().filter(t => t.translation).length
-    setProgress(prev => prev ? { ...prev, percent: wasStopped ? Math.round((actualTranslated / totalStrCount) * 100) : 100, currentStep: wasStopped ? t('autoTranslatePage.stoppedSaved').replace('{n}', String(actualTranslated)) : t('autoTranslatePage.completed') } : null)
+    const nothingTranslated = actualTranslated === 0
+    setProgress(prev => prev ? { ...prev, providersExhausted, percent: wasStopped ? Math.round((actualTranslated / totalStrCount) * 100) : 100, currentStep: wasStopped ? t('autoTranslatePage.stoppedSaved').replace('{n}', String(actualTranslated)) : t('autoTranslatePage.completed') } : null)
     setIsTranslating(false)
     
     // 🎯 Aggiorna progetto con progresso finale
@@ -977,28 +1165,43 @@ export default function AutoTranslatePage() {
       }
     }
     if (files.length > 0) setSelectedFile(files[0].name)
+    // Vai a review solo se ci sono traduzioni utili. Con 0 stringhe la pagina
+    // restava su "Traduzione in corso" con uno Stop inerte: si torna alla scelta
+    // con il gioco intatto, il motivo e Riprova (niente errore se ha fermato l'utente).
+    if (!nothingTranslated) {
+      setStep('review')
+    } else {
+      setStep('select_game')
+      if (!userStopped) {
+        setTranslationFailure({
+          reason: providersExhausted ? 'exhausted' : attemptedStrings > 0 ? 'failed' : 'nothing',
+          errors: [...errors],
+        })
+      }
+    }
     // Notifica OS traduzione completata/fermata
     try {
       await invoke('notify_background_operation_completed', {
         operationType: 'translation',
         operationId: gameInfo?.gameId || 'auto-translate',
-        success: !wasStopped,
-        details: wasStopped
+        success: !wasStopped && !nothingTranslated,
+        details: nothingTranslated
+          ? t('autoTranslatePage.noStringsTranslated')
+          : wasStopped
           ? t('autoTranslatePage.notifyPaused').replace('{n}', String(actualTranslated)).replace('{total}', String(totalStrCount)).replace('{pct}', String(Math.round((actualTranslated / totalStrCount) * 100)))
           : t('autoTranslatePage.notifyCompleted').replace('{n}', String(actualTranslated)).replace('{game}', gameTitle),
       })
     } catch {}
     // Tray notification bridge event
     if (typeof window !== 'undefined') {
+      const failureErrors = errors.length > 0 ? [...errors] : [t('autoTranslatePage.noStringsTranslated')]
       window.dispatchEvent(new CustomEvent('bg-translation-event', {
         detail: {
-          type: wasStopped ? 'job_failed' : 'job_completed',
-          job: { gameName: gameTitle || t('common.game'), translatedCount: actualTranslated, errors: wasStopped ? [t('autoTranslatePage.stoppedByUser')] : [] }
+          type: wasStopped || nothingTranslated ? 'job_failed' : 'job_completed',
+          job: { gameName: gameTitle || t('common.game'), translatedCount: actualTranslated, errors: userStopped ? [t('autoTranslatePage.stoppedByUser')] : wasStopped || nothingTranslated ? failureErrors : [] }
         }
       }));
     }
-    // Vai a review solo se ci sono traduzioni utili
-    if (actualTranslated > 0) setStep('review')
   }, [files, sourceLang, targetLang, useContextHarvest, gameInfo, loadCheckpoint, clearCheckpoint, saveCheckpoint])
 
   // ============================================================================
@@ -1638,7 +1841,10 @@ export default function AutoTranslatePage() {
     setStep('select_game'); setFiles([]); setTranslatedStrings(new Map()); setProgress(null)
     setPatchResult(null); setSelectedFile(null); setEditingKey(null); setGameInfo(null); setGameError(null)
     setUnityDetected(false); setBepinexStatus('idle'); setBepinexSteps([]); setBepinexError(null)
-  }, [])
+    setTranslationFailure(null); setPendingBgResults(null)
+    // Senza gioco si torna al selettore: serve la libreria
+    loadLibraryGames().catch(() => { /* esito già in libraryError */ })
+  }, [loadLibraryGames])
 
   // ============================================================================
   // STEP INDICATOR
@@ -1660,7 +1866,7 @@ export default function AutoTranslatePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 p-4">
+      <div className="bg-gradient-to-r from-rouge-600 via-rouge-600 to-rouge-600 p-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             {gameInfo?.gameId && (
@@ -1724,6 +1930,46 @@ export default function AutoTranslatePage() {
         {/* ================================================================ */}
         {step === 'select_game' && (
           <div className="space-y-4">
+            {/* Traduzione finita con 0 stringhe tradotte: motivo + Riprova, gioco intatto */}
+            {translationFailure && (
+              <Card className="border-red-500/30 bg-red-500/5">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <XCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-semibold text-red-300">
+                        {translationFailure.reason === 'exhausted' ? t('autoTranslatePage.translationProvidersExhausted') : t('autoTranslatePage.noStringsTranslated')}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {translationFailure.reason === 'nothing' ? t('autoTranslatePage.nothingToTranslate')
+                          : translationFailure.reason === 'exhausted' ? t('autoTranslatePage.allProvidersBlocked')
+                          : t('autoTranslatePage.noStringsTranslatedDesc')}
+                      </p>
+                    </div>
+                    {translationFailure.reason !== 'nothing' && (
+                      <Button variant="outline" size="sm" className="h-8 text-xs shrink-0" onClick={() => handleStartTranslation(false)} disabled={files.length === 0 || isTranslating}>
+                        <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> {t('autoTranslatePage.retry')}
+                      </Button>
+                    )}
+                  </div>
+                  {translationFailure.reason === 'exhausted' ? (
+                    <div className="bg-black/20 rounded p-2 space-y-1">
+                      <p className="text-2xs font-medium text-amber-200/80">{t('autoTranslatePage.howToProceed')}</p>
+                      <ul className="text-2xs text-amber-300/60 space-y-0.5 list-disc list-inside">
+                        <li>{t('autoTranslatePage.wait25MinutesAndClick')} <strong>{t('autoTranslatePage.retry')}</strong> {t('autoTranslatePage.toContinue')}</li>
+                        <li>{t('autoTranslatePage.configureAnAiProviderGeminiDee')} <strong>{t('autoTranslatePage.settingsApiKeys')}</strong></li>
+                        <li>{t('autoTranslatePage.install')} <strong>{t('ocrTranslator.ollamaOption')}</strong> {t('autoTranslatePage.toTranslateOffline')}</li>
+                      </ul>
+                    </div>
+                  ) : translationFailure.errors.length > 0 && (
+                    <div className="bg-red-500/10 rounded p-2 text-xs text-red-400">
+                      {translationFailure.errors.map((e, i) => <div key={i}>⚠️ {e}</div>)}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Banner Riprendi Traduzione (checkpoint trovato) */}
             {savedCheckpoint && gameInfo && (
               <Card className="border-amber-500/40 bg-amber-500/10">
@@ -1741,10 +1987,11 @@ export default function AutoTranslatePage() {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="xs" className="text-xs bg-amber-600 hover:bg-amber-700" onClick={handleResumeTranslation}>
+                      {/* Senza file caricati (scansione in corso o fallita) Rivedi/Riprendi non possono funzionare */}
+                      <Button size="xs" className="text-xs bg-amber-600 hover:bg-amber-700" onClick={handleResumeTranslation} disabled={files.length === 0}>
                         <Eye className="h-3 w-3 mr-1" /> {t('autoTranslatePage.review')}
                       </Button>
-                      <Button size="xs" className="text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => handleStartTranslation(true)}>
+                      <Button size="xs" className="text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => handleStartTranslation(true)} disabled={files.length === 0}>
                         <Play className="h-3 w-3 mr-1" /> {t('autoTranslatePage.resume')}</Button>
                       <Button size="sm" variant="outline" className="h-8 text-xs border-amber-500/30 text-amber-300 hover:bg-amber-500/20" onClick={clearCheckpoint}>
                         <XCircle className="h-3 w-3 mr-1" /> {t('autoTranslatePage.restart')}
@@ -1757,7 +2004,7 @@ export default function AutoTranslatePage() {
 
             {/* Game Card (se selezionato) */}
             {gameInfo && (
-              <Card className="bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-violet-500/10 border-purple-500/30 overflow-hidden">
+              <Card className="bg-gradient-to-r from-rouge-500/10 via-rouge-500/5 to-rouge-500/10 border-rouge-500/30 overflow-hidden">
                 <CardContent className="p-5 flex items-center gap-5">
                   {gameInfo.gameImage && (
                     <img src={gameInfo.gameImage} alt={gameInfo.gameName} className="w-32 h-[72px] object-cover rounded-lg shadow-lg" />
@@ -1782,8 +2029,8 @@ export default function AutoTranslatePage() {
                           <span className="text-xs text-muted-foreground">{t('autoTranslatePage.files')}</span>
                         </div>
                         <div className="flex items-center gap-2 justify-end">
-                          <Languages className="h-4 w-4 text-violet-400" />
-                          <span className="text-2xl font-black text-violet-400">{totalStrings.toLocaleString()}</span>
+                          <Languages className="h-4 w-4 text-rouge-400" />
+                          <span className="text-2xl font-black text-rouge-400">{totalStrings.toLocaleString()}</span>
                           <span className="text-xs text-muted-foreground">{t('autoTranslatePage.strings')}</span>
                         </div>
                       </div>
@@ -1797,16 +2044,44 @@ export default function AutoTranslatePage() {
             {!gameInfo && (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                  <h2 className="text-lg font-bold">{t('autoTranslatePage.selectGame')}</h2>
-                  <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                    {t('autoTranslatePage.goToThe')} <strong>{t('nav.library')}</strong>{t('autoTranslatePage.openGameClick')} <strong>{t('autoTranslatePage.translateAllQuoted')}</strong>{t('autoTranslatePage.filesLoadedAuto')}</p>
-                  <Separator className="my-4" />
-                  <p className="text-xs text-muted-foreground">{t('autoTranslatePage.orLoadManually')}</p>
-                  <Button variant="outline" size="sm" className="mt-2 h-7 text-xs" onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="h-3 w-3 mr-1" /> {t('autoTranslatePage.loadFiles')}
-                  </Button>
-                  <input ref={fileInputRef} type="file" accept=".json,.csv,.po,.pot,.xlf,.xliff,.resx,.strings,.ini,.xml,.properties,.yaml,.yml,.txt" multiple onChange={handleManualUpload} className="hidden" />
+                  {isResolvingGame ? (
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" /> {t('common.loading')}
+                    </div>
+                  ) : (
+                    <>
+                      <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                      <h2 className="text-lg font-bold">{t('autoTranslatePage.selectGame')}</h2>
+                      <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
+                        {t('autoTranslatePage.goToThe')} <strong>{t('nav.library')}</strong>{t('autoTranslatePage.openGameClick')} <strong>{t('autoTranslatePage.translateAllQuoted')}</strong>{t('autoTranslatePage.filesLoadedAuto')}</p>
+                      {/* Selettore: i giochi installati della libreria, senza passare dalla Libreria */}
+                      <div className="mt-4 max-w-sm mx-auto text-left">
+                        {libraryError ? (
+                          <p className="text-xs text-red-400 text-center">{t('autoTranslatePage.libraryLoadFailed')}</p>
+                        ) : libraryGames === null ? (
+                          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('common.loading')}
+                          </div>
+                        ) : installedGames.length > 0 ? (
+                          <>
+                            <Label className="text-2xs">{t('autoTranslatePage.pickInstalledGame')}</Label>
+                            <select value="" onChange={(e) => { const g = installedGames.find(x => x.id === e.target.value); if (g) handlePickGame(g) }}
+                              className="w-full h-7 text-xs bg-background border rounded px-2 mt-0.5">
+                              <option value="" disabled>{t('autoTranslatePage.pickGamePlaceholder')}</option>
+                              {installedGames.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
+                            </select>
+                          </>
+                        ) : (
+                          <p className="text-xs text-muted-foreground text-center">{t('autoTranslatePage.noInstalledGames')}</p>
+                        )}
+                      </div>
+                      <Separator className="my-4" />
+                      <p className="text-xs text-muted-foreground">{t('autoTranslatePage.orLoadManually')}</p>
+                      <Button variant="outline" size="sm" className="mt-2 h-7 text-xs" onClick={() => fileInputRef.current?.click()}>
+                        <Upload className="h-3 w-3 mr-1" /> {t('autoTranslatePage.loadFiles')}
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -1820,6 +2095,10 @@ export default function AutoTranslatePage() {
                     <div className="flex-1">
                       <p className="text-xs whitespace-pre-line">{gameError}</p>
                     </div>
+                    {/* Il messaggio invita a caricare i file a mano: il pulsante deve esserci */}
+                    <Button variant="outline" size="sm" className="h-7 text-xs shrink-0" onClick={() => fileInputRef.current?.click()}>
+                      <Upload className="h-3 w-3 mr-1" /> {t('autoTranslatePage.loadFiles')}
+                    </Button>
                   </CardContent>
                 </Card>
                 {/* Suggerimento Binary Patcher */}
@@ -1931,12 +2210,12 @@ export default function AutoTranslatePage() {
                             s.startsWith('✓') ? 'text-green-400' :
                             s.startsWith('❌') ? 'text-red-400' :
                             s.startsWith('⚠') ? 'text-yellow-400' :
-                            s.startsWith('🎉') || s.startsWith('📌') ? 'text-blue-300 font-semibold' :
+                            s.startsWith('🎉') || s.startsWith('📌') ? 'text-noir-300 font-semibold' :
                             'text-muted-foreground'
                           )}>{s}</p>
                         ))}
                         {bepinexStatus === 'installing' && (
-                          <p className="text-blue-400 animate-pulse">{t('autoTranslatePage.installingInProgress')}</p>
+                          <p className="text-noir-400 animate-pulse">{t('autoTranslatePage.installingInProgress')}</p>
                         )}
                       </div>
                     </ScrollArea>
@@ -1986,9 +2265,9 @@ export default function AutoTranslatePage() {
                   {/* Credits */}
                   <div className="pt-2 border-t border-white/5">
                     <p className="text-2xs text-muted-foreground/60">
-                      {t('autoTranslatePage.poweredBy')} <a href="https://github.com/BepInEx/BepInEx" target="_blank" rel="noopener" className="text-blue-400/70 hover:text-blue-400 underline">BepInEx</a> (BepInEx Team) 
+                      {t('autoTranslatePage.poweredBy')} <a href="https://github.com/BepInEx/BepInEx" target="_blank" rel="noopener" className="text-noir-400/70 hover:text-noir-400 underline">BepInEx</a> (BepInEx Team) 
                       {' '}{'&'}{' '}
-                      <a href="https://github.com/bbepis/XUnity.AutoTranslator" target="_blank" rel="noopener" className="text-blue-400/70 hover:text-blue-400 underline">XUnity.AutoTranslator</a> (bbepis).
+                      <a href="https://github.com/bbepis/XUnity.AutoTranslator" target="_blank" rel="noopener" className="text-noir-400/70 hover:text-noir-400 underline">XUnity.AutoTranslator</a> (bbepis).
                       {' '}{t('autoTranslatePage.thanksAuthors')}</p>
                   </div>
                   </div>
@@ -2005,7 +2284,7 @@ export default function AutoTranslatePage() {
                   <CardHeader className="py-2.5 px-4">
                     <CardTitle className="text-sm flex items-center justify-between">
                       <span>{files.length} {t('autoTranslatePage.translatableFiles')}</span>
-                      <Badge className="bg-violet-500/15 text-violet-400 border-violet-500/30 text-xs">{totalStrings.toLocaleString()} {t('autoTranslatePage.strings')}</Badge>
+                      <Badge className="bg-rouge-500/15 text-rouge-400 border-rouge-500/30 text-xs">{totalStrings.toLocaleString()} {t('autoTranslatePage.strings')}</Badge>
                     </CardTitle>
                   </CardHeader>
                   <ScrollArea className="h-[220px]">
@@ -2077,7 +2356,7 @@ export default function AutoTranslatePage() {
                     <Button
                       onClick={() => handleStartTranslation(false)}
                       disabled={files.length === 0 || isTranslating}
-                      className="w-full h-10 text-sm font-bold bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600"
+                      className="w-full h-10 text-sm font-bold bg-gradient-to-r from-rouge-500 to-rouge-500 hover:from-rouge-600 hover:to-rouge-600"
                     >
                       <Zap className="h-4 w-4 mr-2" />
                       {t('autoTranslatePage.translateNStrings').replace('{count}', String(totalStrings))}
@@ -2086,7 +2365,7 @@ export default function AutoTranslatePage() {
                       onClick={handleSendToBackground}
                       disabled={files.length === 0 || isTranslating || !gameInfo}
                       variant="outline"
-                      className="w-full h-8 text-xs border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 hover:text-indigo-200"
+                      className="w-full h-8 text-xs border-rouge-500/30 text-rouge-300 hover:bg-rouge-500/20 hover:text-rouge-200"
                     >
                       <Activity className="h-3.5 w-3.5 mr-1.5" />
                       {t('autoTranslatePage.translateInBackground')}
@@ -2121,6 +2400,9 @@ export default function AutoTranslatePage() {
                 )}
               </div>
             )}
+
+            {/* Input condiviso da "Carica file" (stato vuoto e errore di scansione) */}
+            <input ref={fileInputRef} type="file" accept=".json,.csv,.po,.pot,.xlf,.xliff,.resx,.strings,.ini,.xml,.properties,.yaml,.yml,.txt" multiple onChange={handleManualUpload} className="hidden" />
           </div>
         )}
 
@@ -2139,7 +2421,7 @@ export default function AutoTranslatePage() {
             <Card className="overflow-hidden border-primary/20">
               <div className="h-1.5 bg-muted overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-violet-500 via-indigo-500 to-purple-500 transition-all duration-700 ease-out relative"
+                  className="h-full bg-gradient-to-r from-rouge-500 via-rouge-500 to-rouge-500 transition-all duration-700 ease-out relative"
                   style={{ width: `${progress.percent}%` }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-pulse" />
@@ -2151,7 +2433,7 @@ export default function AutoTranslatePage() {
                   <div className="flex items-center gap-4">
                     <div className="relative">
                       <div className="h-16 w-16 rounded-full border-4 border-primary/20 flex items-center justify-center">
-                        <span className="text-2xl font-black bg-gradient-to-br from-violet-400 to-indigo-400 bg-clip-text text-transparent">
+                        <span className="text-2xl font-black bg-gradient-to-br from-rouge-400 to-rouge-400 bg-clip-text text-transparent">
                           {progress.percent}%
                         </span>
                       </div>
@@ -2203,7 +2485,7 @@ export default function AutoTranslatePage() {
                       <Timer className="h-3 w-3" /> {t('autoTranslatePage.elapsed')}</div>
                   </div>
                   <div className="bg-muted/40 rounded-lg p-3 text-center">
-                    <div className="text-2xl font-bold tabular-nums text-violet-400">{remaining !== null ? `~${remaining}m` : '...'}</div>
+                    <div className="text-2xl font-bold tabular-nums text-rouge-400">{remaining !== null ? `~${remaining}m` : '...'}</div>
                     <div className="text-2xs text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
                       <TrendingUp className="h-3 w-3" /> ETA
                     </div>
@@ -2270,7 +2552,7 @@ export default function AutoTranslatePage() {
                 {/* Errori */}
                 {progress.errors.length > 0 && (
                   <div className="space-y-2">
-                    {progress.errors.some(e => e.includes('translation providers are blocked') || e.includes('provider di traduzione sono bloccati')) ? (
+                    {progress.providersExhausted ? (
                       <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 space-y-2">
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
@@ -2314,7 +2596,7 @@ export default function AutoTranslatePage() {
               <Card className="p-2.5"><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.translated')}</div><div className="text-lg font-bold">{totalTranslated - untranslatedCount}</div></Card>
               <Card className="p-2.5"><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.avgScore')}</div><div className={cn("text-lg font-bold", avgScore >= 80 ? "text-emerald-400" : avgScore >= 60 ? "text-yellow-400" : "text-red-400")}>{avgScore}%</div></Card>
               <Card className="p-2.5"><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.toReview')}</div><div className="text-lg font-bold text-yellow-400">{issueCount}</div></Card>
-              <Card className="p-2.5"><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.edited')}</div><div className="text-lg font-bold text-blue-400">{editedCount}</div></Card>
+              <Card className="p-2.5"><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.edited')}</div><div className="text-lg font-bold text-noir-400">{editedCount}</div></Card>
               <Card className={cn("p-2.5", untranslatedCount > 0 ? "border-red-500/30 bg-red-500/5" : "")}>
                 <div className="text-2xs text-muted-foreground">{t('autoTranslatePage.untranslated')}</div>
                 <div className="text-lg font-bold text-red-400">{untranslatedCount}</div>
@@ -2334,12 +2616,12 @@ export default function AutoTranslatePage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button onClick={handleGeneratePatch} className="h-9 text-xs bg-gradient-to-r from-violet-500 to-indigo-500">
+              <Button onClick={handleGeneratePatch} className="h-9 text-xs bg-gradient-to-r from-rouge-500 to-rouge-500">
                 <Package className="h-3.5 w-3.5 mr-1.5" /> {t('autoTranslatePage.createPatch')}</Button>
               {gameInfo?.installPath && isUnrealEngine(gameInfo.installPath) && (
                 <Button
                   onClick={handleTestPatch}
-                  className="h-9 text-xs bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
+                  className="h-9 text-xs bg-gradient-to-r from-rouge-500 to-rouge-500 hover:from-rouge-600 hover:to-rouge-600"
                   disabled={testPatchStatus !== 'idle' && testPatchStatus !== 'done' && testPatchStatus !== 'error'}
                 >
                   <Play className="h-3.5 w-3.5 mr-1.5" /> {t('autoTranslatePage.testPatch')}</Button>
@@ -2348,13 +2630,13 @@ export default function AutoTranslatePage() {
 
             {/* Pannello Test Patch UE (visibile anche in review) */}
             {testPatchStatus !== 'idle' && (
-              <Card className="border-violet-500/30 bg-violet-500/5">
+              <Card className="border-rouge-500/30 bg-rouge-500/5">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-xs flex items-center gap-2">
                     {testPatchStatus === 'monitoring' && <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" /></span>}
                     {testPatchStatus === 'error' && <span className="h-2 w-2 rounded-full bg-red-500" />}
                     {testPatchStatus === 'done' && <span className="h-2 w-2 rounded-full bg-emerald-500" />}
-                    {(testPatchStatus === 'backing_up' || testPatchStatus === 'applying' || testPatchStatus === 'launching' || testPatchStatus === 'restoring') && <Loader2 className="h-3 w-3 animate-spin text-violet-400" />}
+                    {(testPatchStatus === 'backing_up' || testPatchStatus === 'applying' || testPatchStatus === 'launching' || testPatchStatus === 'restoring') && <Loader2 className="h-3 w-3 animate-spin text-rouge-400" />}
                     <span>{t('autoTranslatePage.testPatch')}</span>
                     <span className="text-muted-foreground font-normal">
                       — {testPatchStatus === 'backing_up' ? 'Cleaning previous patches...' : testPatchStatus === 'applying' ? 'Applying translations...' : testPatchStatus === 'launching' ? 'Launching game...' : testPatchStatus === 'monitoring' ? 'Running — check in-game' : testPatchStatus === 'restoring' ? 'Restoring originals...' : testPatchStatus === 'error' ? 'Error' : 'Completed'}
@@ -2367,7 +2649,7 @@ export default function AutoTranslatePage() {
                       const currentIdx = steps.indexOf(testPatchStatus)
                       const isDone = testPatchStatus === 'done' || (currentIdx >= 0 && idx < currentIdx)
                       const isCurrent = testPatchStatus === s
-                      return <div key={s} className={cn("h-1 flex-1 rounded-full transition-colors", isDone ? "bg-emerald-500" : isCurrent ? "bg-violet-500 animate-pulse" : testPatchStatus === 'error' && idx <= Math.max(currentIdx, 0) ? "bg-red-500/60" : "bg-muted")} />
+                      return <div key={s} className={cn("h-1 flex-1 rounded-full transition-colors", isDone ? "bg-emerald-500" : isCurrent ? "bg-rouge-500 animate-pulse" : testPatchStatus === 'error' && idx <= Math.max(currentIdx, 0) ? "bg-red-500/60" : "bg-muted")} />
                     })}
                   </div>
                 </CardHeader>
@@ -2375,7 +2657,7 @@ export default function AutoTranslatePage() {
                   <ScrollArea className="h-[180px] rounded border border-border/50 bg-background/50 p-2">
                     <div className="space-y-0.5 text-2xs font-mono">
                       {testPatchLogs.map((log, i) => (
-                        <div key={i} className={cn("text-muted-foreground", log.includes('✅') && "text-emerald-400/80", log.includes('❌') && "text-red-400/80", log.includes('⚠️') && "text-yellow-400/80", log.includes('📦') && "text-violet-400/80")}>{log}</div>
+                        <div key={i} className={cn("text-muted-foreground", log.includes('✅') && "text-emerald-400/80", log.includes('❌') && "text-red-400/80", log.includes('⚠️') && "text-yellow-400/80", log.includes('📦') && "text-rouge-400/80")}>{log}</div>
                       ))}
                       <div ref={(el) => { el?.scrollIntoView({ behavior: 'smooth' }) }} />
                     </div>
@@ -2438,7 +2720,7 @@ export default function AutoTranslatePage() {
                       const finalTranslation = s.isEdited ? (s.editedTranslation || s.translation) : s.translation
                       return (
                         <div key={`${s.key}-${i}`} className={cn("p-2 rounded border transition-colors",
-                          !s.qaPassed ? "border-yellow-500/20 bg-yellow-500/5" : s.isEdited ? "border-blue-500/20 bg-blue-500/5" : "border-transparent hover:bg-muted/30")}>
+                          !s.qaPassed ? "border-yellow-500/20 bg-yellow-500/5" : s.isEdited ? "border-noir-500/20 bg-noir-500/5" : "border-transparent hover:bg-muted/30")}>
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
                               <div className="text-micro text-muted-foreground/60 font-mono truncate mb-0.5">{s.key}</div>
@@ -2454,11 +2736,11 @@ export default function AutoTranslatePage() {
                               ) : (
                                 <div className="text-xs mt-0.5 flex items-start gap-1">
                                   {finalTranslation ? (
-                                    <span className={s.isEdited ? "text-blue-400" : ""}><DiffHighlight original={s.original} translated={finalTranslation} /></span>
+                                    <span className={s.isEdited ? "text-noir-400" : ""}><DiffHighlight original={s.original} translated={finalTranslation} /></span>
                                   ) : (
                                     <span className="text-red-400 italic">{t('autoTranslatePage.untranslated')}</span>
                                   )}
-                                  {s.isEdited && <Badge className="text-2xs h-3 px-1 bg-blue-500/20 text-blue-400">{t('autoTranslatePage.edited')}</Badge>}
+                                  {s.isEdited && <Badge className="text-2xs h-3 px-1 bg-noir-500/20 text-noir-400">{t('autoTranslatePage.edited')}</Badge>}
                                 </div>
                               )}
                             </div>
@@ -2499,7 +2781,7 @@ export default function AutoTranslatePage() {
               </Card>
             ) : patchResult ? (
               <>
-                <Card className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/30">
+                <Card className="bg-gradient-to-r from-emerald-500/10 to-noir-500/10 border-emerald-500/30">
                   <CardContent className="p-6 text-center">
                     <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto mb-3" />
                     <h2 className="text-xl font-bold">{t('autoTranslatePage.patchReady')}</h2>
@@ -2507,12 +2789,12 @@ export default function AutoTranslatePage() {
                       {patchResult.stats.translatedStrings}/{patchResult.stats.totalStrings}  {t('autoTranslatePage.stringsTranslated')} ({patchResult.stats.coveragePercent}%)
                     </p>
                     <div className="flex flex-wrap justify-center gap-3 mt-4">
-                      <Button onClick={handleDownloadZip} size="lg" className="bg-gradient-to-r from-emerald-500 to-teal-500">
+                      <Button onClick={handleDownloadZip} size="lg" className="bg-gradient-to-r from-emerald-500 to-noir-500">
                         <Download className="h-4 w-4 mr-2" /> {t('autoTranslatePage.downloadZip')}</Button>
                       <Button
                         onClick={handleTestPatch}
                         size="lg"
-                        className="bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
+                        className="bg-gradient-to-r from-rouge-500 to-rouge-500 hover:from-rouge-600 hover:to-rouge-600"
                         disabled={testPatchStatus !== 'idle' && testPatchStatus !== 'done' && testPatchStatus !== 'error'}
                       >
                         <Play className="h-4 w-4 mr-2" /> {t('autoTranslatePage.testPatch')}</Button>
@@ -2525,7 +2807,7 @@ export default function AutoTranslatePage() {
                   <Card className="p-3 text-center"><div className="text-2xl font-bold">{patchResult.stats.totalFiles}</div><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.files')}</div></Card>
                   <Card className="p-3 text-center"><div className="text-2xl font-bold">{patchResult.stats.translatedStrings}</div><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.strings')}</div></Card>
                   <Card className="p-3 text-center"><div className="text-2xl font-bold text-emerald-400">{patchResult.stats.coveragePercent}%</div><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.coverage')}</div></Card>
-                  <Card className="p-3 text-center"><div className="text-2xl font-bold text-blue-400">{avgScore}%</div><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.quality')}</div></Card>
+                  <Card className="p-3 text-center"><div className="text-2xl font-bold text-noir-400">{avgScore}%</div><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.quality')}</div></Card>
                 </div>
                 <Card className="border-dashed">
                   <CardHeader className="py-2 px-4"><CardTitle className="text-xs flex items-center gap-2"><Globe className="h-3.5 w-3.5" /> {t('autoTranslatePage.exportAs')}</CardTitle></CardHeader>
@@ -2573,24 +2855,24 @@ export default function AutoTranslatePage() {
                 {testPatchStatus !== 'idle' && (
                   <Card className={cn(
                     "border",
-                    testPatchStatus === 'monitoring' ? 'border-violet-500/40 bg-violet-500/5' :
+                    testPatchStatus === 'monitoring' ? 'border-rouge-500/40 bg-rouge-500/5' :
                     testPatchStatus === 'error' ? 'border-red-500/40 bg-red-500/5' :
                     testPatchStatus === 'done' ? 'border-emerald-500/40 bg-emerald-500/5' :
-                    'border-blue-500/40 bg-blue-500/5'
+                    'border-noir-500/40 bg-noir-500/5'
                   )}>
                     <CardHeader className="py-3 px-4">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm flex items-center gap-2">
-                          {testPatchStatus === 'backing_up' && <><Loader2 className="h-4 w-4 animate-spin text-blue-400" /> {t('autoTranslatePage.backingUp')}</>}
-                          {testPatchStatus === 'applying' && <><Loader2 className="h-4 w-4 animate-spin text-blue-400" /> {t('autoTranslatePage.applyingPatch')}</>}
-                          {testPatchStatus === 'launching' && <><Loader2 className="h-4 w-4 animate-spin text-violet-400" /> {t('autoTranslatePage.launchingGame')}</>}
-                          {testPatchStatus === 'monitoring' && <><Shield className="h-4 w-4 text-violet-400 animate-pulse" />{t('common.monitoraggioAttivo')}</>}
+                          {testPatchStatus === 'backing_up' && <><Loader2 className="h-4 w-4 animate-spin text-noir-400" /> {t('autoTranslatePage.backingUp')}</>}
+                          {testPatchStatus === 'applying' && <><Loader2 className="h-4 w-4 animate-spin text-noir-400" /> {t('autoTranslatePage.applyingPatch')}</>}
+                          {testPatchStatus === 'launching' && <><Loader2 className="h-4 w-4 animate-spin text-rouge-400" /> {t('autoTranslatePage.launchingGame')}</>}
+                          {testPatchStatus === 'monitoring' && <><Shield className="h-4 w-4 text-rouge-400 animate-pulse" />{t('common.monitoraggioAttivo')}</>}
                           {testPatchStatus === 'restoring' && <><Loader2 className="h-4 w-4 animate-spin text-amber-400" /> {t('autoTranslatePage.restoring')}</>}
                           {testPatchStatus === 'done' && <><CheckCircle2 className="h-4 w-4 text-emerald-400" />{t('common.testCompletato')}</>}
                           {testPatchStatus === 'error' && <><XCircle className="h-4 w-4 text-red-400" />{t('qaCheck.error')}</>}
                         </CardTitle>
                         {testPatchApplied && (
-                          <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-micro">
+                          <Badge className="bg-rouge-500/20 text-rouge-300 border-rouge-500/30 text-micro">
                             {t('autoTranslatePage.patchActive')}
                           </Badge>
                         )}
@@ -2615,7 +2897,7 @@ export default function AutoTranslatePage() {
                               {i > 0 && <div className={cn("w-4 h-px", isDone ? "bg-emerald-500" : "bg-muted-foreground/20")} />}
                               <div className={cn(
                                 "flex items-center gap-1 px-2 py-1 rounded-full border",
-                                isActive ? "border-violet-500 bg-violet-500/20 text-violet-300" :
+                                isActive ? "border-rouge-500 bg-rouge-500/20 text-rouge-300" :
                                 isDone ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" :
                                 "border-muted-foreground/20 text-muted-foreground/50"
                               )}>

@@ -83,55 +83,55 @@ const DEMO_STRINGS: HarvestInput[] = [
 // ============================================================================
 
 const SCREEN_COLORS: Record<ScreenType, string> = {
-  main_menu: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  pause_menu: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  settings: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+  main_menu: "bg-noir-500/15 text-noir-400 border-noir-500/30",
+  pause_menu: "bg-noir-500/15 text-noir-400 border-noir-500/30",
+  settings: "bg-noir-500/15 text-noir-400 border-noir-500/30",
   dialogue: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  cutscene: "bg-purple-500/15 text-purple-400 border-purple-500/30",
+  cutscene: "bg-rouge-500/15 text-rouge-400 border-rouge-500/30",
   combat: "bg-red-500/15 text-red-400 border-red-500/30",
   inventory: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
   shop: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
   quest_log: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-  map: "bg-teal-500/15 text-teal-400 border-teal-500/30",
-  hud: "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
-  tutorial: "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
-  loading: "bg-gray-500/15 text-gray-400 border-gray-500/30",
-  credits: "bg-gray-500/15 text-gray-400 border-gray-500/30",
-  character_creation: "bg-pink-500/15 text-pink-400 border-pink-500/30",
+  map: "bg-noir-500/15 text-noir-400 border-noir-500/30",
+  hud: "bg-noir-500/15 text-noir-400 border-noir-500/30",
+  tutorial: "bg-rouge-500/15 text-rouge-400 border-rouge-500/30",
+  loading: "bg-noir-500/15 text-noir-400 border-noir-500/30",
+  credits: "bg-noir-500/15 text-noir-400 border-noir-500/30",
+  character_creation: "bg-rouge-500/15 text-rouge-400 border-rouge-500/30",
   crafting: "bg-lime-500/15 text-lime-400 border-lime-500/30",
-  skill_tree: "bg-violet-500/15 text-violet-400 border-violet-500/30",
+  skill_tree: "bg-rouge-500/15 text-rouge-400 border-rouge-500/30",
   achievement: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
-  notification: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-  tooltip: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
-  unknown: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
+  notification: "bg-noir-500/15 text-noir-400 border-noir-500/30",
+  tooltip: "bg-noir-500/15 text-noir-400 border-noir-500/30",
+  unknown: "bg-noir-500/15 text-noir-400 border-noir-500/30",
 }
 
 const SPEAKER_COLORS: Record<SpeakerType, string> = {
   player: "bg-green-500/15 text-green-400 border-green-500/30",
   npc: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  narrator: "bg-purple-500/15 text-purple-400 border-purple-500/30",
-  system: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-  ui: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  narrator: "bg-rouge-500/15 text-rouge-400 border-rouge-500/30",
+  system: "bg-noir-500/15 text-noir-400 border-noir-500/30",
+  ui: "bg-noir-500/15 text-noir-400 border-noir-500/30",
   enemy: "bg-red-500/15 text-red-400 border-red-500/30",
-  companion: "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
+  companion: "bg-noir-500/15 text-noir-400 border-noir-500/30",
   merchant: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
   quest_giver: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-  tutorial_guide: "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
-  unknown: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
+  tutorial_guide: "bg-rouge-500/15 text-rouge-400 border-rouge-500/30",
+  unknown: "bg-noir-500/15 text-noir-400 border-noir-500/30",
 }
 
 const TONE_COLORS: Record<ToneType, string> = {
-  formal: "bg-blue-500/15 text-blue-400",
+  formal: "bg-noir-500/15 text-noir-400",
   informal: "bg-green-500/15 text-green-400",
   urgent: "bg-red-500/15 text-red-400",
-  epic: "bg-purple-500/15 text-purple-400",
+  epic: "bg-rouge-500/15 text-rouge-400",
   comedic: "bg-yellow-500/15 text-yellow-400",
-  dark: "bg-gray-500/15 text-gray-300",
-  neutral: "bg-zinc-500/15 text-zinc-400",
-  mysterious: "bg-violet-500/15 text-violet-400",
+  dark: "bg-noir-500/15 text-noir-300",
+  neutral: "bg-noir-500/15 text-noir-400",
+  mysterious: "bg-rouge-500/15 text-rouge-400",
   friendly: "bg-emerald-500/15 text-emerald-400",
-  threatening: "bg-rose-500/15 text-rose-400",
-  sad: "bg-sky-500/15 text-sky-400",
+  threatening: "bg-rouge-500/15 text-rouge-400",
+  sad: "bg-noir-500/15 text-noir-400",
 }
 
 const SCREEN_ICONS: Partial<Record<ScreenType, string>> = {
@@ -390,7 +390,7 @@ export default function ContextHarvesterPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Card className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <Monitor className="h-4 w-4 text-blue-400" />
+                  <Monitor className="h-4 w-4 text-noir-400" />
                   <span className="text-xs font-medium">{t('contextHarvesterPage.screenshots')}</span>
                 </div>
                 <div className="flex flex-wrap gap-1">

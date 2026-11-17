@@ -276,14 +276,20 @@ export class BatchTranslator {
         );
       }
 
+      // Dopo cancel() nessun passo successivo: niente estrazione glossario (chiamata AI
+      // a pagamento) né validazione, e lo stato resta 'cancelled' invece di 'completed'.
+      if (this.isCancelled) return this.job;
+
       // Step 3: Traduzione
       this.job.status = 'translating';
       this.emitStatusChange('translating');
       await this.translateItems();
+      if (this.isCancelled) return this.job;
 
       // Step 3.5: Auto-extraction glossario al primo batch di un nuovo gioco
       if (this.job.gameId) {
         await this.maybeExtractGlossary();
+        if (this.isCancelled) return this.job;
       }
 
       // Step 4: Validazione qualità
@@ -291,6 +297,7 @@ export class BatchTranslator {
         this.job.status = 'validating';
         this.emitStatusChange('validating');
         await this.validateItems();
+        if (this.isCancelled) return this.job;
       }
 
       // Completato
@@ -299,6 +306,8 @@ export class BatchTranslator {
       this.emitStatusChange('completed');
 
     } catch (error: unknown) {
+      // Un errore arrivato dopo cancel() non deve sovrascrivere 'cancelled' con 'failed'.
+      if (this.isCancelled) return this.job;
       this.job.status = 'failed';
       this.job.error = error instanceof Error ? error.message : String(error);
       this.emitStatusChange('failed');

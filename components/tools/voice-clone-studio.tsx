@@ -180,7 +180,7 @@ export function VoiceCloneStudio() {
   return (
     <div className="space-y-4">
       {/* Hero Header - Stile blu come pagina Traduci */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full blur-xl translate-y-1/2 -translate-x-1/2" />
         
@@ -257,7 +257,7 @@ export function VoiceCloneStudio() {
                     <Button
                       onClick={handleSynthesize}
                       disabled={isGenerating || !inputText.trim()}
-                      className="bg-violet-600 hover:bg-violet-500"
+                      className="bg-rouge-600 hover:bg-rouge-500"
                     >
                       {isGenerating ? (
                         <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
@@ -274,7 +274,7 @@ export function VoiceCloneStudio() {
                 )}
 
                 {generatedAudio && (
-                  <div className="flex items-center gap-2 p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-rouge-500/10 border border-rouge-500/20">
                     <Button
                       size="icon"
                       variant="ghost"
@@ -289,9 +289,9 @@ export function VoiceCloneStudio() {
                       )}
                     </Button>
                     <div className="flex-1">
-                      <div className="h-8 bg-violet-500/20 rounded flex items-center px-2">
-                        <div className="flex-1 h-1 bg-violet-500/30 rounded">
-                          <div className="h-full w-0 bg-violet-500 rounded" />
+                      <div className="h-8 bg-rouge-500/20 rounded flex items-center px-2">
+                        <div className="flex-1 h-1 bg-rouge-500/30 rounded">
+                          <div className="h-full w-0 bg-rouge-500 rounded" />
                         </div>
                       </div>
                     </div>
@@ -373,7 +373,7 @@ export function VoiceCloneStudio() {
                       <Badge
                         key={preset}
                         variant="outline"
-                        className="cursor-pointer hover:bg-violet-500/20"
+                        className="cursor-pointer hover:bg-rouge-500/20"
                         onClick={() => applyPreset(preset)}
                       >
                         {preset}
@@ -391,7 +391,7 @@ export function VoiceCloneStudio() {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <Mic className="h-4 w-4 text-violet-500" />
+                <Mic className="h-4 w-4 text-rouge-500" />
                 {t('voiceClone.cloneTitle')}
               </CardTitle>
               <CardDescription>
@@ -428,7 +428,7 @@ export function VoiceCloneStudio() {
               <div className="space-y-2">
                 <Label>{t('voiceClone.audioSamples')}</Label>
                 <div
-                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-violet-500/50 transition-colors"
+                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-rouge-500/50 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
@@ -454,7 +454,7 @@ export function VoiceCloneStudio() {
               <Button
                 onClick={handleCloneVoice}
                 disabled={isCloning || !cloneName.trim() || audioSamples.length === 0}
-                className="w-full bg-violet-600 hover:bg-violet-500"
+                className="w-full bg-rouge-600 hover:bg-rouge-500"
               >
                 {isCloning ? (
                   <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
@@ -472,7 +472,7 @@ export function VoiceCloneStudio() {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <User className="h-4 w-4 text-violet-500" />
+                <User className="h-4 w-4 text-rouge-500" />
                 {t('voiceClone.savedProfiles')}
               </CardTitle>
             </CardHeader>
@@ -492,8 +492,8 @@ export function VoiceCloneStudio() {
                         className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-violet-500/20">
-                            <AudioLines className="h-4 w-4 text-violet-500" />
+                          <div className="p-2 rounded-lg bg-rouge-500/20">
+                            <AudioLines className="h-4 w-4 text-rouge-500" />
                           </div>
                           <div>
                             <div className="font-medium text-sm">{profile.name}</div>

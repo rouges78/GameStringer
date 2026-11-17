@@ -5,6 +5,7 @@ import { set, get, del } from 'idb-keyval';
 import { useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
 import { invoke } from '@/lib/tauri-api';
+import { toast } from 'sonner';
 import {
   FileCode2, Upload, Languages, Play, Download, Save,
   Search, AlertTriangle,
@@ -52,15 +53,15 @@ const LANG_NAMES: Record<string, string> = {
 
 const CATEGORY_COLORS: Record<string, string> = {
   enemy: 'bg-red-500/20 text-red-400',
-  ability: 'bg-purple-500/20 text-purple-400',
-  stat: 'bg-blue-500/20 text-blue-400',
+  ability: 'bg-rouge-500/20 text-rouge-400',
+  stat: 'bg-noir-500/20 text-noir-400',
   item: 'bg-amber-500/20 text-amber-400',
   ui: 'bg-green-500/20 text-green-400',
-  dialogue: 'bg-cyan-500/20 text-cyan-400',
+  dialogue: 'bg-noir-500/20 text-noir-400',
   gameplay: 'bg-orange-500/20 text-orange-400',
-  debug: 'bg-zinc-500/20 text-zinc-400',
-  engine: 'bg-zinc-500/20 text-zinc-400',
-  unknown: 'bg-zinc-500/20 text-zinc-400',
+  debug: 'bg-noir-500/20 text-noir-400',
+  engine: 'bg-noir-500/20 text-noir-400',
+  unknown: 'bg-noir-500/20 text-noir-400',
 };
 
 const CATEGORY_NAMES: Record<string, string> = {
@@ -68,6 +69,29 @@ const CATEGORY_NAMES: Record<string, string> = {
   item: 'Oggetti', ui: 'Interfaccia', dialogue: 'Dialoghi',
   gameplay: 'Gameplay', debug: 'Debug', engine: 'Engine', unknown: 'Altro',
 };
+
+// save_binary_file vuole il contenuto in base64; a blocchi per non sforare lo stack.
+function toBase64(buf: Uint8Array): string {
+  const CHUNK = 0x8000;
+  let binary = '';
+  for (let i = 0; i < buf.length; i += CHUNK) {
+    binary += String.fromCharCode(...buf.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+
+// Checkpoint e progetti salvati prima che il ramo AI impostasse isTranslated:
+// senza il flag quelle traduzioni non verrebbero mai scritte (applyPatch le salta)
+// né ritradotte da «Riprendi» (che salta le stringhe con translated).
+function withTranslatedFlag(proj: PatchProject): PatchProject {
+  return {
+    ...proj,
+    strings: proj.strings.map(s =>
+      s.isTranslated === undefined && s.translated
+        ? { ...s, isTranslated: s.translated !== s.original }
+        : s),
+  };
+}
 
 export default function BinaryPatcherPage() {
   const { t } = useTranslation();
@@ -147,7 +171,7 @@ export default function BinaryPatcherPage() {
       try {
         const saved = await get(key);
         if (saved?.project?.strings?.length > 0 && saved.translatedCount > 0) {
-          setSavedCheckpoint(saved);
+          setSavedCheckpoint({ ...saved, project: withTranslatedFlag(saved.project) });
           clientLogger.debug(`[BinPatch Checkpoint] Trovato: ${saved.translatedCount}/${saved.totalCount} (${lang})`);
           return;
         }
@@ -242,22 +266,16 @@ export default function BinaryPatcherPage() {
         const binaryStr = atob(base64);
         buffer = new Uint8Array(binaryStr.length);
         for (let i = 0; i < binaryStr.length; i++) buffer[i] = binaryStr.charCodeAt(i);
-      } catch {
-        addLog('⚠️ read_binary_file_base64 non disponibile, uso read_text_file...');
-        try {
-          // Fallback: read_text_file legge con from_utf8_lossy — perdiamo byte non-UTF8
-          // ma per stringhe di testo funziona bene
-          const rawText = await invoke<string>('read_text_file', { path: mainBin.path, maxBytes: 50000000 });
-          const encoder = new TextEncoder();
-          buffer = encoder.encode(rawText);
-          addLog(`⚠️ Letto via text fallback (${(buffer.length / 1024 / 1024).toFixed(1)} MB) — alcuni byte non-UTF8 potrebbero essere persi`);
-        } catch (e2) {
-          addLog(`❌ Impossibile leggere il binario: ${e2 instanceof Error ? e2.message : String(e2)}`);
-          addLog('📁 Caricalo manualmente con il bottone qui sotto.');
-          setIsProcessing(false);
-          setStep('load');
-          return;
-        }
+      } catch (readErr) {
+        // Niente fallback su read_text_file: tronca a 50 MB e passa da
+        // from_utf8_lossy (U+FFFD, offset spostati), quindi il binario patchato
+        // che ne usciva era corrotto. Meglio dirlo e fermarsi.
+        clientLogger.warn('[BinaryPatcher] read_binary_file_base64 fallito:', readErr);
+        addLog(`❌ ${t('binaryPatcherPage.readBinaryFailed').replace('{error}', readErr instanceof Error ? readErr.message : String(readErr))}`);
+        addLog('📁 Caricalo manualmente con il bottone qui sotto.');
+        setIsProcessing(false);
+        setStep('load');
+        return;
       }
 
       setFileBuffer(buffer);
@@ -303,7 +321,7 @@ export default function BinaryPatcherPage() {
     } finally {
       setIsProcessing(false);
     }
-  }, [addLog, targetLang]);
+  }, [addLog, targetLang, t]);
 
   // Auto-load on mount se URL params presenti
   useEffect(() => {
@@ -509,9 +527,13 @@ export default function BinaryPatcherPage() {
           for (let j = 0; j < batch.length; j++) {
             const idx = updatedStrings.findIndex(s => s.offset === batch[j].offset);
             if (idx !== -1 && result.translations[j] && result.translations[j] !== texts[j]) {
+              const fitted = fitToByteLength(result.translations[j], updatedStrings[idx].byteLen);
+              // isTranslated è ciò che applyPatch e le statistiche leggono: senza,
+              // le traduzioni AI non finivano mai nel binario.
               updatedStrings[idx] = {
                 ...updatedStrings[idx],
-                translated: fitToByteLength(result.translations[j], updatedStrings[idx].byteLen),
+                translated: fitted,
+                isTranslated: fitted !== updatedStrings[idx].original,
               };
               translated++;
             }
@@ -566,27 +588,72 @@ export default function BinaryPatcherPage() {
     setIsProcessing(true);
     setProgress({ current: 0, total: 1, label: 'Applicazione patch...' });
 
-    const result = applyPatch(fileBuffer, project.strings);
+    try {
+      // Si scrive result.patchedBuffer: applyPatch lavora su una copia, fileBuffer
+      // resta l'originale. Fino a ottobre 2026 qui si salvava fileBuffer, cioè
+      // l'eseguibile identico all'originale, sotto «Patch completata!».
+      const result = applyPatch(fileBuffer, project.strings);
+      if (result.errors.length > 0) {
+        clientLogger.warn(`[BinaryPatcher] ${result.errors.length} traduzioni non scritte:`, result.errors.slice(0, 20));
+      }
+      if (!result.success || !result.patchedBuffer) {
+        toast.error(t('binaryPatcherPage.patchNothingApplied'), {
+          description: result.errors.length > 0
+            ? t('binaryPatcherPage.patchSkippedErrors').replace('{n}', String(result.errors.length))
+            : undefined,
+        });
+        return;
+      }
 
-    // Download patched file
-    const ab = new ArrayBuffer(fileBuffer.length);
-    new Uint8Array(ab).set(fileBuffer);
-    const blob = new Blob([ab], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const ext = fileName.match(/\.[^.]+$/)?.[0] || '.exe';
-    a.download = fileName.replace(ext, `_${targetLang.toUpperCase()}${ext}`);
-    a.click();
-    URL.revokeObjectURL(url);
+      const ext = fileName.match(/\.[^.]+$/)?.[0] || '.exe';
+      const outName = fileName.replace(ext, `_${targetLang.toUpperCase()}${ext}`);
+      // Accanto al gioco quando il percorso è noto (auto-load), altrimenti solo il nome.
+      const defaultPath = project.filePath ? project.filePath.replace(/[^\\/]*$/, outName) : outName;
+      const { save } = await import('@tauri-apps/plugin-dialog');
+      const outputPath = await save({ defaultPath });
+      if (!outputPath) return; // annullato dall'utente
 
-    setProgress({
-      current: 1, total: 1,
-      label: `Patch completata! ${result.patchedCount} stringhe patchate, ${result.skippedCount} saltate`,
-    });
-    setStep('patch');
-    setIsProcessing(false);
-  }, [project, fileBuffer, fileName, targetLang]);
+      // Se si sovrascrive un file esistente (es. l'eseguibile originale) se ne
+      // tiene una copia .bak. Un .bak già presente non si sovrascrive mai (può
+      // essere l'originale non patchato): in quel caso il backup prende un nome
+      // con timestamp.
+      let backupPath: string | null = null;
+      if (await invoke<boolean>('check_path_exists', { path: outputPath })) {
+        backupPath = `${outputPath}.bak`;
+        try {
+          if (await invoke<boolean>('check_path_exists', { path: backupPath })) {
+            backupPath = `${outputPath}.${Date.now()}.bak`;
+          }
+          const existing = await invoke<string>('read_binary_file_base64', { path: outputPath });
+          await invoke('save_binary_file', { filePath: backupPath, base64Content: existing });
+        } catch (backupErr) {
+          clientLogger.error('[BinaryPatcher] Backup fallito, nessun file scritto:', backupErr);
+          toast.error(t('binaryPatcherPage.backupFailed').replace('{error}', backupErr instanceof Error ? backupErr.message : String(backupErr)));
+          return;
+        }
+      }
+
+      await invoke('save_binary_file', { filePath: outputPath, base64Content: toBase64(result.patchedBuffer) });
+
+      const details = [
+        outputPath,
+        backupPath ? t('binaryPatcherPage.backupKept').replace('{path}', backupPath) : '',
+        result.errors.length > 0 ? t('binaryPatcherPage.patchSkippedErrors').replace('{n}', String(result.errors.length)) : '',
+      ].filter(Boolean).join(' — ');
+      const title = t('binaryPatcherPage.patchSaved').replace('{patched}', String(result.patchedCount));
+      if (result.errors.length > 0) {
+        toast.warning(title, { description: details });
+      } else {
+        toast.success(title, { description: details });
+      }
+      setStep('patch');
+    } catch (err: unknown) {
+      clientLogger.error('[BinaryPatcher] Salvataggio file patchato fallito:', err);
+      toast.error(t('binaryPatcherPage.patchSaveFailed').replace('{error}', err instanceof Error ? err.message : String(err)));
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [project, fileBuffer, fileName, targetLang, t]);
 
   // ============================================================
   // Import/Export Project
@@ -608,7 +675,7 @@ export default function BinaryPatcherPage() {
     if (!file) return;
     try {
       const json = await file.text();
-      const proj = importProject(json);
+      const proj = withTranslatedFlag(importProject(json));
       setProject(proj);
       setFileName(proj.fileName);
       setTargetLang(proj.targetLang);
@@ -754,7 +821,7 @@ export default function BinaryPatcherPage() {
                     </div>
                   </div>
                 )}
-                <div className="p-3 rounded-lg bg-zinc-900/50 border border-white/10 max-h-[200px] overflow-auto">
+                <div className="p-3 rounded-lg bg-noir-900/50 border border-white/10 max-h-[200px] overflow-auto">
                   {autoLoadLog.map((log, i) => (
                     <p key={i} className="text-xs text-white/70 font-mono py-0.5">{log}</p>
                   ))}
@@ -834,7 +901,7 @@ export default function BinaryPatcherPage() {
               <div className="flex items-center gap-3 mb-4">
                 <label className="text-sm text-white/60">{t('binaryPatcherPage.targetLang')}</label>
                 <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)}
-                  className="border border-white/10 rounded px-3 py-1.5 text-sm text-white" style={{backgroundColor: '#1a1a2e'}}>
+                  className="border border-white/10 rounded px-3 py-1.5 text-sm text-white" style={{backgroundColor: '#161618'}}>
                   <option value="it">🇮🇹 {t('languages.it')}</option>
                   <option value="en">🇬🇧 {t('languages.en')}</option>
                   <option value="es">🇪🇸 {t('languages.es')}</option>
@@ -865,7 +932,7 @@ export default function BinaryPatcherPage() {
                 <p className="text-xs text-white/50">{t('binaryPatcherPage.detectedLanguages')}</p>
               </div>
               <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
-                <p className="text-2xl font-bold text-blue-400">{Object.keys(stats.byCategory).length}</p>
+                <p className="text-2xl font-bold text-noir-400">{Object.keys(stats.byCategory).length}</p>
                 <p className="text-xs text-white/50">{t('culturalAdaptation.categories')}</p>
               </div>
             </div>
@@ -931,17 +998,17 @@ export default function BinaryPatcherPage() {
                 <span className="text-sm text-orange-400 font-medium">{LANG_NAMES[targetLang]}</span>
               </div>
               <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)}
-                className="border border-white/10 rounded px-2 py-1 text-xs text-white" style={{backgroundColor: '#1a1a2e'}}>
-                <option value="it" style={{backgroundColor: '#1a1a2e'}}>🇮🇹 {t('languages.it')}</option>
-                <option value="en" style={{backgroundColor: '#1a1a2e'}}>🇬🇧 {t('languages.en')}</option>
-                <option value="es" style={{backgroundColor: '#1a1a2e'}}>🇪🇸 {t('languages.es')}</option>
-                <option value="de" style={{backgroundColor: '#1a1a2e'}}>🇩🇪 {t('languages.de')}</option>
-                <option value="fr" style={{backgroundColor: '#1a1a2e'}}>🇫🇷 {t('languages.fr')}</option>
-                <option value="pt" style={{backgroundColor: '#1a1a2e'}}>🇵🇹 {t('languages.pt')}</option>
-                <option value="ja" style={{backgroundColor: '#1a1a2e'}}>🇯🇵 日本語</option>
-                <option value="ko" style={{backgroundColor: '#1a1a2e'}}>🇰🇷 한국어</option>
-                <option value="zh" style={{backgroundColor: '#1a1a2e'}}>🇨🇳 中文</option>
-                <option value="ru" style={{backgroundColor: '#1a1a2e'}}>🇷🇺 Русский</option>
+                className="border border-white/10 rounded px-2 py-1 text-xs text-white" style={{backgroundColor: '#161618'}}>
+                <option value="it" style={{backgroundColor: '#161618'}}>🇮🇹 {t('languages.it')}</option>
+                <option value="en" style={{backgroundColor: '#161618'}}>🇬🇧 {t('languages.en')}</option>
+                <option value="es" style={{backgroundColor: '#161618'}}>🇪🇸 {t('languages.es')}</option>
+                <option value="de" style={{backgroundColor: '#161618'}}>🇩🇪 {t('languages.de')}</option>
+                <option value="fr" style={{backgroundColor: '#161618'}}>🇫🇷 {t('languages.fr')}</option>
+                <option value="pt" style={{backgroundColor: '#161618'}}>🇵🇹 {t('languages.pt')}</option>
+                <option value="ja" style={{backgroundColor: '#161618'}}>🇯🇵 日本語</option>
+                <option value="ko" style={{backgroundColor: '#161618'}}>🇰🇷 한국어</option>
+                <option value="zh" style={{backgroundColor: '#161618'}}>🇨🇳 中文</option>
+                <option value="ru" style={{backgroundColor: '#161618'}}>🇷🇺 Русский</option>
               </select>
             </div>
 
@@ -956,13 +1023,13 @@ export default function BinaryPatcherPage() {
                   onClick={() => setTranslationMode('ai')}
                   className={`p-3 rounded-lg border cursor-pointer transition-all ${
                     translationMode === 'ai'
-                      ? 'border-purple-500/50 bg-purple-500/10'
+                      ? 'border-rouge-500/50 bg-rouge-500/10'
                       : 'border-white/10 bg-white/5 hover:border-white/20'
                   }`}>
                   <div className="flex items-center gap-2 mb-1">
-                    <Bot className="h-4 w-4 text-purple-400" />
+                    <Bot className="h-4 w-4 text-rouge-400" />
                     <span className="text-sm font-medium text-white">{t('binaryPatcherPage.aiLlm')}</span>
-                    <Sparkles className="h-3 w-3 text-purple-400" />
+                    <Sparkles className="h-3 w-3 text-rouge-400" />
                   </div>
                   <p className="text-2xs text-white/50">{t('binaryPatcherPage.geminiDeepseekOpenaiOllamaDeep')}</p>
                 </div>
@@ -993,7 +1060,7 @@ export default function BinaryPatcherPage() {
                         onClick={() => { setChainPresetState(preset.id as ChainPreset); setChainPreset(preset.id as ChainPreset); }}
                         className={`p-2 rounded-md border cursor-pointer transition-all flex items-center gap-3 ${
                           chainPreset === preset.id
-                            ? 'border-purple-500/50 bg-purple-500/10'
+                            ? 'border-rouge-500/50 bg-rouge-500/10'
                             : 'border-white/5 hover:border-white/15'
                         }`}>
                         <div className="flex-1">
@@ -1004,7 +1071,7 @@ export default function BinaryPatcherPage() {
                           </div>
                           <p className="text-2xs text-white/40">{preset.description}</p>
                         </div>
-                        {chainPreset === preset.id && <CheckCircle2 className="h-4 w-4 text-purple-400 flex-none" />}
+                        {chainPreset === preset.id && <CheckCircle2 className="h-4 w-4 text-rouge-400 flex-none" />}
                       </div>
                     ))}
                   </div>
@@ -1017,14 +1084,14 @@ export default function BinaryPatcherPage() {
 
             {/* Translation Log */}
             {translationLog.length > 0 && (
-              <div className="p-3 rounded-lg bg-zinc-900/50 border border-white/10 mb-4 max-h-[150px] overflow-auto">
+              <div className="p-3 rounded-lg bg-noir-900/50 border border-white/10 mb-4 max-h-[150px] overflow-auto">
                 {translationLog.map((log, i) => (
                   <p key={i} className="text-xs text-white/70 font-mono py-0.5">{log}</p>
                 ))}
                 {isProcessing && (
                   <div className="flex items-center gap-2 mt-1">
-                    <Loader2 className="h-3 w-3 animate-spin text-purple-400" />
-                    <span className="text-xs text-purple-400">{t('offlineTranslator.translating')}</span>
+                    <Loader2 className="h-3 w-3 animate-spin text-rouge-400" />
+                    <span className="text-xs text-rouge-400">{t('offlineTranslator.translating')}</span>
                   </div>
                 )}
               </div>
@@ -1093,15 +1160,15 @@ export default function BinaryPatcherPage() {
                 />
               </div>
               <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
-                className="h-8 border border-white/10 rounded px-2 text-xs text-white" style={{backgroundColor: '#1a1a2e'}}>
-                <option value="all" style={{backgroundColor: '#1a1a2e'}}>{t('binaryPatcherPage.allCategories')}</option>
+                className="h-8 border border-white/10 rounded px-2 text-xs text-white" style={{backgroundColor: '#161618'}}>
+                <option value="all" style={{backgroundColor: '#161618'}}>{t('binaryPatcherPage.allCategories')}</option>
                 {Object.entries(CATEGORY_NAMES).map(([k, v]) => (
-                  <option key={k} value={k} style={{backgroundColor: '#1a1a2e'}}>{v}</option>
+                  <option key={k} value={k} style={{backgroundColor: '#161618'}}>{v}</option>
                 ))}
               </select>
               <select value={filterLang} onChange={(e) => setFilterLang(e.target.value)}
-                className="h-8 border border-white/10 rounded px-2 text-xs text-white" style={{backgroundColor: '#1a1a2e'}}>
-                <option value="all" style={{backgroundColor: '#1a1a2e'}}>{t('communityHub.allLanguages')}</option>
+                className="h-8 border border-white/10 rounded px-2 text-xs text-white" style={{backgroundColor: '#161618'}}>
+                <option value="all" style={{backgroundColor: '#161618'}}>{t('communityHub.allLanguages')}</option>
                 {Object.entries(stats.byLanguage).map(([k]) => (
                   <option key={k} value={k}>{LANG_NAMES[k] || k}</option>
                 ))}
@@ -1174,7 +1241,7 @@ export default function BinaryPatcherPage() {
 
         {/* Progress overlay */}
         {isProcessing && (
-          <div className="fixed bottom-4 right-4 bg-zinc-900 border border-white/10 rounded-lg p-3 shadow-xl z-50 min-w-[250px]">
+          <div className="fixed bottom-4 right-4 bg-noir-900 border border-white/10 rounded-lg p-3 shadow-xl z-50 min-w-[250px]">
             <div className="flex items-center gap-2 mb-2">
               <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
               <span className="text-sm text-white">{progress.label}</span>

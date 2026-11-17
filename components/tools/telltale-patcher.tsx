@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -188,6 +188,19 @@ export function TelltalePatcher() {
     }
   };
 
+  // Ponte da String it! nel game-detail: ?gamePath=… rileva subito il gioco,
+  // senza ripassare dal folder picker (route con query params, convenzione del progetto).
+  useEffect(() => {
+    try {
+      const gp = new URLSearchParams(window.location.search).get('gamePath');
+      if (gp) {
+        setGamePath(gp);
+        detectGame(gp);
+      }
+    } catch { /* niente query params */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const applyTranslation = async () => {
     if (!gamePath || !selectedGame) {
       toast.error(t('common.selectGameFolderFirst'));
@@ -362,7 +375,7 @@ export function TelltalePatcher() {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-3 overflow-y-auto overflow-x-hidden">
       {/* Hero Header Compatto */}
-      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 p-2 shrink-0">
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-emerald-600 via-noir-500 to-noir-500 p-2 shrink-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="relative flex items-center gap-2">
           <div className="p-1.5 rounded-md bg-black/20 backdrop-blur-sm">
@@ -399,10 +412,10 @@ export function TelltalePatcher() {
                   className={`w-full flex items-center gap-2 p-1.5 rounded text-left text-xs transition-all border ${
                     selectedGame?.id === game.id
                       ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-400/10 border-emerald-500/40 text-white shadow-sm'
-                      : 'border-transparent hover:bg-emerald-500/10 hover:border-emerald-500/20 text-slate-300'
+                      : 'border-transparent hover:bg-emerald-500/10 hover:border-emerald-500/20 text-noir-300'
                   }`}
                 >
-                  <div className="w-7 h-5 bg-slate-800/80 rounded flex items-center justify-center shrink-0">
+                  <div className="w-7 h-5 bg-noir-800/80 rounded flex items-center justify-center shrink-0">
                     <Gamepad2 className="w-3 h-3 text-emerald-500" />
                   </div>
                   <span className="truncate flex-1 font-medium text-[11px]">{game.name}</span>
@@ -421,7 +434,7 @@ export function TelltalePatcher() {
         </Card>
 
         {/* Right Column - Configuration */}
-        <Card className="flex-1 border-slate-800/50 flex flex-col overflow-hidden relative bg-slate-950/80">
+        <Card className="flex-1 border-noir-800/50 flex flex-col overflow-hidden relative bg-noir-950/80">
           {/* Cover Image Background */}
           {selectedGame && (
             <>
@@ -429,7 +442,7 @@ export function TelltalePatcher() {
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
                 style={{ backgroundImage: `url(${selectedGame.coverImage})` }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-noir-950 via-noir-950/80 to-transparent" />
             </>
           )}
           <CardHeader className="py-2 px-3 relative z-10">
@@ -438,7 +451,7 @@ export function TelltalePatcher() {
                 <Download className="w-4 h-4 text-emerald-400" />
                 {selectedGame ? selectedGame.name : t('telltale.selectGame')}
                 {detectedPlatform && (
-                  <Badge variant="outline" className="text-2xs px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/30">
+                  <Badge variant="outline" className="text-2xs px-1.5 py-0 bg-noir-500/10 text-noir-400 border-noir-500/30">
                     {detectedPlatform.toUpperCase()}
                   </Badge>
                 )}
@@ -452,7 +465,7 @@ export function TelltalePatcher() {
           <CardContent className="p-3 pt-0 flex-1 flex flex-col gap-3 overflow-y-auto relative z-10">
             {/* Path Display */}
             {gamePath && (
-              <div className="p-2 bg-slate-950/50 border border-slate-800/50 rounded text-2xs font-mono text-slate-400 break-all">
+              <div className="p-2 bg-noir-950/50 border border-noir-800/50 rounded text-2xs font-mono text-noir-400 break-all">
                 📁 {gamePath}
               </div>
             )}
@@ -521,10 +534,10 @@ export function TelltalePatcher() {
             {logs.length > 0 && (
               <div className="flex-1 min-h-[120px]">
                 <div className="text-2xs text-muted-foreground mb-1">{t('telltale.log')}</div>
-                <ScrollArea className="h-full max-h-[200px] rounded border border-slate-800/50 bg-slate-950/50 p-2">
+                <ScrollArea className="h-full max-h-[200px] rounded border border-noir-800/50 bg-noir-950/50 p-2">
                   <div className="font-mono text-2xs space-y-0.5">
                     {logs.map((log, i) => (
-                      <div key={i} className="text-slate-400">{log}</div>
+                      <div key={i} className="text-noir-400">{log}</div>
                     ))}
                   </div>
                 </ScrollArea>

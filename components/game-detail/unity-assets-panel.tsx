@@ -55,13 +55,13 @@ export function UnityAssetsPanel({
   };
 
   return (
-    <div className="rounded-xl bg-[#1b2838]/60 border border-[#2a475e]/40 p-3.5">
+    <div className="rounded-xl bg-noir-900/60 border border-noir-700/40 p-3.5">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5">
+        <span className="text-[11px] font-bold text-noir-200 flex items-center gap-1.5">
           <HardDrive className="h-3.5 w-3.5 text-amber-400" /> Unity Assets (.assets)
         </span>
         <button
-          className="text-2xs font-semibold text-[#8f98a0] hover:text-[#c6d4df] transition-colors"
+          className="text-2xs font-semibold text-noir-400 hover:text-noir-200 transition-colors"
           onClick={handleToggle}
         >
           {showPanel ? '▲ Chiudi' : '▼ Espandi'}
@@ -100,15 +100,15 @@ export function UnityAssetsPanel({
           {/* File .assets trovati */}
           {assetsFiles.length > 0 ? (
             <div className="space-y-1">
-              <span className="text-2xs text-[#8f98a0]/60">{assetsFiles.length} file .assets trovati</span>
+              <span className="text-2xs text-noir-400/60">{assetsFiles.length} file .assets trovati</span>
               <div className="max-h-[120px] overflow-y-auto space-y-0.5 custom-scrollbar pr-1">
                 {assetsFiles.map((af, idx) => (
-                  <div key={idx} className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-[#2a475e]/20 hover:bg-[#2a475e]/30 transition-all">
-                    <span className="text-[11px] text-[#c6d4df] truncate flex-1">{af.file_name}</span>
-                    <span className="text-2xs text-[#8f98a0]/60 ml-2 shrink-0">{(af.size_bytes / 1048576).toFixed(1)} MB</span>
+                  <div key={idx} className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-noir-700/20 hover:bg-noir-700/30 transition-all">
+                    <span className="text-[11px] text-noir-200 truncate flex-1">{af.file_name}</span>
+                    <span className="text-2xs text-noir-400/60 ml-2 shrink-0">{(af.size_bytes / 1048576).toFixed(1)} MB</span>
                     {uabeaStatus?.installed && (
                       <button
-                        className="ml-2 text-micro font-bold px-1.5 py-0.5 rounded bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/20 transition-all shrink-0"
+                        className="ml-2 text-micro font-bold px-1.5 py-0.5 rounded bg-noir-500/10 hover:bg-noir-500/20 text-noir-300 border border-noir-500/20 transition-all shrink-0"
                         onClick={() => invoke('open_assets_with_uabea', { assetsFile: af.path }).catch(e => toast.error(String(e)))}
                       >
                         Apri
@@ -119,10 +119,10 @@ export function UnityAssetsPanel({
               </div>
             </div>
           ) : (
-            <p className="text-[11px] text-[#8f98a0]/60 text-center py-2">Nessun file .assets trovato nella cartella del gioco</p>
+            <p className="text-[11px] text-noir-400/60 text-center py-2">Nessun file .assets trovato nella cartella del gioco</p>
           )}
 
-          <p className="text-2xs text-[#8f98a0]/50">
+          <p className="text-2xs text-noir-400/50">
             UABEA permette di tradurre testi e texture incorporati nei file .assets Unity (come il pacchetto immagini di Blue Prince).
           </p>
         </div>

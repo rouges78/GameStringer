@@ -122,6 +122,20 @@ due esiti diversi per l'utente: da una porta chiusa a chiave si può entrare
 procurandosi la chiave, da una stanza vuota no. Nel codice il marcatore
 `PAK_NEEDS_AES` risale fino alla UI proprio per tenerli separati.
 
+**Seconda trappola (15/11/2026): il marcatore partiva solo sui giochi con `.utoc`.**
+`extract_iostore_localization` usciva con «Nessun file .utoc trovato» prima di
+arrivare al fallback sui `.pak` classici. Un gioco UE4 ha il solo `.pak`: se
+l'indice è cifrato il marcatore non partiva mai e l'utente leggeva «non espone
+testi estraibili». Misura: Fobia - St. Dinfna Hotel, un `.pak` da 3,3 GB con
+indice cifrato, nessun `.utoc`. Ora si esce subito solo se mancano sia i `.utoc`
+sia i `.pak`. Controllo riproducibile (sola lettura, deve finire con
+`PAK_ENCRYPTED_NEEDS_AES_KEY`):
+
+```bash
+cd /c/GIT/GameStringer/src-tauri
+GS_UE_GAME_PATH="E:/SteamLibrary/steamapps/common/FobiaStDinfnaHotel" cargo test --lib -- --ignored estrazione_su_gioco_reale --nocapture
+```
+
 ### UE5 IoStore: un `_P.pak` da solo non si monta, serve la tripletta
 
 **Il fatto.** Nei giochi UE5 IoStore (5.6+) un `_P.pak` da solo viene ignorato dal
@@ -370,6 +384,561 @@ composta.
 6. **Ambiente.** In Git Bash non c'è `strings`, e Python sulla console Windows
    (cp1252) si ferma stampando caratteri come `ő`. Per questo la sonda è in
    Node, come le altre in `scripts/`.
+
+### TextAsset in Rust (`unity_serialized.rs`): misurato su un gioco vero, e perché non entra da solo in String it
+
+**Il fatto.** Il riscrittore dei TextAsset tutto in Rust non restituiva il file
+identico nemmeno senza sostituzioni: ricompattava gli oggetti con allineamento
+a 4 byte e perdeva il riempimento originale e la coda del file. Corretto
+l'11/11/2026: ora conserva i vuoti fra gli oggetti e la coda, e quando un testo
+cambia lunghezza sposta gli oggetti successivi solo di multipli di 16 byte,
+così ognuno mantiene l'allineamento che aveva.
+
+**Misura.** art of rally (Steam, Unity 2019.4.38f1, SerializedFile v21), 11/11/2026,
+sola lettura — non scrive nella cartella del gioco:
+
+```bash
+cd src-tauri && GS_UNITY_SHOW=1 GS_UNITY_DATA_DIRS="E:/SteamLibrary/steamapps/common/artofrally/artofrally_Data"   cargo test --bin gamestringer real_games_roundtrip -- --ignored --nocapture
+```
+
+| Cosa | Prima | Dopo |
+|---|---|---|
+| File `.assets` riconosciuti | 63 su 63 | 63 su 63 |
+| Riscrittura senza sostituzioni identica byte per byte | 1 su 63 | 63 su 63 |
+| Allungare un TextAsset e rileggerlo (testo nuovo presente, gli altri invariati) | ok | ok |
+| TextAsset trovati | 23, tutti in `resources.assets` | 23 |
+
+**Cosa contengono quei 23 TextAsset.** 9 assetti delle auto (`[body] weight=900 …`),
+4 classifiche JSON (`top-times*`, fino a 199 KB), 4 tabelle di caratteri per
+l'a capo di TextMeshPro, 2 README di un pacchetto di texture, un numero di
+versione, una nota di una cartella, e **un solo** file con testo per il
+giocatore: `achievements` (JSON, 14 KB).
+
+**Cosa ne segue.** Tradurre «tutti i TextAsset» romperebbe il gioco: l'assetto
+di un'auto è un TextAsset quanto un dialogo. Un metodo statico automatico su
+Unity deve prima RICONOSCERE quali TextAsset sono tabelle di localizzazione
+(CSV con colonne lingua, JSON con chiavi lingua, formati I2/SimpleLocalization)
+e toccare solo quelli, campo per campo. Finché quel riconoscitore non c'è, il
+piano di String it tiene XUnity come primo metodo per Unity.
+
+**Trappole.**
+
+1. **«12 giochi Unity installati» erano 1.** Le cartelle `*_Data` in
+   `steamapps/common` restano dopo la disinstallazione, con dentro una cartella
+   `Languages` o poco altro. Si contano i file `.assets`, non le cartelle.
+2. **`data.unity3d` non è coperto.** Lost Host Demo ed Esoteric Ebb tengono
+   tutto in un bundle UnityFS: zero file `.assets` sciolti, quindi questo
+   riscrittore non li vede.
+3. **Rileggere col proprio parser non prova che il gioco carichi il file.** Il
+   test «allungo e rileggo» passava anche PRIMA della correzione, con il file
+   già diverso dall'originale. L'unica prova forte senza avviare il gioco è
+   l'identità byte per byte a sostituzioni vuote.
+4. **`| tail` in fondo a un comando di misura taglia la misura.** La prima
+   tabella mostrava solo art of rally perché le righe degli altri giochi non
+   c'erano; ma l'avrebbe mostrata uguale se fossero state tagliate. Si salva
+   l'uscita intera e si conta.
+
+**Nel codice.** `src-tauri/src/commands/unity_serialized.rs` —
+`rewrite_text_assets`, test `real_games_roundtrip` (ignorato, vuole
+`GS_UNITY_DATA_DIRS`). Nessuna pagina chiama ancora `extract_unity_text_assets`
+/ `rewrite_unity_text_assets`.
+
+### Riconoscere le tabelle di localizzazione fra i TextAsset (`unity_loc_tables.rs`)
+
+**Il fatto.** Dall'11/11/2026 un riconoscitore decide quali TextAsset sono
+tabelle di localizzazione. È conservativo: dice sì solo se il file dichiara da
+solo **almeno due lingue** — CSV/TSV con colonne-lingua nell'intestazione, JSON
+con chiavi-lingua al primo livello o nelle voci di un elenco. Nel dubbio dice
+no. Il numero di tabelle entra nel piano di String it (`unity_loc_tables`), che
+su Unity aggiunge il metodo `unity-loc-tables` **dopo** XUnity e non automatico:
+le tabelle si sanno leggere, non ancora riscrivere nel gioco.
+
+**Misura.** Sola lettura, 11/11/2026:
+
+```bash
+cd src-tauri && GS_UNITY_GAME_DIRS="E:/SteamLibrary/steamapps/common/artofrally;E:/SteamLibrary/steamapps/common/Lost Host Demo"   cargo test --bin gamestringer real_games_loc_tables -- --ignored --nocapture
+```
+
+| Gioco | File `.assets` | TextAsset | Prese per tabelle | Tempo |
+|---|---|---|---|---|
+| art of rally | 63 | 23 | 0 (giusto: nessuno lo è) | 79 ms |
+| Lost Host Demo | 0 (tutto in `data.unity3d`) | — | 0 | 1 ms |
+
+I 79 ms valgono perché `extract_text_assets_from_path` legge dal disco solo la
+tabella degli oggetti e i singoli TextAsset, non i file interi (il solo
+`resources.assets` è 235 MB).
+
+**Cosa NON è misurato.** Una tabella con più lingue nello STESSO file (CSV con
+colonne-lingua, JSON con chiavi-lingua) su un gioco vero: quel sì è coperto
+solo da test con dati scritti a mano. Il sì misurato dal vero è quello delle
+famiglie di file per lingua, nella voce qui sotto.
+
+**Trappole.**
+
+1. **`id` e `no` sono codici ISO** (indonesiano, norvegese): l'intestazione
+   `name,id,no` sembrerebbe una tabella a due lingue. Sono esclusi, insieme a
+   `is` e `to`.
+2. **Un file che comincia con `[` o `{` si giudica solo come JSON.** `[body]
+   weight=900` è l'assetto di un'auto: letto come CSV non avrebbe lingue, ma è
+   meglio non provarci nemmeno.
+3. **`serde_json` ordina le chiavi.** Le lingue di un JSON escono in ordine
+   alfabetico, non di comparsa: non usarne l'ordine per decidere la lingua
+   sorgente.
+4. **Testo in una lingua sola non è una tabella.** `achievements` di art of
+   rally è l'unico TextAsset con testo per il giocatore, ed è rifiutato di
+   proposito: senza conoscere il gioco non si sa quali campi tradurre.
+
+**Nel codice.** `src-tauri/src/commands/unity_loc_tables.rs` — `recognize`,
+`scan`, comando `scan_unity_loc_tables`; `translation_plan.rs` — `probe`.
+
+### Leggere dentro `data.unity3d` (`unity_fs.rs`), e i file per lingua di Lost Host Demo
+
+**Il fatto.** Molti giochi Unity non hanno file `.assets` sciolti: tutto sta in
+un bundle UnityFS. Dall'11/11/2026 c'è un lettore scritto da zero che tiene in
+memoria solo l'indice dei blocchi e decomprime, a richiesta, quelli che coprono
+i byte chiesti. Il decompressore di `unity_localization.rs` carica il file
+intero e decomprime ogni blocco: su un bundle di gigabyte non è usabile.
+`unity_serialized::extract_text_assets_from` ora legge da una sorgente
+qualunque (`ReadAt`): un file su disco o un file interno al bundle.
+
+**Misura.** Lost Host Demo (Steam, Unity 6000.3.8f1, UnityFS v8), 11/11/2026,
+sola lettura:
+
+```bash
+cd src-tauri && GS_UNITY_BUNDLES="E:/SteamLibrary/steamapps/common/Lost Host Demo/LostHost_Data/data.unity3d" \
+  cargo test --bin gamestringer real_bundles -- --ignored --nocapture
+cd src-tauri && GS_UNITY_SHOW=1 GS_UNITY_GAME_DIRS="E:/SteamLibrary/steamapps/common/Lost Host Demo" \
+  cargo test --bin gamestringer real_games_loc_tables -- --ignored --nocapture
+```
+
+| Cosa | Risultato |
+|---|---|
+| Bundle su disco | 2,78 GB, flag `0x243` (indice LZ4HC, riempimento a 16 prima dei blocchi) |
+| Apertura (solo indice) | 15 ms |
+| Blocchi | 43.701, flusso decompresso 5.462 MB |
+| File interni | 94: 9 serializzati (`globalgamemanagers`, `resources.assets`, `sharedassets0-2.assets`, `level0-2`…), i `.resS` con texture e audio, e la luce precalcolata in `GI/` |
+| Versione dei file serializzati | 22 — **prima lettura di una v22 vera**, il parser la legge |
+| TextAsset trovati | 20 (15 in `sharedassets0.assets`, 5 in `resources.assets`) |
+| Tabelle riconosciute | 14 su 15 file lingua; art of rally resta a 0 |
+| Tempo di due passate complete | 82 ms |
+
+**Lo schema di Lost Host Demo.** La localizzazione è una **famiglia di file per
+lingua**: 15 TextAsset `LOST_HOST - <Lingua>`, ognuno un CSV a due colonne
+`testo inglese,traduzione`, da 288 a 300 righe. L'italiano c'è già. Il
+riconoscitore cercava più lingue nello stesso file e dava zero: ora riconosce
+anche le famiglie (almeno due TextAsset dello stesso file, stesso nome, lingua
+diversa in coda).
+
+**Cosa ne segue.** Per un gioco fatto così, aggiungere una lingua che manca non
+è «riempire una colonna»: o si sovrascrive il file di una lingua che non serve,
+o si aggiunge un TextAsset nuovo (e il gioco deve saperlo elencare). È una
+scelta da prendere quando si scriverà la scrittura, non prima.
+
+**Trappole.**
+
+1. **`Ukranian`.** Il gioco scrive male «Ukrainian», quindi quel file non è
+   riconosciuto: 14 su 15. Non ho aggiunto l'errore di battitura alla lista
+   delle lingue; una famiglia già riconosciuta potrebbe però accogliere i
+   membri con lo stesso nome e coda sconosciuta.
+2. **Il primo campo dopo la firma non dice se un file interno è
+   serializzato.** I `.resS` e i file in `GI/` hanno byte casuali dove ci si
+   aspetta la versione: si saltano per nome, e per il resto decide
+   `is_serialized_file`.
+3. **Leggere oltre la fine di un file interno restituirebbe l'inizio del
+   successivo**, senza errore, perché il flusso decompresso è unico. Il lettore
+   controlla i limiti del nodo (c'è un test).
+4. **Esoteric Ebb non ha né `.assets` né `data.unity3d`** nella cartella
+   `_Data`: zero TextAsset in 10 ms. Probabilmente usa bundle Addressables in
+   `StreamingAssets`; non verificato.
+
+**Nel codice.** `src-tauri/src/commands/unity_fs.rs` — `Bundle::open`,
+`read_stream`, `NodeReader`, tratto `ReadAt`; `unity_loc_tables.rs` —
+`text_assets`, `recognize_families`, `name_language`. LZMA non è supportato
+(errore esplicito).
+
+### Scrivere dentro `data.unity3d`: `Bundle::rewrite_node`
+
+**Il fatto.** Dall'11/11/2026 `unity_fs.rs` sa produrre un bundle nuovo in cui
+un file interno è sostituito. Ricomprime solo i blocchi che contengono byte di
+quel file (in blocchi LZ4 da 128 KB, la misura di Unity); tutti gli altri si
+copiano dall'originale compressi come sono. I file interni successivi slittano
+di un multiplo di 16 byte. L'originale non viene mai aperto in scrittura.
+
+**Misura.** Lost Host Demo, 11/11/2026. Si sostituisce il TextAsset
+`LOST_HOST - Italian` (una riga in più, con accentate) dentro
+`sharedassets0.assets` e si scrive il bundle in una cartella a parte:
+
+```bash
+cd src-tauri && GS_UNITY_BUNDLE="E:/SteamLibrary/steamapps/common/Lost Host Demo/LostHost_Data/data.unity3d" \
+  GS_UNITY_NODE="sharedassets0.assets" GS_UNITY_ASSET="LOST_HOST - Italian" GS_UNITY_OUT="<cartella con 3 GB liberi>" \
+  cargo test --bin gamestringer real_bundle_rewrite -- --ignored --nocapture
+```
+
+| Cosa | Risultato |
+|---|---|
+| Tempo di scrittura | 8,5 s |
+| Blocchi ricompressi | 499 su 43.702 (quelli di `sharedassets0.assets`, 63 MB) |
+| Byte copiati senza decomprimere | 2.747.970.175 |
+| Byte ricompressi | 36.367.265 |
+| Dimensione | 2.778.817.629 → 2.784.531.472 (+5,7 MB) |
+| File interni identici all'originale | 93 su 94; l'unico diverso è quello sostituito |
+| TextAsset modificato, riletto dal bundle nuovo | testo nuovo presente, gli altri 14 invariati |
+| Tempo del confronto completo (5,4 GB decompressi due volte) | 120 s |
+
+**Il gioco carica il bundle riscritto: provato l'11/11/2026.** Vedi la voce
+qui sotto. Le due ipotesi — blocchi LZ4 «veloce» al posto di LZ4HC, e un blocco
+più corto di 128 KB in mezzo al flusso — reggono su Unity 6000.3.
+
+**Trappole.**
+
+1. **Il bundle cresce** di 5,7 MB perché `lz4_flex` comprime meno di LZ4HC. È
+   innocuo, ma un confronto «stessa dimensione» fallirebbe sempre.
+2. **Il campo dimensione nell'intestazione è la lunghezza del file**: va
+   riscritto dopo aver finito, non prima.
+3. **`rmdir` su una cartella temporanea fuori dal progetto** è stato bloccato
+   dal controllo di sicurezza dell'ambiente. Il test cancella da sé il file che
+   crea; per le prove si usa una cartella che non richieda pulizie a mano.
+
+**Nel codice.** `src-tauri/src/commands/unity_fs.rs` — `Bundle::rewrite_node`,
+`RewriteStats`, test `real_bundle_rewrite` (ignorato). Nessun comando Tauri lo
+espone ancora: non è raggiungibile dall'interfaccia.
+
+### Lost Host Demo: il bundle riscritto si carica, ma il testo che il gioco mostra NON sta nei TextAsset
+
+**Il fatto.** Sostituire il file della lingua **lituana** con un altro non ha
+cambiato quello che il gioco mostra. I 15 TextAsset `LOST_HOST - <Lingua>`
+esistono, ma il lituano è **anche incorporato nella scena `level0`**: è la
+lingua dello sviluppatore (GestLT) e fa da testo predefinito.
+
+> **Due correzioni del giorno stesso.** La prima stesura diceva che il gioco
+> legge sempre la copia nella scena e che i CSV sono solo materiale di partenza.
+> La seconda la ritrattava: «nella scena c'è solo il lituano, le altre lingue
+> passano dai TextAsset». Era sbagliata la seconda. La misura fatta con
+> `unity_static` (voce «Il metodo statico dentro String it») conta i testi di
+> ogni lingua negli script delle scene: **tutte e 14 le lingue sono
+> incorporate**, da 271 a 285 testi ciascuna. La prima stesura era giusta.
+> L'errore è nato dal guardare un solo oggetto (`path_id 3540`, la tabella
+> lituana) e generalizzare.
+
+**Prova nel gioco**, 11/11/2026, con il consenso del proprietario. Scritto nel
+bundle installato il testo italiano al posto di quello lituano
+(`replace_node_in_place`, originale tenuto come `data.unity3d.gs_backup`):
+
+| Cosa | Risultato |
+|---|---|
+| Scrittura nel gioco | 14,7 s, 498 blocchi ricompressi su 43.701 |
+| Il gioco parte con il bundle riscritto | sì: `Player.log` riporta «Loading player data from …/data.unity3d», carica le scene fino a `Chapter1` ed esce con «Exit button pressed», senza errori di archivio |
+| Il lituano in gioco diventa italiano | **no** |
+| Ripristino | originale rimesso, 2.778.817.629 byte come prima |
+
+**Misura che spiega il no.** Ricerca di testo in tutti i file interni del
+bundle (sola lettura):
+
+```bash
+cd src-tauri && GS_UNITY_BUNDLE="E:/SteamLibrary/steamapps/common/Lost Host Demo/LostHost_Data/data.unity3d" GS_UNITY_GREP="Nustatymai" \
+  cargo test --bin gamestringer -- commands::unity_fs::real_bundle_grep::real_bundle_grep --ignored --nocapture --exact
+```
+
+| Testo cercato | Bundle originale | Bundle con il lituano sostituito |
+|---|---|---|
+| `Nustatymai` («Impostazioni» in lituano) | `sharedassets0.assets` 1 volta, `level0` 3 volte | solo `level0` 3 volte |
+| `Žaisti` («Gioca» in lituano) | — | `level0` 2 volte |
+| `Impostazioni` | — | `sharedassets0.assets` 2 volte, `level0` 1 volta |
+
+Dopo la sostituzione il lituano è sparito dal TextAsset ma è rimasto in
+`level0`: il menu continua a leggerlo da lì.
+
+**Cosa ne segue.**
+
+1. **Un TextAsset di localizzazione che esiste non è per forza quello che il
+   gioco legge.** Il riconoscitore dice «qui ci sono tabelle», non «il gioco le
+   usa». Prima di proporre un metodo statico bisogna controllare che il testo
+   non compaia anche altrove (la ricerca qui sopra costa pochi secondi).
+2. Per questo gioco la via statica passa dai campi stringa degli oggetti di
+   scena (`level0`, `level2`), come per Fran Bow: stringhe con lunghezza in
+   testa, allineate a 4 byte, dentro oggetti senza albero dei tipi. In Rust
+   quel motore non esiste ancora; oggi lo fa solo `tools/unity_inject.py`.
+3. Lo scrittore di bundle e il backup per rinomina sono validati dal vero e
+   restano utili per quel motore: cambia cosa si riscrive, non come.
+
+**Trappole.**
+
+1. **Consigliare «sovrascrivi una lingua» prima di aver cercato dove sta
+   davvero il testo.** È stato l'errore di questa voce: la prova in gioco è
+   costata un backup da 2,78 GB e un avvio, la ricerca sarebbe costata un
+   minuto.
+2. **Il filtro di `cargo test` prende per sottostringa.** `real_bundle_apply`
+   è anche il nome del modulo che contiene `real_bundle_restore`: senza il
+   nome completo e `--exact` partirebbero insieme, applicando e ripristinando.
+3. **«Il gioco è partito» si legge nel registro**, non si deduce:
+   `%USERPROFILE%/AppData/LocalLow/GestLT/LostHost/Player.log`.
+
+**Nel codice.** `src-tauri/src/commands/unity_fs.rs` — `replace_node_in_place`,
+`restore_original`, test `real_bundle_apply`, `real_bundle_restore`,
+`real_bundle_grep` (tutti ignorati; i primi due SCRIVONO nella cartella del
+gioco).
+
+### Tradurre le stringhe dentro gli oggetti di scena (`unity_strings.rs`)
+
+**Il fatto.** Dall'11/11/2026 c'è un motore in Rust che trova le stringhe nel
+corpo di un oggetto Unity (lunghezza in 4 byte, UTF-8, riempimento a zero fino
+al multiplo di 4, cercate solo a posizioni multiple di 4) e sostituisce quelle
+**esattamente uguali** a un testo da tradurre, anche con lunghezza diversa.
+Dentro un oggetto i campi sono in fila, senza puntatori interni, quindi basta
+spostare ciò che segue; la dimensione nuova dell'oggetto la sistema
+`unity_serialized::rewrite_objects`, che ora sostituisce il corpo di un oggetto
+di qualunque tipo.
+
+**Com'è fatta la tabella incorporata di Lost Host Demo.** In `level0` l'oggetto
+`path_id 3540` (MonoBehaviour, 18.592 byte) contiene 577 stringhe a coppie
+`chiave, testo lituano`: `Play`, `Žaisti`, `Settings`, `Nustatymai`… Altri 31
+MonoBehaviour da ~528 byte hanno una sola stringa: il testo predefinito di
+un'etichetta dell'interfaccia.
+
+**Misura.** Tutta in memoria, non scrive nulla. Si traduce il lituano
+incorporato usando come dizionario i due TextAsset del gioco (lituano e
+italiano, appaiati per chiave):
+
+```bash
+cd src-tauri && GS_UNITY_BUNDLE="E:/SteamLibrary/steamapps/common/Lost Host Demo/LostHost_Data/data.unity3d" \
+  GS_UNITY_NODE="level0" GS_UNITY_TABLES="sharedassets0.assets" \
+  GS_UNITY_FROM="LOST_HOST - Lithuanian" GS_UNITY_TO="LOST_HOST - Italian" \
+  cargo test --bin gamestringer -- commands::unity_strings::real_scene_translate::real_scene_translate --ignored --nocapture --exact
+```
+
+| Cosa | `level0` | `level2` |
+|---|---|---|
+| Oggetti | 3.820 | 15.595 |
+| Voci nelle tabelle (lituano / italiano) | 295 / 291 | idem |
+| Coppie traducibili dopo le regole di sicurezza | 279 | idem |
+| Oggetti toccati | 32 (uno da 274 stringhe, 31 da una) | 5 |
+| Stringhe sostituite | 305 | 5 |
+| Stringhe lasciate identiche | 11.221 | 6.356 |
+| Stringhe sbagliate (controllo posizione per posizione) | 0 | 0 |
+| Oggetti non toccati identici byte per byte | tutti | tutti |
+| Dimensione del file | 1.390.912 → 1.391.088 | invariata |
+
+In `level1` e in `sharedassets0.assets` non cambia niente: lì il lituano è
+dentro il CSV, che è un'unica stringa lunga e non è uguale a nessuna voce.
+
+**Regole di sicurezza** (`translation_map`, con test):
+
+1. **Un testo che è anche una chiave non si traduce mai.** La tabella tiene
+   chiavi e testi come stringhe una accanto all'altra: se «OK» si dice «OK»,
+   sostituire quel testo cambierebbe anche la chiave.
+2. **Un testo con due traduzioni diverse si lascia stare.** Se «Atgal» vale
+   sia `Back` sia `Return`, non si sa quale voce si sta guardando.
+3. Si sostituisce solo per uguaglianza esatta: «Play now» non è «Play».
+
+Per queste regole 16 voci su 295 restano in lituano: è il prezzo del non
+rompere il gioco.
+
+**Provato in gioco l'11/11/2026.** Scritto `level0` tradotto nel bundle
+installato (305 stringhe, 13 s, 12 blocchi ricompressi su 43.702, originale
+tenuto come backup): il gioco parte, e scegliendo il lituano **il menu è in
+italiano**, visto dal proprietario del gioco. `Player.log`: caricamento di
+`data.unity3d` e uscita con «Exit button pressed», nessun errore. Poi
+l'originale è stato ripristinato.
+
+```bash
+cd src-tauri && GS_UNITY_BUNDLE="E:/SteamLibrary/steamapps/common/Lost Host Demo/LostHost_Data/data.unity3d" \
+  GS_UNITY_NODE="level0" GS_UNITY_TABLES="sharedassets0.assets" \
+  GS_UNITY_FROM="LOST_HOST - Lithuanian" GS_UNITY_TO="LOST_HOST - Italian" \
+  cargo test --bin gamestringer -- commands::unity_strings::real_scene_apply::real_scene_apply --ignored --nocapture --exact
+```
+
+È la prima traduzione statica di un gioco Unity fatta solo con i motori Rust
+(lettore e scrittore di bundle, riscrittura di oggetti, sostituzione di
+stringhe) e vista funzionare in gioco, su Unity 6000.3.
+
+**Cosa NON è provato.**
+
+- Un dizionario fatto da una traduzione AI: qui i testi nuovi erano
+  l'italiano ufficiale del gioco. La catena tecnica è la stessa, cambia solo
+  da dove arrivano i testi.
+- `level2` (il gioco vero dopo «Nuova partita»): misurato in memoria, non
+  scritto.
+- Più file interni nella stessa passata: `replace_node_in_place` ne sostituisce
+  uno e riparte sempre dall'originale, quindi una seconda chiamata su un altro
+  file annullerebbe la prima. Serve una versione che ne prenda più d'uno.
+- Giochi con i file `.assets` sciolti, e versioni di Unity diverse da 6000.3.
+- Il motore non è collegato a nessun comando né a String it.
+
+**Trappole.**
+
+1. **Contare «quante stringhe sono uguali a una chiave» prima e dopo non
+   verifica niente.** Dopo la traduzione ce n'erano 6 in più (4.472 → 4.478):
+   non chiavi rovinate, ma parole italiane come «Audio» e «Video» che
+   coincidono con chiavi inglesi. Il controllo giusto è posizione per
+   posizione: stesso numero di stringhe, e la i-esima è il testo nuovo se era
+   in mappa, identica altrimenti.
+2. **`| head` in fondo alla misura ha tagliato di nuovo l'uscita** (la riga di
+   riepilogo di `level0` non c'era). Seconda volta in un giorno: l'uscita di
+   una misura si salva su file e ci si cerca dentro.
+3. **Trovare stringhe è un'euristica, e non importa.** Su `level0` i candidati
+   sono 11.526; fra loro ci saranno byte che per caso sembrano testo. Non si
+   toccano perché non sono uguali a nessuna voce del dizionario.
+
+**Nel codice.** `src-tauri/src/commands/unity_strings.rs` — `find_strings`,
+`replace_strings`, `translation_map`, test `real_scene_strings` e
+`real_scene_translate` (ignorati, sola lettura); `unity_serialized.rs` —
+`list_objects`, `rewrite_objects`.
+
+### Il metodo statico dentro String it (`unity_static.rs`, `unity-loc-tables`)
+
+**Il fatto.** Dall'11/11/2026 String it, su un gioco Unity con tabelle di
+localizzazione, prova **prima** a scrivere i testi nei file del gioco e solo
+dopo XUnity. Il metodo:
+
+1. trova la famiglia di file lingua (`chiave,testo`, uno per lingua);
+2. conta, per ogni lingua, quanti suoi testi stanno negli script delle scene
+   (solo MonoBehaviour, solo testi che non sono anche chiavi);
+3. sceglie quale lingua **sostituire**: stesso alfabeto di quella voluta, mai
+   l'inglese, la meno diffusa per prima (l'utente può imporne un'altra);
+4. traduce i testi inglesi con la catena AI dell'app;
+5. li scrive nelle scene al posto di quelli della lingua scelta, in tutti i
+   file interni in una passata, con backup e ripristino.
+
+Se il gioco non è fatto così il metodo lo dice (`not-applicable`) e String it
+scende a XUnity. Non iniettando nulla, vale anche con un anti-cheat.
+
+**Misura.** Lost Host Demo, sola lettura, 11/11/2026:
+
+```bash
+cd src-tauri && GS_UNITY_TARGET="nl" GS_UNITY_GAME_DIRS="E:/SteamLibrary/steamapps/common/Lost Host Demo" \
+  cargo test --bin gamestringer -- commands::unity_static::real_static_probe::real_static_probe --ignored --nocapture --exact
+```
+
+| Lingua | Voci | Testi non-chiave | Ritrovati nelle scene |
+|---|---|---|---|
+| Coreano | 288 | 285 | 285 |
+| Turco | 292 | 289 | 278 |
+| Giapponese, francese, polacco | 289-292 | 284-288 | 277 |
+| Portoghese, spagnolo | 289-290 | 285-286 | 276 |
+| Russo | 293 | 288 | 275 |
+| Lituano, tedesco | 292-295 | 285-289 | 274 |
+| Arabo, italiano, cinese | 288-291 | 282-283 | 271 |
+| Inglese | 292 | 268 | 252 |
+
+Negli script delle scene ci sono 6.270 stringhe distinte.
+
+| Lingua voluta | Risposta della sonda |
+|---|---|
+| Olandese (`nl`) | sostituisce il lituano (274 testi), sorgente inglese, 292 voci |
+| Ucraino (`uk`) | sostituisce il russo (275 testi) |
+| Italiano (`it`) | rifiuta: il gioco ha già quella lingua |
+| Greco (`el`) | rifiuta: nessuna lingua del gioco ha quell'alfabeto |
+
+Tempo della sonda in build di debug: 6 s (legge e scandisce ~340 MB di file
+serializzati). In build di rilascio non è misurato.
+
+**Il percorso intero dal pulsante (12/11/2026).** Build di sviluppo
+(`npm run tauri:dev`), scheda di Lost Host Demo, lingua `NL`, profilo AI
+«Gratis», pulsante String it. Sotto il pulsante il piano mostrava «Tabelle di
+localizzazione (14)» al primo posto. Esito, in circa due minuti:
+
+- tradotti 291 testi dall'inglese (TM `en → nl` vuota, quindi tutti dall'AI);
+- messaggio dell'app: «In gioco scegli la lingua Lithuanian», 319 stringhe in
+  2 file, 27 voci lasciate com'erano;
+- `data.unity3d` riscritto (+354 KB), originale in `data.unity3d.gs_backup`;
+- `real_bundle_grep`: «Instellingen» 3 volte in `level0` nel file scritto e
+  zero nel backup; «Nustatymai» sparito da `level0` (resta solo nel TextAsset);
+- il gioco ha caricato il bundle riscritto fino al menu, `Player.log` senza
+  errori. **Il menu in olandese non è stato guardato da noi**: la finestra del
+  gioco non era visibile alla prova.
+
+Originale rimesso con `real_bundle_restore`.
+
+Tre difetti visti durante la prova e corretti lo stesso giorno:
+
+- la riga sotto il pulsante diceva «si traducono mentre giochi, con BepInEx +
+  XUnity» anche col piano che mette prima le tabelle: ora, se il piano ha
+  `unity-loc-tables`, dice che i testi si scrivono nei file del gioco;
+- la scheda diceva «Italiano: assente — traducibile» benché il gioco abbia
+  l'italiano fra i suoi file lingua, e con `IT` String it scendeva a XUnity.
+  Il piano ora porta le lingue delle tabelle (`unity_loc_languages`): la
+  scheda dice «già presente» e il pulsante si ferma con «il gioco ha già
+  Italiano», senza installare nulla. Visto nell'app su Lost Host Demo;
+- premuto prima che il piano fosse arrivato, il ramo Unity avrebbe saltato il
+  metodo statico: ora `startAutoTranslate` aspetta il piano. Non provato a
+  schermo: su Lost Host Demo la scansione dura 77 ms e la finestra non si
+  riesce ad aprire a mano.
+
+Resta da guardare: la scheda «Da tradurre» nella barra laterale prende le
+lingue da un'altra fonte e per Lost Host Demo diceva «Manca italiano».
+
+**Cosa NON è provato.**
+
+- Che il gioco mostri bene una lingua nuova col font della lingua sostituita:
+  la regola dell'alfabeto è un'ipotesi ragionevole, non una misura.
+- Giochi con i file `.assets` sciolti: il metodo li rifiuta dicendolo.
+
+**Trappole.**
+
+1. **«Una lingua incorporata» era un'idea sbagliata, e il codice l'aveva già
+   presa per vera.** La prima versione cercava LA lingua incorporata e
+   pretendeva il doppio dei testi della seconda classificata: sul gioco vero
+   rispondeva «nessuna», perché le lingue sono tutte lì con numeri quasi
+   uguali. I test con dati finti passavano tutti. L'ha trovata solo la sonda
+   sul gioco reale, prima di collegare l'interfaccia.
+2. **L'inglese coincide con le chiavi.** Per questo si contano solo i testi
+   che non sono chiavi: altrimenti l'inglese risulterebbe sempre incorporato
+   al 100% solo perché le chiavi stanno nelle scene.
+3. **`replace_node_in_place` riparte dall'originale.** Per scrivere più file
+   interni serve `replace_nodes_in_place`: due chiamate separate si
+   annullerebbero.
+
+**Nel codice.** `src-tauri/src/commands/unity_static.rs` — `probe`, `apply`,
+`restore`, comandi `unity_static_probe/apply/restore`; `unity_fs.rs` —
+`rewrite_nodes`, `replace_nodes_in_place`; `lib/string-it/unity-static.ts` —
+`runUnityStaticTranslation`; ramo Unity di `startAutoTranslate` in
+`components/game-detail-client.tsx`; `translation_plan.rs` mette
+`unity-loc-tables` prima di `unity-xunity`.
+
+## GameMaker
+
+### Un `%` a metà frase è un codice anche se il controllo non lo conta
+
+**Il fatto.** Nei giochi tipo Deltarune `%` chiude il messaggio ovunque si
+trovi, non solo in coda. Per questo il gioco scrive «percent» per esteso. Il
+modello lo «corregge» in `%`, e il messaggio verrebbe troncato in quel punto.
+Una traduzione con più `%` dell'originale viene ora rifiutata e la riga resta
+com'era.
+
+**Come è stato misurato.** Confronto chiave per chiave tra
+`lang/lang_en_ch1.json` (sorgente) e `lang/lang_ja_ch1.json` (dove String it
+scrive l'italiano) dopo il giro del 16/11/2026: su 6.242 chiavi, 2 hanno un
+numero di `%` diverso, e in tutte e due la traduzione ne ha uno in più.
+
+| chiave | inglese | italiano scritto |
+|---|---|---|
+| `obj_checkers_enemy_slash_Step_0_gml_82_0` | `\cY~1-percent\cW loose!` | `\cY~1%\cW!` |
+| `obj_npc_room_slash_Other_10_gml_871_0` | `a 400-percent increase […]/%` | `del 400% […]/%` |
+
+Nel sorgente inglese solo 3 righe hanno un `%` non finale («% TP» due volte,
+«found by 5%.»): lì il `%` l'ha messo il gioco, e resta ammesso.
+
+**Quando.** 16/11/2026, DELTARUNE demo (Steam), Ollama locale.
+
+**Dove vive nel codice.** `src-tauri/src/commands/gm_placeholder.rs`,
+`codes_preserved`; chiamata dal percorso GameMaker in
+`src-tauri/src/commands/prediction_tool.rs`. Test:
+`rifiuta_il_percento_che_l_originale_non_aveva`, con le due righe vere.
+
+**La trappola.** `extract_gm_codes` conta `%` e `/` come codici solo in coda,
+per non toccare «100%» e «and/or». La scelta è giusta per il mascheramento, ma
+il confronto finale ereditava lo stesso punto cieco: un `%` nuovo a metà frase
+non risultava un codice e la riga usciva pulita. Mascherare e verificare hanno
+bisogno di regole diverse: chi verifica deve contare anche ciò che chi maschera
+lascia stare.
+
+**Cosa NON è provato.** Non è stato visto in gioco che cosa fa davvero un `%`
+a metà riga: che tronchi è dedotto dal fatto che il gioco evita di scriverlo.
+Lo stesso punto cieco vale per una `/` nuova a metà frase, che non viene
+rifiutata. Le due righe già scritte nella copia installata non sono state
+toccate: si correggono rifacendo il giro o ripristinando il `.bak`.
+
+---
 
 ## Traduzione in tempo reale (IPC)
 
@@ -1728,7 +2297,699 @@ ogni anello e' verificato singolarmente e il giro completo non l'ha ancora fatto
 nessuno: l'unico modo di sapere se regge e' percorrerlo, e finche' non e' stato
 percorso va scritto cosi'.
 
+### Windows OCR: la lingua sorgente, il ripiego per scrittura e il panic di `block_on`
+
+**Il fatto.** Fino alla Fase 0 l'OCR Rust di Windows ignorava la lingua sorgente:
+il motore nasceva sempre da `OcrEngine::TryCreateFromUserProfileLanguages()`, il
+parametro di `recognize_text_async` si chiamava `_language` e nessuno lo leggeva
+(`recognize_text` lo scriveva nel `log::debug!` e lo passava avanti), quindi si
+otteneva il riconoscitore del profilo Windows qualunque lingua si scegliesse. E
+ogni riga usciva con `confidence: 0.9` scritto a mano, perché Windows OCR una
+confidenza per riga non la fornisce: il cursore «confidenza minima» di
+`/ocr-translator` (30–90%, default 50%) non scartava mai niente, e il badge di
+`/live-ocr` avrebbe mostrato 90% su qualunque testo, se quella pagina avesse mai
+ricevuto una risposta (vedi il panic più sotto). Ora:
+
+- il motore si crea per la lingua chiesta: `Language::CreateLanguage` →
+  `OcrEngine::IsLanguageSupported` → `OcrEngine::TryCreateFromLanguage`.
+  `"auto"` (o vuoto) resta sulle lingue del profilo, che è l'unico automatico
+  che Windows OCR offre;
+- se il riconoscitore esatto manca, si ripiega sul primo riconoscitore
+  installato con la **stessa scrittura** (`Language.Script`, quattro lettere).
+  Le scritture indeterminate (`Z…`: `Zyyy`, `Zzzz`, `Zxxx`) non combaciano con
+  niente;
+- se manca anche quello, l'errore è onesto: comincia col marcatore
+  `OCR_LANGUAGE_NOT_INSTALLED` e dice di installare il language pack con il
+  riconoscimento ottico dei caratteri. `start_ocr_translator` lo verifica
+  **prima** di accendere il loop, perché dentro `run_ocr_loop` un errore
+  finisce solo in `log::warn!` e la pagina resterebbe «avviata» e muta;
+- `confidence` è sparito da `DetectedText` e `OcrTextResult`, e
+  `min_confidence` da `OcrConfig`.
+
+**Misura (01/10/2026, questa macchina: Windows 11, unico riconoscitore OCR
+installato `it-IT`).** Le lingue si interrogano da Windows PowerShell 5.1
+(`powershell.exe`), che sa caricare i tipi WinRT:
+
+```powershell
+$null = [Windows.Media.Ocr.OcrEngine, Windows.Foundation, ContentType = WindowsRuntime]
+$null = [Windows.Globalization.Language, Windows.Foundation, ContentType = WindowsRuntime]
+[Windows.Media.Ocr.OcrEngine]::AvailableRecognizerLanguages | % { "$($_.LanguageTag) $($_.Script)" }
+foreach ($t in 'en','en-US','it','ja','zh','zh-Hans','ko','ru') {
+  $l = [Windows.Globalization.Language]::new($t)
+  "$t supportata=$([Windows.Media.Ocr.OcrEngine]::IsLanguageSupported($l)) scrittura=$($l.Script)"
+}
+```
+
+`AvailableRecognizerLanguages` restituisce solo `it-IT Latn`. Il resto, con
+accanto cosa ne fa `create_engine` (letto dal codice, non eseguito in Rust):
+
+| richiesta | `IsLanguageSupported` | scrittura | `create_engine` |
+|---|---|---|---|
+| `it` | True | `Latn` | motore `it-IT` |
+| `en`, `en-US` | **False** | `Latn` | ripiego su `it-IT` |
+| `ru` | False | `Cyrl` | errore language pack |
+| `ja` | False | `Jpan` | errore language pack |
+| `ko` | False | `Kore` | errore language pack |
+| `zh-Hans` | False | `Hans` | errore language pack |
+| `zh` | False | **`Zyyy`** | errore, senza nemmeno tentare il ripiego |
+
+Che il riconoscitore italiano legga l'inglese è stato provato, non dedotto: un
+PNG sintetico (Segoe UI 28, nero su bianco, 900x160) con due righe inglesi, dato
+a `RecognizeAsync` del motore `it-IT` dalla stessa PowerShell (sonda non
+committata: `System.Drawing` per il disegno, `BitmapDecoder` per la
+`SoftwareBitmap`):
+
+```text
+richiesta: en  IsLanguageSupported=False  script=Latn
+riconoscitore usato: it-IT
+  riga: The quick brown foxjumps over the lazy dog
+  riga: New Game Load Game Options Quit
+```
+
+Due righe su due, un solo difetto (`foxjumps`, uno spazio perso). È testo di
+sistema pulito, non un fotogramma di gioco: dice che il ripiego ha senso, non
+quanto legga un font bitmap.
+
+**Il panic di `block_on`.** Prima `recognize_text` costruiva un runtime Tokio
+(`new_current_thread()`) e ci faceva `block_on` sull'`.await` di
+`RecognizeAsync`. Dal loop di `/ocr-translator` funzionava, perché
+`run_ocr_loop` gira in un `std::thread::spawn`, fuori da ogni runtime. Ma
+`ocr_recognize` è un comando Tauri `async` e chiamava `recognize_text`
+direttamente, cioè da un thread del runtime di Tauri; e `ocr_recognize_png`,
+quello che invoca `/live-ocr` (`components/tools/live-ocr-overlay.tsx`), passa da
+`ocr_recognize`. Lì Tokio va in panic con «Cannot start a runtime from within a
+runtime» (`tokio/src/runtime/context/runtime.rs`): la chiamata moriva invece di
+restituire un risultato o un errore. Ora l'attesa è `IAsyncOperation::get()` di
+`windows-future`, che blocca il thread su un evento Win32 senza nessun runtime
+(`windows-future-0.2.1/src/get.rs` e `waiter.rs`: `CreateEventW`, poi
+`WaitForSingleObject`), e `ocr_recognize` chiama `recognize_text`
+dentro `tauri::async_runtime::spawn_blocking`, così ad aspettare non è un thread
+del runtime async.
+
+**Nel codice.**
+
+- `src-tauri/src/ocr_translator/ocr_engine.rs` — `create_engine()`,
+  `engine_with_same_script()`, `check_language()`, `recognize_text()`; costante
+  `OCR_LANGUAGE_NOT_INSTALLED`.
+- `src-tauri/src/ocr_translator/mod.rs` — `start_ocr_translator` chiama
+  `ocr_engine::check_language` prima di partire; `ocr_recognize` usa
+  `spawn_blocking`.
+- `src-tauri/Cargo.toml` — feature `"Globalization"` del crate `windows` 0.61:
+  senza, `windows::Globalization::Language` non esiste e `ocr_engine.rs` non
+  compila.
+- `lib/ocr-overlay-payload.ts` — lo stesso marcatore e `isOcrLanguageMissing()`,
+  con cui `app/ocr-translator/page.tsx` e `components/tools/live-ocr-overlay.tsx`
+  mostrano l'indicazione tradotta. `live-ocr-overlay.tsx` passa `zh-Hans` al
+  posto di `zh`, proprio per la scrittura indeterminata.
+
+**Le trappole.**
+
+1. **Un parametro col trattino basso è il compilatore che te lo dice.**
+   `_language` era una promessa della firma che il corpo non manteneva: la UI
+   faceva scegliere la lingua, la funzione la buttava. Nessun errore, solo un
+   riconoscitore diverso da quello chiesto.
+2. **Una costante al posto di una misura fa sembrare vivo un filtro.** 0.9 è
+   ≥ di ogni valore che il cursore permetteva: il cursore si muoveva, la soglia
+   non scartava mai niente, e il 90% era un numero inventato. Se il motore non
+   fornisce un dato, il dato non si mostra.
+3. **`IsLanguageSupported("en") == False` non vuol dire «l'inglese non si
+   legge».** Conta la scrittura, non il tag. Ma il ripiego vale solo per una
+   scrittura vera: `zh` da solo è `Zyyy`, e farlo combaciare con qualcosa
+   vorrebbe dire leggere il cinese con un riconoscitore a caso.
+4. **La stessa funzione era giusta da un chiamante e rotta dall'altro.**
+   `block_on` da un `std::thread` funziona, da un comando `async` va in panic.
+   Provarla dal loop di `/ocr-translator` non avrebbe mai mostrato il difetto di
+   `/live-ocr`: una funzione bloccante si prova da **ogni** contesto che la
+   chiama.
+
 ---
+
+## Scelta del metodo: il pianificatore di String it
+
+**Stato all'11/11/2026: il piano ordina, blocca e guida la cascata
+nativo → runtime → OCR. Non ancora provato su giochi veri.**
+
+Prima la scelta era una catena di `if` sul nome del motore dentro
+`startAutoTranslate` (`components/game-detail-client.tsx`), con il motore
+ricalcolato 11 volte e l'anti-cheat mai controllato prima di installare
+BepInEx.
+
+Ora c'è un comando Rust, `plan_translation` (`src-tauri/src/commands/translation_plan.rs`),
+che per un gioco installato restituisce:
+
+- il motore e **da dove lo sappiamo**: `files` (marcatori nella cartella,
+  fiducia 90), `hint` (nome/PCGamingWiki, 50), `none` (0);
+- l'anti-cheat trovato nella cartella, se c'è;
+- i metodi **in ordine**: quello nativo del motore, poi `runtime-hook`, per
+  ultimo `ocr-overlay`, che c'è sempre.
+
+Regole che il piano applica (coperte da test in fondo al file Rust):
+
+- con un anti-cheat ogni metodo che inietta (`unity-xunity`, `runtime-hook`)
+  ha `blocked_by` e non va eseguito; i metodi statici e l'OCR restano;
+- RPG Maker dipende dalla variante letta dal disco: MV/MZ → `rpgmaker-json`,
+  XP/VX/Ace → `generic-workflow`, 2000/2003 → nessun metodo statico;
+- Godot, Wolf RPG, Bethesda, CRI e Telltale sono metodi `page`: rinviano allo
+  strumento dedicato, non sono ancora automatici;
+- Unity con tabelle di localizzazione: `unity-loc-tables` (statico, vedi la
+  voce «Il metodo statico dentro String it») viene prima di `unity-xunity`.
+
+Nel frontend (`lib/string-it/plan.ts`): `resolveEngine` è l'unico punto che
+decide il motore per tutti i rami; il ramo Unity e `tryRuntimeFallback` si
+fermano se il piano blocca l'iniezione; sotto il pulsante compare il piano.
+
+**Cascata (11/11/2026).** Quando il metodo nativo non scrive nulla si chiama
+`tryRuntimeFallback`, che ora segue il piano: prova `runtime-hook` (la regola
+`planRuntimeFallback` riceve finalmente `antiCheatBlocked`) e, se il runtime
+non va — bloccato, DLL assente, gioco chiuso, iniezione fallita — propone il
+metodo che il piano mette dopo (`methodAfterRuntime`), oggi l'OCR con un
+pulsante «Apri OCR». Anche i rami Unity e RPG Maker MV/MZ, che prima si
+fermavano all'errore, ora entrano nella cascata. Verificato solo con test
+della regola: **non provato su giochi veri**.
+
+**Cosa manca.** L'OCR si propone, non parte da solo (serve il gioco a
+schermo). Il piano non ha ancora un secondo metodo statico per nessun motore,
+e non sonda quante stringhe troverebbe ogni metodo: su Unity non sa preferire
+le tabelle di localizzazione a XUnity. I rami di `startAutoTranslate` restano
+`if` in sequenza: portare un metodo nuovo nel piano richiede ancora un ramo
+scritto a mano.
+
+### Il banco di prova del piano sui giochi installati (12/11/2026)
+
+**Il fatto.** Un test `#[ignore]` fa il piano per ogni gioco che Steam dà per
+installato e lo confronta con `src-tauri/bench/string-it-plan.tsv`: motore,
+da dove lo sappiamo, primo metodo automatico, anti-cheat, tabelle Unity. Se
+una riga cambia il test fallisce; un gioco nuovo è segnato `+`, uno non più
+installato si salta. È in sola lettura e misura la SCELTA del metodo, non se
+poi il metodo riesce.
+
+```bash
+cd src-tauri && GS_BENCH_LIBRARIES="C:/Program Files (x86)/Steam/steamapps;E:/SteamLibrary/steamapps;F:/SteamLibrary/steamapps" \
+  cargo test --bin gamestringer -- commands::translation_plan::real_bench::real_games_plan_bench --ignored --nocapture --exact
+```
+
+`GS_BENCH_WRITE=1` riscrive il file con quello che si vede ora: va usato dopo
+aver installato un gioco o aver cambiato la regola di proposito.
+
+**Misura.** 15 giochi installati al 13/11/2026 (erano 8 il giorno prima),
+1,1 s in tutto, motore letto dai file in 13 su 15:
+
+| Gioco | Motore | Fonte | Primo metodo automatico |
+|---|---|---|---|
+| AILA, DREAD FLATS, Fobia, Townfall | Unreal Engine | file | `unreal-locres` |
+| Lost Host Demo | Unity | file | `unity-loc-tables` (14 tabelle) |
+| art of rally, Mouthwashing | Unity | file | `unity-xunity` |
+| Danganronpa Trigger Happy Havoc | Spike Chunsoft | file | `danganronpa-wad` |
+| Foolish Mortals | Visionaire Studio | file | `visionaire-vis` |
+| Look Outside | Hendrix Localization | file | `hendrix-csv` |
+| Scarlet Hollow | Ren'Py | file | `renpy-tl` |
+| The Incident at Galley House | Godot | file | `runtime-hook` |
+| Resident Evil Requiem | RE Engine | file | `generic-workflow` |
+| Gabriel Knight 2, The Dig | Unknown | nessuna | `generic-workflow` |
+
+Su Godot il primo metodo del piano è `godot-pck`, che è una pagina e non parte
+da solo: per questo il primo AUTOMATICO risulta l'aggancio a runtime.
+
+**Cosa NON è provato.** Che il metodo scelto riesca: il banco dice solo quale
+è. In particolare `generic-workflow` su RE Engine, Gabriel Knight 2 e The Dig.
+Senza un gioco installato restano RPG Maker MV/MZ puro, GameMaker, Tyrano e
+Wolf RPG.
+
+**Trappole.**
+
+1. **Le cartelle in `steamapps/common` non sono i giochi installati.** La
+   prima versione le contava tutte: 45 «giochi», 33 col motore sconosciuto.
+   Erano resti di giochi disinstallati (salvataggi, backup `.gs_bak`,
+   BepInEx). I giochi veri sono gli `appmanifest_*.acf` con `StateFlags` 4.
+2. **`F:/SteamLibrary` non è in `libraryfolders.vdf`** e non ha manifest: solo
+   resti. Non conta.
+
+**Nel codice.** `src-tauri/src/commands/translation_plan.rs` — `plan_for`
+(il piano per una cartella, usato anche dal comando) e il modulo `real_bench`.
+
+### Il pulsante sui giochi del banco: tre provati, uno scriveva inglese (13/11/2026)
+
+**Il fatto.** String it premuto nella build di sviluppo su tre giochi appena
+installati, profilo AI «Gratis», backend cloud. Ogni cartella è stata
+fotografata prima (percorso e dimensione di ogni file) e confrontata dopo.
+
+| Gioco | Metodo | Esito |
+|---|---|---|
+| Foolish Mortals | `visionaire-vis` | interrotto a 2.000/33.221: 540 tradotte, **262 scritte** |
+| Look Outside | `hendrix-csv` | «finito» in 10 min: **23.322 righe su 23.532 uguali all'inglese** |
+| Mouthwashing (`nl`) | `unity-xunity` | installato; nel gioco 49 testi tradotti dopo 75 s |
+
+**Foolish Mortals.** Scansione ed estrazione riuscite, ~660 stringhe/min
+(un'ora per tutto). Backup `data.vis.gs_bak` e checkpoint
+`gamestringer_ckpt_it.json` creati; l'annullamento funziona. Dal log di
+`visionaire_patcher`: «Patch a parità di offset: 262 applicate, 278 NON entrano
+nello spazio dell'originale (tenuto l'inglese)». **Metà delle traduzioni
+italiane è più lunga dell'originale e viene scartata**: il gioco esce a
+macchia di leopardo. Dopo l'annullamento i passi restano segnati con la spunta
+verde, con scritto «interrotta dall'utente».
+
+**Look Outside.** La barra è arrivata al 100% e non è comparso alcun
+riepilogo. Nel CSV la colonna `it` conteneva l'inglese: le 142 righe
+«diverse» differivano solo per gli spazi ai bordi. Causa: quando tutti i
+provider falliscono `translateWithFallback` restituisce i testi sorgente con
+`success: false`; `runHendrixTranslation` non guardava `success` e accettava
+un testo uguale all'originale, quindi il freno dei tre batch a vuoto non
+scattava mai. Danganronpa, RPG Maker e Ren'Py lo scartavano già; Hendrix no.
+Corretto: uguale all'originale (a meno degli spazi ai bordi) non è una
+traduzione, e senza nemmeno una traduzione il gioco non si tocca. Riprovato:
+«Operazione fallita», cartella intatta.
+
+**Mouthwashing.** BepInEx 5 + XUnity 5.6.3.1 installati, `Language=nl`,
+`Endpoint=GoogleTranslateV2`. Avviato il gioco: `LogOutput.log` dice «Loaded
+XUnity.AutoTranslator into Unity [2022.3.15f1]» e
+`_AutoGeneratedTranslations.txt` aveva 49 righe («New Game=Nieuw spel»). Un
+solo errore di batch su un testo lungo. La traduzione la fa Google dentro
+XUnity, non la catena AI dell'app.
+
+**Cosa NON è provato.** AILA, Danganronpa, Scarlet Hollow e The Incident at
+Galley House: i provider gratuiti avevano smesso di rispondere e senza
+traduzione la prova non dice nulla. Perché abbiano smesso non è accertato
+(limite di richieste è l'ipotesi): gli errori stanno nella console della
+webview, che il log di `tauri:dev` non raccoglie. Nessuno dei tre giochi è
+stato guardato a schermo.
+
+**Trappole.**
+
+1. **Una barra al 100% non dice che è stato tradotto qualcosa.** L'unica
+   prova è confrontare la colonna scritta con l'originale.
+2. **«Italiano: già presente» su Look Outside è falso.** Il gioco ha solo le
+   colonne `en, fr, sp, cn`. La scansione delle lingue conta i file
+   `locales/it.pak` di Chromium che NW.js porta con sé (32 «lingue»).
+   Corretto il 13/11: una cartella `locales` che contiene `en-US.pak` è
+   l'interfaccia di Chromium (NW.js, Electron, CEF) e la scansione la salta
+   (`game_lang_scan.rs`, due test). Non riguardato nell'app.
+3. **Su Mouthwashing l'italiano c'è davvero e il pulsante procede lo stesso.**
+   Il blocco «il gioco ha già la lingua» copriva solo le tabelle Unity; qui con
+   `IT` avrebbe installato XUnity per niente. Corretto il 13/11 **solo nel
+   ramo Unity**: ora si ferma anche quando la lingua è fra quelle dichiarate
+   dallo store. La scansione dei file non conta, perché è un'euristica e un
+   falso positivo fermerebbe il pulsante. Gli altri motori traducono ancora un
+   gioco che la lingua ce l'ha. Non riprovato nell'app.
+4. **HowLongToBeat dà gli stessi numeri a ogni gioco** (19h / 22h / 26h / 24h
+   per Lost Host Demo, Foolish Mortals, Look Outside, Mouthwashing). Non
+   corretto.
+5. **Il traduttore Hendrix toglie gli spazi iniziali**, che in Look Outside
+   servono a centrare i cartelli. Corretto il 13/11: `withOriginalEdges`
+   rimette attorno alla traduzione gli spazi ai bordi dell'originale.
+6. **Dopo la reinstallazione di un gioco Steam lascia i file che non
+   conosce**: backup `.gs_bak`, checkpoint, BepInEx. Una prova pulita parte da
+   una cartella senza resti.
+
+**Il motivo del fallimento AI ora si vede (13/11/2026).** Quando nessun
+provider traduce, `translateWithFallback` restituiva solo `success: false`: il
+perché restava nella console della webview. Ora raccoglie un motivo per ogni
+provider della catena (`senza chiave`, `in pausa dopo un errore`, `limite di
+richieste`, `testo restituito invariato`, oppure il messaggio d'errore, con le
+chiavi censurate) e lo mette in tre posti: nel campo `error` del risultato,
+accanto all'errore sotto il pulsante String it, e nel log di Tauri con il
+prefisso `[frontend] [AI]` (comando `log_frontend_warning`). Coperto da un
+test; **non ancora visto nell'app con provider che falliscono davvero**, quindi
+il perché del 13/11 resta da accertare alla prossima prova.
+
+**Visto nell'app lo stesso giorno, su Scarlet Hollow (Ren'Py).** Estrazione
+riuscita: 83.530 stringhe da `GameStringer/rpa_src` (199 file `.rpy`). La
+traduzione si è fermata dopo tre blocchi a vuoto e il motivo è comparso sotto
+il pulsante e nel log. **Con il profilo «Gratis» e backend cloud non c'era un
+solo provider utilizzabile:**
+
+| Provider | Motivo |
+|---|---|
+| groq-gptoss, groq, cerebras, openrouter | senza chiave |
+| hymt, translategemma, ollama | cercato su `127.0.0.1:11500`, dove non risponde nessuno |
+| lmstudio | non raggiungibile |
+| nllb, mymemory | `Failed to fetch` |
+| libretranslate | testo restituito invariato |
+
+**Ollama era acceso.** Rispondeva su `127.0.0.1:11434` con cinque modelli
+(fra cui `translategemma:12b`, `gemma4:e4b` e `hy-mt1.5`), ma l'app lo cercava
+sulla porta 11500 e lo dava per «spento, 0 modelli». Nel codice 11500 non
+compare: viene dall'indirizzo Ollama salvato nelle Impostazioni
+(`translation.ollamaUrl`), non verificato a schermo. Con l'indirizzo giusto i
+tre provider locali sarebbero partiti. Non corretto: è un'impostazione.
+
+MyMemory e NLLB chiamano `fetch` dalla webview, che verso domini esterni
+fallisce: nell'app Tauri **non possono funzionare mai**. La traduzione della
+chat usa già il giro giusto (`fetch_url_content`, lato Rust); questi due no.
+MyMemory corretto il 13/11 (`myMemoryGet`, due test); NLLB no. **Non
+riprovato nell'app.** Come abbia fatto la corsa del 12/11 su Lost Host Demo a tradurre
+291 testi con lo stesso profilo non è accertato.
+
+Nella cartella del gioco restano `GameStringer/rpa_src/` e
+`gs_renpy_progress_it.json` (24 MB, senza traduzioni); nessun file del gioco è
+stato modificato e `game/tl/` non è stata creata. Danganronpa, AILA e The
+Incident at Galley House non sono stati provati: senza un provider avrebbero
+dato lo stesso esito.
+
+Dopo la prova fallita la scheda diceva **«Italiano: già presente»**: la
+scansione delle lingue leggeva `it` nel nome del nostro
+`gs_renpy_progress_it.json`. Corretto il 13/11: la scansione salta i file e
+le cartelle che scriviamo noi (`gs_*`, `gamestringer*`, `*.gsprogress_*`).
+
+**Seconda corsa, con Ollama raggiungibile (13/11/2026).** Nella build di
+sviluppo l'indirizzo salvato era ancora `:11500`; svuotato il campo, Ollama è
+risultato attivo con 5 modelli. Lotto di prova da 200, backend cloud: la
+catena è scesa sui modelli locali, ~1,2 stringhe/s, finita in 3 minuti.
+L'app dichiara «136 stringhe scritte nei file del gioco (25% riuscito)» e
+«150 errori»; sul disco ci sono `game/tl/it/screens_it.rpy` con **50** coppie
+`old`/`new` e `game/gs_language.rpy` (`config.language = "it"`). Perché 136
+contro 50 non è accertato. Il gioco non è stato avviato.
+
+**Trappola: `byte as char` nell'estrazione Ren'Py.** `extract_first_quoted`
+leggeva la riga byte per byte e spingeva ogni byte come carattere: il pallino
+`•` (E2 80 A2) usciva come tre caratteri Latin-1 e nel file `tl` finiva
+`C3 A2 C2 80 C2 A2`. Un `old` così non combacia col testo del gioco, quindi
+**ogni riga con un carattere non ASCII restava in inglese**, e il modello
+riceveva testo sporco (nelle traduzioni compaiono `Â¢` e `Â�•`). I sorgenti
+`.rpy` erano UTF-8 validi (199 su 199): il danno nasceva solo lì. Corretto il
+13/11 leggendo per caratteri, con un test. Il checkpoint e il file `tl` già
+scritti in Scarlet Hollow contenevano gli originali sporchi. **Riprovato lo
+stesso giorno a cartella pulita**: 65 coppie in due file (`screens_it.rpy`,
+`01virtual_keyboard_it.rpy`), tutti gli `old` compaiono identici nel sorgente,
+nessun carattere sporco né negli `old` né nei `new`, i pallini restano
+pallini. Il lotto ha impiegato circa 2 minuti. Altri difetti di qualità visti
+nel campione: «Duke» tradotto «Il Duca», la persona del verbo che cambia da
+una riga all'altra,
+vengono tradotti identificatori (`forced_short`, `default_choice`) e i nomi
+dei tasti (`Enter` → «Inserisci»).
+
+**Perché è lento: misurato (13/11/2026).** Nell'app ~1,2-1,7 stringhe/s: per
+83.530 stringhe la stima era 19 ore. Misure fatte fuori dall'app, contro
+Ollama, con 40 stringhe vere di `screens.rpy` (74 caratteri e ~30 token di
+uscita in media), RTX 4080 con 8,3 GB di memoria video già occupati da altro:
+
+| Modello | Slot Ollama | Concorrenza 1 | Concorrenza 4 | Concorrenza 8 |
+|---|---|---|---|---|
+| `hy-mt1.5` 7B | 1 (com'è oggi) | 1,22 str/s | 1,29 | 1,28 |
+| `gemma4:e4b` | 1 (com'è oggi) | 1,57 | 1,61 | 1,60 |
+| `hy-mt1.5` 7B | 4 | 1,18 | **3,24** | 3,36 |
+| `gemma4:e4b` | 4 | 2,42 | **3,65** | 2,80 |
+
+- Il tempo è quasi tutto generazione: ~0,55 s a stringa, più ~0,1 s di prompt.
+  Il modo in cui l'app chiama il modello costa poco: Ollama da solo, in
+  sequenza, fa 1,9 str/s con lo stesso prompt.
+- **Mandare più stringhe in una richiesta non serve**: 30 righe numerate in una
+  chiamata impiegano quanto 30 chiamate (i token da generare sono gli stessi).
+- **Le richieste parallele non servono se Ollama ha uno slot solo**: si mettono
+  in coda. Con `OLLAMA_NUM_PARALLEL=4` lo stesso modello rende 2,7 volte, al
+  prezzo di memoria video (hy-mt: 5,3 → 7,0 GB).
+- `translategemma:12b` qui fa 19 token/s: non entra nella memoria libera.
+
+Corretto il 13/11: quando è GameStringer ad avviare Ollama lo avvia con 4 slot
+(se l'utente non ha già scelto un valore), e `translateWithHYMT` manda 4
+richieste alla volta invece di 3. **Riprovato nell'app** con Ollama riavviato
+a 4 slot (variabile utente `OLLAMA_NUM_PARALLEL=4`): il lotto da 200 di
+Scarlet Hollow è passato da ~120 s a **~87 s** (2,3 str/s). Ollama da solo ne
+farebbe ~66: i ~20 s di differenza sono dell'app (pause fra i gruppi, ricerche
+prima di ogni lotto), non ancora scomposti. L'avvio da GameStringer con 4 slot
+non è stato provato: qui Ollama l'ha avviato la sua icona. Un Ollama già
+avviato da altri (l'icona di Ollama all'accesso a Windows) resta a uno slot:
+serve la variabile d'ambiente `OLLAMA_NUM_PARALLEL=4` e un riavvio di Ollama.
+Anche a 3,2 str/s Scarlet Hollow chiede ~7 ore: per un gioco di quelle
+dimensioni la via pratica resta un provider cloud.
+
+**Trappola della misura.** Due istanze di Ollama insieme riempiono la memoria
+video (15,2 GB su 16) e i numeri escono senza senso: la prova con più slot va
+fatta su un'istanza sola, con i modelli dell'altra scaricati.
+
+Altri due difetti visti: con «Lotto di prova (200)» spuntato il contatore
+mostrava 0/83.530, e in alto compare «Errore sconosciuto» mentre il motivo
+vero sta nel pannello. Non corretti.
+
+**Nel codice.** `lib/hendrix-translate.ts` — il controllo nel ciclo dei batch
+e il blocco prima di applicare. `lib/ai/ai-translate-direct.ts` —
+`recordChainFailure` e `getChainFailureSince`.
+
+### Il pulsante sugli altri tre giochi del banco (13/11/2026, pomeriggio)
+
+**Il fatto.** String it premuto nella build di sviluppo, backend cloud senza
+chiavi: la catena scende sul modello locale `hy-mt1.5` 7B, Ollama a 4 slot.
+Cartelle fotografate prima e confrontate dopo.
+
+| Gioco | Metodo | Esito |
+|---|---|---|
+| Danganronpa | `danganronpa-wad` | fermato a mano dopo ~1 min: **192 scritte**, WAD ricostruito |
+| AILA | `unreal-locres` | finito in 19 min: **3.317 tradotte su 3.518** |
+| The Incident at Galley House | `godot-pck` | **il pulsante si ferma subito**, cartella intatta |
+
+**Danganronpa.** 47.999 stringhe da 1.509 file `.lin`, ~3 str/s, stima 4 h
+48 min. Lo Stop salva il checkpoint e ricostruisce comunque il WAD con quanto
+c'è: «192 scritte · 0 mismatch · 23 tag interni · 7 senza traduzione ·
+verifica 4/4». `dr1_data_us.wad` passa da 1.306.210.055 a 1.306.212.357 byte;
+restano i backup `dr1_data_us.wad.gsbackup` e
+`dr1_data_keyboard_us.wad.gsbackup` e `GameStringer_Translation/`.
+
+**AILA.** 3.518 stringhe da 8 `.locres` dentro il pak (v11, Oodle). Scritta la
+tripletta `ProjectAIDA_GameStringer_it_P.pak` + `.utoc` + `.ucas` con
+`Game/it/Game.locres` e la cultura `it` aggiunta al `locmeta`; i file del
+gioco non sono toccati. 201 stringhe sono uguali all'originale, a campione
+legittime (nomi, «No»). L'app dichiara «3321 scritte (94% riuscito)». Un
+solo lotto è rimasto senza traduzione, col motivo nel log. Su Unreal il
+pannello non mostra un contatore, solo una barra.
+
+**The Incident at Galley House.** «Godot non ha una pipeline automatica in
+String it!: usa il Godot Translator dedicato». Il piano elenca dopo
+l'aggancio a runtime e l'OCR, ma il pulsante non ci scende: su Godot String it
+oggi non fa nulla.
+
+**Cosa NON è provato.** Nessuno dei giochi è stato avviato: che il WAD
+ricostruito e la tripletta Unreal si carichino e mostrino l'italiano non è
+verificato. La corsa completa di Danganronpa non è stata fatta.
+
+**Trappole.**
+
+1. **`translategemma` risponde 404**: è installato come `translategemma:12b`,
+   ma la catena lo chiama con un nome che Ollama non trova. Non corretto.
+2. **La ricerca in Libreria con i punti non trova il gioco**: «A.I.L.A» dà 20
+   risultati senza AILA in cima, «AILA» lo trova. Non corretto.
+3. **MyMemory ora raggiunge il server dall'app** (risponde, anche se col testo
+   invariato): la correzione del mattino è confermata.
+
+### AILA avviato: la tripletta si carica, ma i `.locres` non sono tutto il testo (13/11/2026)
+
+**Il fatto.** AILA avviato da Steam (`steam://rungameid/2695430`) con la
+tripletta `ProjectAIDA_GameStringer_it_P.*` nella cartella `Paks`. È la prima
+volta che una patch scritta dal pulsante viene guardata dentro il gioco.
+
+**Cosa si vede.**
+
+- Menu principale in italiano: «GIOCO NUOVO», «OPZIONI», «ESCI», «Regola le
+  opzioni di gioco.», «Naviga», «Conferma». Sono le nostre stringhe: stanno
+  identiche in `GameStringer/translation_session.json`.
+- In Opzioni la voce TESTI è su **ENGLISH** e il gioco mostra l'italiano: la
+  patch copre i testi inglesi, non aggiunge una decima lingua da scegliere.
+- In partita l'intestazione «OBIETTIVI» è italiana, l'obiettivo sotto resta
+  **«Go to the dinner»** (visto dal proprietario giocando).
+
+**Perché l'obiettivo resta inglese.** La frase non è in nessuno degli 8
+`.locres`: 0 occorrenze nella sessione delle 3.518 stringhe. Decomprimendo
+tutti i 601.660 blocchi di `ProjectAIDA-Windows.ucas` (17,5 GB) compare **una
+volta sola**, nell'asset `Content/Blueprints/AP/Trash/UI_PercentMission.uasset`
+(chunk `823cb2deef3dcc1e00000001`). Lì è un `FText` **senza chiave**: flag `2`
+(`CultureInvariant`), storia `-1`, poi la stringa. Un testo invariante non ha
+namespace né chiave, quindi **nessuna voce di `.locres` può tradurlo**:
+l'ipotesi «basta aggiungere la chiave» era sbagliata.
+
+**Il metodo che funziona: sostituire l'asset.** Provato su questa sola frase.
+
+```bash
+# retoc vuole solo i contenitori del gioco: con la nostra tripletta nella
+# stessa cartella rifiuta («different header versions»). Servono copie o
+# collegamenti fisici di ProjectAIDA-Windows.utoc/.ucas e global.utoc/.ucas.
+retoc to-legacy -f UI_PercentMission --no-shaders <cartella-collegamenti> legacy
+# nel .uexp: «Go to the dinner» -> «Vai alla cena   » (stessa lunghezza)
+retoc to-zen --version UE5_5 legacy ProjectAIDA_GameStringer_assets_P.utoc
+```
+
+La tripletta `ProjectAIDA_GameStringer_assets_P.pak/.utoc/.ucas` (347 + 483 +
+31.599 byte) copiata in `Paks`: il gioco parte, carica il salvataggio e
+l'inventario (TAB) mostra **«Vai alla cena»** sotto «OBIETTIVI».
+
+**Cosa NON è provato.**
+
+- Una traduzione di **lunghezza diversa**: qui la frase è stata riempita di
+  spazi per non spostare nessun offset. Con lunghezze libere vanno riscritte le
+  dimensioni dentro l'asset.
+- Che il metodo regga su altri asset e altri giochi: un asset, un gioco.
+
+**Quanti sono (misura sull'intero archivio).** Decompressi i 38.850 chunk
+`ExportBundleData` e cercata la forma di «Go to the dinner» (flag u32, storia
+`-1`, bool `1`, FString):
+
+| | |
+|---|---|
+| occorrenze | 2.222 in 269 asset |
+| testi distinti | 518 |
+| distinti con almeno due lettere | 444 |
+| distinti con uno spazio (frasi) | 234, per 806 occorrenze |
+| di queste frasi, già presenti come testo nei `.locres` | 17 |
+
+Contro le 3.518 stringhe dei `.locres` il tetto è quindi **234 frasi (6,7%)**,
+444 contando le parole singole (12,6%). È un tetto, non il numero dei testi che
+il giocatore vede: dentro ci sono etichette di lavoro degli sviluppatori
+(«Lock» 332 volte, «Unlock» 286, «Disable Player Input» 237, soprattutto in
+`Content/Map/Experiences`), appunti in portoghese, segnaposto dei widget
+(«File name.txt») e testi veri («Kill 10 enemies silently», «Main Menu»,
+«Initializing A.I.L.A. System...»). **La forma del dato non distingue un
+testo a schermo da un'etichetta di lavoro.**
+
+Limite della misura: conta una sola forma di serializzazione. Testi salvati
+come stringhe semplici (`FString`) o in tabelle dati non sono contati.
+
+**Trappole.**
+
+1. **«Tradotto al 94%» è il 94% dei `.locres`, non del gioco.** Il riepilogo
+   non sa dei testi rimasti negli asset.
+2. **La nostra tripletta `_it_P` ha un'intestazione più nuova del gioco**
+   (`SoftPackageReferencesOffset`, scritta come UE5_7; il gioco è
+   `SoftPackageReferences`, cioè UE5_5). Il gioco la carica lo stesso perché è
+   vuota, ma `retoc` si rifiuta di leggere le due insieme. Per un contenitore
+   con asset veri la versione va presa dal gioco, non fissata.
+3. **Errori del modello passati senza controllo**, visti a schermo:
+   «LINGUAGUE» per Language, «MAUS/TASTIERA» per Mouse/Keyboard, «CAMMINA
+   DRITTO» sul tasto D (era «muovi a destra»).
+
+### Scarlet Hollow e Danganronpa avviati (13/11/2026)
+
+**Il fatto.** I due giochi avviati da Steam con i file scritti dal pulsante al
+mattino, guardati a schermo.
+
+| Gioco | Si avvia? | Italiano a schermo? |
+|---|---|---|
+| Scarlet Hollow (Ren'Py) | sì, `log.txt` senza traceback | sì, dove il lotto di prova è arrivato |
+| Danganronpa (WAD ricostruito) | sì | sì, con due difetti |
+
+**Scarlet Hollow.** Le due schermate nere iniziali restano inglesi (non erano
+nel lotto). Menu principale tutto italiano: «Prosegui», «Inizia», «Carica»,
+«Preferenze», «Accessibilità», «Controlli», «Fine». Nelle Preferenze sono
+italiane solo «Finestra» e «Modalità a schermo intero»; il resto è inglese,
+coerente con le 128 coppie scritte. `config.language = "it"` di
+`gs_language.rpy` basta: nessun menu lingua da toccare.
+
+**Danganronpa.** Nuova partita, lingua English: dopo il filmato il prologo
+(`e00_001_000.lin`) esce in italiano, sette righe guardate. Apostrofo tipografico
+e puntini di sospensione si vedono corretti.
+
+**Trappole.**
+
+1. **Il font di Danganronpa ha solo «à» e «é» fra le accentate italiane**:
+   «E lì,» esce come «E l≡,». Letto dal font stesso, non dedotto dallo schermo.
+   Sta in `Dr1/data/us/font/font.pak` dentro `dr1_data_us.wad`: un PAK di 4
+   voci, due immagini dei glifi e due tabelle `tFpS`. Nella tabella: `u32`
+   numero glifi a +8, `u32` inizio dati a +12, `u32` codice massimo a +16, poi
+   **da +32** un `u16` per ogni codice Unicode (`0xFFFF` = glifo assente).
+   Leggere da +28 sposta tutto di due codici: è l'errore fatto al primo colpo.
+
+   | Font | Glifi | Latin-1 | Punteggiatura tipografica |
+   |---|---|---|---|
+   | voce 1 (dialoghi) | 323 | × à é ó | — ― ’ “ ” • … ※ |
+   | voce 3 | 179 | nessuna | — … ※ |
+
+   Controprova: ogni carattere dei 47.999 testi inglesi originali risulta
+   presente nella voce 1. Mancano invece **è (47 volte), ì (30), È (21),
+   ò (18), ù (9)**: **96 righe tradotte su 215 (45%)** hanno almeno un
+   carattere senza glifo. Il rebuild dichiara «0 mismatch · verifica 4/4» e
+   non controlla i glifi. A schermo è stata vista rotta solo la «ì».
+
+   **Corretto nel rebuild** (`gs_font_safe` in `danganronpa_patcher.rs`): prima
+   dell'a-capo automatico il rebuild legge la tabella del font dal WAD stesso e
+   sostituisce ogni carattere senza glifo con un ripiego che il font ha
+   («è» → «e'», «È» → «E'», «…» → «...»). «à» ed «é» restano, perché ci sono.
+   Se il WAD non ha il font, o il ripiego non è nel font, il testo resta
+   com'è. Provato con i test su una tabella sintetica e **rivisto a schermo
+   il 15/11**: WAD ricostruito dal backup (192 scritte, +234 byte rispetto al
+   rebuild del 13/11), nuova partita, la riga che usciva «E l≡,» ora è
+   «E li', in piedi all’ingresso…»; «già» nella riga prima tiene la «à».
+   Guardate nove righe del prologo; le righe con «è», «È», «ò», «ù» non sono
+   capitate a schermo.
+
+   Per rifare il solo rebuild senza passare dal pulsante (che farebbe
+   ripartire la traduzione): un esempio Cargo di poche righe che chiama
+   `rebuild_danganronpa_wad(cartella)` dentro
+   `tauri::async_runtime::block_on`. Riparte sempre dal `.gsbackup`.
+2. **Le righe con parole colorate restavano inglesi.** La riga 6 del prologo
+   aveva la traduzione nella sessione ma nel gioco era inglese: era una delle
+   «tag interni» che il rebuild saltava. Non sono poche: contando le forme dei
+   tag nei 1.871 `.lin` del gioco, 15.978 righe hanno un solo colore attorno
+   a tutto il testo (`#T#`, già gestite) e **circa 3.200 hanno tag nel
+   mezzo** (1.742 `T#T#T`, 948 `#T##T##T#`, più varianti). I tag sono sempre
+   a coppie: `<CLT n>` apre, `<CLT>` chiude.
+
+   **Corretto nel rebuild** (`gs_rewrite_inner_clt`): la riga si scrive
+   sempre. La traduzione prende il colore di base; una parola evidenziata
+   tiene il colore solo se compare identica nella traduzione, come parola
+   intera (in pratica i nomi propri), altrimenti lo perde. Sul gioco: 215
+   scritte invece di 192, **6 evidenziazioni tenute e 24 perse** nelle 23
+   righe. Rivisto a schermo il 15/11: la riga 6 è italiana, il nome
+   dell'accademia resta giallo, «speranza» è senza colore.
+
+   Strada sbagliata da non rifare: scegliere il colore di base come «quello
+   che copre più testo». Se la parola evidenziata è più lunga del resto della
+   frase, tutta la riga prende il colore dell'evidenziazione. Il colore di
+   base è quello con cui la riga comincia e finisce; il conteggio serve solo
+   se i due non coincidono.
+
+   Non provato: se nei dibattiti in classe un colore ha un ruolo nel gioco e
+   non solo di enfasi. Le quattro file tradotte sono tutte di dialogo.
+3. **In Scarlet Hollow una voce lunga esce dal riquadro**: «Informazioni
+   generali sul gioco» (era «About») si sovrappone al pannello delle
+   Preferenze.
+4. **Nel lotto di Scarlet Hollow sono stati tradotti nomi interni** («who» →
+   «chi», «default_choice» → «opzione_predefinita»). Il gioco parte lo stesso,
+   ma sono identificatori, non testo.
+5. **Per chi guida il gioco da fuori:** in Danganronpa il testo avanza col
+   pulsante sinistro del mouse, e i clic sintetici non arrivano; Ctrl («salta
+   testo») sì. Non scambiare un dialogo fermo per un blocco della patch. I
+   tocchi brevi dei tasti spesso non vengono letti: servono pressioni tenute
+   (0,2 s nei menu; 0,1 s di Ctrl avanza una riga, 0,2 s ne salta due).
+6. **Le traduzioni lunghe escono dal riquadro.** Il riquadro del dialogo
+   mostra tre righe da 40 caratteri; l'a-capo automatico ne produce una
+   quarta quando l'italiano è più lungo, e quella si vede tagliata sul bordo
+   (viste due righe così nel prologo). Non corretto.
+
+**Cosa NON è provato.** Oltre il prologo di Danganronpa e oltre il menu di
+Scarlet Hollow non è stato guardato niente; nessun dialogo di Scarlet Hollow è
+tradotto, quindi lì i dialoghi a schermo non sono verificati.
+
+## Eseguibili: patch delle stringhe sul posto (Binary Patcher)
+
+### Si patchano solo le stringhe i cui byte tornano identici
+
+**Il fatto.** Una sequenza trovata in un eseguibile è testo patchabile solo se,
+decodificata e ricodificata in UTF-8, restituisce gli stessi byte. Le altre non
+vanno estratte.
+
+**Come è stato misurato.** Su `DELTARUNE.exe` (demo, 5.070.848 byte) con il
+metodo «Basato su regole» EN→IT, che non traduce nulla, la revisione mostrava
+3 stringhe «tradotte» su 2393 e Applica Patch le scriveva. Confronto byte per
+byte con l'originale:
+
+- `0x1f82f8`, sezione `.text`: `C0 89 44 24` (istruzioni) → `EF BF BD 20`;
+- `0x49e8d2`, sezione `.data`: 8 byte di dati → due U+FFFD;
+- `0x4d5b4c`, sezione `.rsrc`: il BOM del manifest sparisce, testo scalato di 3 byte.
+
+Dopo la correzione: 2390 estratte, 0 marcate tradotte, patch rifiutata.
+
+```bash
+# da C:\GIT\GameStringer
+npx vitest run __tests__/lib/binary-string-patcher.test.ts
+```
+
+**Quando.** 17/11/2026, copia di DELTARUNE.exe, a schermo in `tauri:dev`.
+
+**Dove vive nel codice.** `lib/patchers/binary-string-patcher.ts`,
+`extractStringsFromBuffer` (controllo `roundTrips`).
+
+**La trappola.** Il lettore accetta come «UTF-8 a 2 byte» qualunque coppia
+`C0-DF` + `80-BF`, comprese le forme non valide (`C0 89`), frequenti nel codice
+macchina. `TextDecoder` le rende U+FFFD (3 byte) e toglie un BOM iniziale:
+`fitToByteLength(original)` non è più l'originale, `translateStrings` la marca
+`isTranslated` anche senza alcuna traduzione, `applyPatch` la scrive. Non
+provato: se l'eseguibile così patchato parte.
 
 ## Come si aggiunge una voce
 

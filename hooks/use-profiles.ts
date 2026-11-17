@@ -179,7 +179,7 @@ export function useProfilesCore(): UseProfilesReturn {
   const createProfile = useCallback(async (request: CreateProfileRequest): Promise<boolean> => {
     try {
       setError(null);
-      clientLogger.debug(`Creazione profilo con request: ${JSON.stringify(request)}`);
+      clientLogger.debug(`Creazione profilo: ${request.name}`);
       const response = await invoke<ProfileResponse<UserProfile>>('create_profile', { request });
       clientLogger.debug(`Risposta creazione profilo: ${JSON.stringify(response)}`);
       

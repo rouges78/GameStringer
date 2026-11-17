@@ -65,13 +65,13 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
 };
 
 const CATEGORY_ACCENTS: Record<string, string> = {
-  'announcements': 'text-rose-400',
+  'announcements': 'text-rouge-400',
   'translation-packs': 'text-amber-400',
-  'help': 'text-cyan-400',
-  'tutorials': 'text-violet-400',
+  'help': 'text-noir-400',
+  'tutorials': 'text-rouge-400',
   'requests': 'text-emerald-400',
   'showcase': 'text-yellow-400',
-  'off-topic': 'text-slate-400',
+  'off-topic': 'text-noir-400',
 };
 
 interface CommunityOverviewProps {
@@ -146,18 +146,18 @@ export function CommunityOverview({
     <div className="space-y-8">
       {/* ── Esperienza guidata a community vuota ─────────────────────────── */}
       {isEmpty && (
-        <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-6">
-          <h2 className="text-lg font-semibold text-slate-100 mb-1">
+        <section className="rounded-xl border border-noir-800 bg-noir-900/40 p-6">
+          <h2 className="text-lg font-semibold text-noir-100 mb-1">
             {t('communityHub.welcomeTitle') || 'Benvenuto nella community! 👋'}
           </h2>
-          <p className="text-sm text-slate-400 mb-5 max-w-2xl">
+          <p className="text-sm text-noir-400 mb-5 max-w-2xl">
             {t('communityHub.welcomeSubtitle') ||
               'Qui si condividono traduzioni, si chiede aiuto e si mostrano i propri progetti. La community è appena nata: ogni contributo conta doppio.'}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <StarterCard
               icon={MessageSquarePlus}
-              accent="text-violet-400"
+              accent="text-rouge-400"
               title={t('communityHub.starterThread') || 'Apri la prima discussione'}
               description={t('communityHub.starterThreadDesc') || 'Presentati o racconta a cosa stai lavorando.'}
               onClick={() => onNewThread()}
@@ -171,7 +171,7 @@ export function CommunityOverview({
             />
             <StarterCard
               icon={HelpCircle}
-              accent="text-cyan-400"
+              accent="text-noir-400"
               title={t('communityHub.starterHelp') || 'Chiedi aiuto'}
               description={t('communityHub.starterHelpDesc') || 'Bloccato su un engine o un formato? Qualcuno ci è già passato.'}
               onClick={() => onNewThread('help')}
@@ -185,7 +185,7 @@ export function CommunityOverview({
         <section>
           <SectionHeader
             icon={Flame}
-            iconClass="text-rose-400"
+            iconClass="text-rouge-400"
             title={t('forum.trendingNow') || 'In evidenza'}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -202,15 +202,15 @@ export function CommunityOverview({
           <section className="lg:col-span-2">
             <SectionHeader
               icon={Clock}
-              iconClass="text-violet-400"
+              iconClass="text-rouge-400"
               title={t('communityHub.recentActivity') || 'Attività recente'}
               action={
-                <Button variant="ghost" size="sm" className="text-xs text-slate-400 hover:text-white" onClick={() => onGoDiscussions()}>
+                <Button variant="ghost" size="sm" className="text-xs text-noir-400 hover:text-white" onClick={() => onGoDiscussions()}>
                   {t('communityHub.seeAll') || 'Vedi tutte'} <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
                 </Button>
               }
             />
-            <div className="rounded-xl border border-slate-800 divide-y divide-slate-800/70 overflow-hidden">
+            <div className="rounded-xl border border-noir-800 divide-y divide-noir-800/70 overflow-hidden">
               {recent.map((thread) => (
                 <ActivityRow key={thread.id} thread={thread} locale={locale} onClick={() => onOpenThread(thread)} />
               ))}
@@ -223,7 +223,7 @@ export function CommunityOverview({
               iconClass="text-amber-400"
               title={t('communityHub.latestPacks') || 'Ultimi pack'}
               action={
-                <Button variant="ghost" size="sm" className="text-xs text-slate-400 hover:text-white" onClick={onGoPacks}>
+                <Button variant="ghost" size="sm" className="text-xs text-noir-400 hover:text-white" onClick={onGoPacks}>
                   {t('communityHub.seeAll') || 'Vedi tutti'} <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
                 </Button>
               }
@@ -239,9 +239,9 @@ export function CommunityOverview({
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-slate-800 p-5 text-center">
-                <Package className="h-6 w-6 text-slate-600 mx-auto mb-2" />
-                <p className="text-xs text-slate-500 mb-3">
+              <div className="rounded-xl border border-dashed border-noir-800 p-5 text-center">
+                <Package className="h-6 w-6 text-noir-600 mx-auto mb-2" />
+                <p className="text-xs text-noir-500 mb-3">
                   {t('communityHub.noPacksYet') || 'Nessun pack pubblicato ancora.'}
                 </p>
                 <Button size="sm" variant="outline" className="text-xs" onClick={() => router.push('/patch-hub')}>
@@ -258,13 +258,13 @@ export function CommunityOverview({
         <section>
           <SectionHeader
             icon={MessageSquare}
-            iconClass="text-indigo-400"
+            iconClass="text-rouge-400"
             title={t('forum.categories') || 'Categorie'}
             action={
               <Button
                 onClick={() => onNewThread()}
                 size="sm"
-                className="bg-violet-600 hover:bg-violet-500 text-xs"
+                className="bg-rouge-600 hover:bg-rouge-500 text-xs"
               >
                 <Plus className="h-3.5 w-3.5 mr-1" />
                 {t('forum.newThread') || 'Nuova discussione'}
@@ -274,23 +274,23 @@ export function CommunityOverview({
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {categories.map((cat) => {
               const Icon = CATEGORY_ICONS[cat.slug] || MessageSquare;
-              const accent = CATEGORY_ACCENTS[cat.slug] || 'text-indigo-400';
+              const accent = CATEGORY_ACCENTS[cat.slug] || 'text-rouge-400';
               return (
                 <button
                   key={cat.id}
                   onClick={() => onGoDiscussions(cat.slug)}
-                  className="flex items-center gap-2.5 rounded-lg border border-slate-800 bg-slate-900/40 px-3 py-2.5 text-left transition-colors hover:border-slate-700 hover:bg-slate-900/70"
+                  className="flex items-center gap-2.5 rounded-lg border border-noir-800 bg-noir-900/40 px-3 py-2.5 text-left transition-colors hover:border-noir-700 hover:bg-noir-900/70"
                 >
                   <Icon className={cn('h-4 w-4 flex-shrink-0', accent)} />
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs font-medium text-slate-200 truncate">
+                    <div className="text-xs font-medium text-noir-200 truncate">
                       {categoryLabel(cat.slug, cat.name)}
                     </div>
-                    <div className="text-2xs text-slate-500">
+                    <div className="text-2xs text-noir-500">
                       {cat.thread_count || 0} {t('forum.discussions') || 'discussioni'}
                     </div>
                   </div>
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-600 flex-shrink-0" />
+                  <ChevronRight className="h-3.5 w-3.5 text-noir-600 flex-shrink-0" />
                 </button>
               );
             })}
@@ -306,28 +306,28 @@ export function CommunityOverview({
             iconClass="text-emerald-400"
             title={t('communityHub.translationNews') || 'Dal mondo traduzioni'}
             action={
-              <Button variant="ghost" size="sm" className="text-xs text-slate-400 hover:text-white" onClick={() => router.push('/info')}>
+              <Button variant="ghost" size="sm" className="text-xs text-noir-400 hover:text-white" onClick={() => router.push('/info')}>
                 {t('communityHub.allNews') || 'Tutte le news'} <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
               </Button>
             }
           />
-          <div className="rounded-xl border border-slate-800 divide-y divide-slate-800/70 overflow-hidden">
+          <div className="rounded-xl border border-noir-800 divide-y divide-noir-800/70 overflow-hidden">
             {news.map((item) => (
               <a
                 key={item.id}
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-slate-900/70 group"
+                className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-noir-900/70 group"
               >
                 <span className="text-base flex-shrink-0" aria-hidden>{item.sourceIcon}</span>
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs text-slate-200 truncate group-hover:text-white">{item.title}</div>
-                  <div className="text-2xs text-slate-500">
+                  <div className="text-xs text-noir-200 truncate group-hover:text-white">{item.title}</div>
+                  <div className="text-2xs text-noir-500">
                     {item.sourceName} · {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true, locale })}
                   </div>
                 </div>
-                <ExternalLink className="h-3.5 w-3.5 text-slate-600 group-hover:text-slate-400 flex-shrink-0" />
+                <ExternalLink className="h-3.5 w-3.5 text-noir-600 group-hover:text-noir-400 flex-shrink-0" />
               </a>
             ))}
           </div>
@@ -352,7 +352,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center justify-between mb-3">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-noir-200">
         <Icon className={cn('h-4 w-4', iconClass)} />
         {title}
       </h2>
@@ -377,11 +377,11 @@ function StarterCard({
   return (
     <button
       onClick={onClick}
-      className="rounded-lg border border-slate-800 bg-slate-900/40 p-4 text-left transition-colors hover:border-slate-700 hover:bg-slate-900/70"
+      className="rounded-lg border border-noir-800 bg-noir-900/40 p-4 text-left transition-colors hover:border-noir-700 hover:bg-noir-900/70"
     >
       <Icon className={cn('h-5 w-5 mb-2.5', accent)} />
-      <div className="text-sm font-medium text-slate-200 mb-1">{title}</div>
-      <div className="text-xs text-slate-500 leading-relaxed">{description}</div>
+      <div className="text-sm font-medium text-noir-200 mb-1">{title}</div>
+      <div className="text-xs text-noir-500 leading-relaxed">{description}</div>
     </button>
   );
 }
@@ -390,12 +390,12 @@ function FeaturedCard({ thread, locale, onClick }: { thread: ForumThread; locale
   const { t } = useTranslation();
   const categoryLabel = useCategoryLabel(t);
   const category = thread.category as ForumCategory | undefined;
-  const accent = category ? (CATEGORY_ACCENTS[category.slug] || 'text-indigo-400') : 'text-indigo-400';
+  const accent = category ? (CATEGORY_ACCENTS[category.slug] || 'text-rouge-400') : 'text-rouge-400';
 
   return (
     <button
       onClick={onClick}
-      className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 text-left transition-colors hover:border-slate-700 hover:bg-slate-900/70 flex flex-col"
+      className="rounded-xl border border-noir-800 bg-noir-900/40 p-4 text-left transition-colors hover:border-noir-700 hover:bg-noir-900/70 flex flex-col"
     >
       <div className="flex items-center gap-2 mb-2 text-2xs">
         {category && (
@@ -409,8 +409,8 @@ function FeaturedCard({ thread, locale, onClick }: { thread: ForumThread; locale
           </span>
         )}
       </div>
-      <h4 className="text-sm font-medium text-slate-100 line-clamp-2 mb-3 flex-1">{thread.title}</h4>
-      <div className="flex items-center justify-between text-2xs text-slate-500">
+      <h4 className="text-sm font-medium text-noir-100 line-clamp-2 mb-3 flex-1">{thread.title}</h4>
+      <div className="flex items-center justify-between text-2xs text-noir-500">
         <span className="truncate mr-2">{thread.author_name}</span>
         <span className="flex items-center gap-2.5 flex-shrink-0">
           <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{thread.view_count}</span>
@@ -421,7 +421,7 @@ function FeaturedCard({ thread, locale, onClick }: { thread: ForumThread; locale
           )}
         </span>
       </div>
-      <div className="text-2xs text-slate-600 mt-1.5">
+      <div className="text-2xs text-noir-600 mt-1.5">
         {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true, locale })}
       </div>
     </button>
@@ -432,22 +432,22 @@ function ActivityRow({ thread, locale, onClick }: { thread: ForumThread; locale:
   const { t } = useTranslation();
   const categoryLabel = useCategoryLabel(t);
   const category = thread.category as ForumCategory | undefined;
-  const accent = category ? (CATEGORY_ACCENTS[category.slug] || 'text-indigo-400') : 'text-indigo-400';
+  const accent = category ? (CATEGORY_ACCENTS[category.slug] || 'text-rouge-400') : 'text-rouge-400';
 
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-2.5 text-left bg-slate-900/40 transition-colors hover:bg-slate-900/80"
+      className="w-full flex items-center gap-3 px-4 py-2.5 text-left bg-noir-900/40 transition-colors hover:bg-noir-900/80"
     >
       <Avatar className="h-7 w-7 flex-shrink-0">
         <AvatarImage src={thread.author_avatar || undefined} />
-        <AvatarFallback className="bg-slate-800 text-2xs text-slate-300 font-semibold">
+        <AvatarFallback className="bg-noir-800 text-2xs text-noir-300 font-semibold">
           {thread.author_name.charAt(0).toUpperCase()}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <div className="text-xs text-slate-200 truncate">{thread.title}</div>
-        <div className="text-2xs text-slate-500 truncate">
+        <div className="text-xs text-noir-200 truncate">{thread.title}</div>
+        <div className="text-2xs text-noir-500 truncate">
           {thread.author_name}
           {category && (
             <> · <span className={accent}>{categoryLabel(category.slug, category.name)}</span></>
@@ -456,7 +456,7 @@ function ActivityRow({ thread, locale, onClick }: { thread: ForumThread; locale:
           {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true, locale })}
         </div>
       </div>
-      <span className="flex items-center gap-1 text-2xs text-slate-500 flex-shrink-0">
+      <span className="flex items-center gap-1 text-2xs text-noir-500 flex-shrink-0">
         <MessageSquare className="h-3 w-3" />{thread.reply_count}
       </span>
     </button>
@@ -469,13 +469,13 @@ function PackRow({ pack, onClick }: { pack: TranslationPack; onClick: () => void
   return (
     <button
       onClick={onClick}
-      className="w-full rounded-lg border border-slate-800 bg-slate-900/40 px-3.5 py-3 text-left transition-colors hover:border-amber-500/30 hover:bg-slate-900/70"
+      className="w-full rounded-lg border border-noir-800 bg-noir-900/40 px-3.5 py-3 text-left transition-colors hover:border-amber-500/30 hover:bg-noir-900/70"
     >
       <div className="flex items-center gap-2 mb-1">
         <Package className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
-        <span className="text-xs font-medium text-slate-200 truncate">{pack.name}</span>
+        <span className="text-xs font-medium text-noir-200 truncate">{pack.name}</span>
       </div>
-      <div className="flex items-center gap-2 text-2xs text-slate-500 pl-[1.375rem]">
+      <div className="flex items-center gap-2 text-2xs text-noir-500 pl-[1.375rem]">
         <span className="truncate">{pack.gameName}</span>
         <span className="font-mono flex-shrink-0 uppercase">{pack.sourceLanguage}→{pack.targetLanguage}</span>
         <span className="flex items-center gap-1 text-amber-400/80 flex-shrink-0">
@@ -491,12 +491,12 @@ function OverviewSkeleton() {
     <div className="space-y-8 animate-pulse">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-32 rounded-xl bg-slate-900/60 border border-slate-800" />
+          <div key={i} className="h-32 rounded-xl bg-noir-900/60 border border-noir-800" />
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 h-64 rounded-xl bg-slate-900/60 border border-slate-800" />
-        <div className="h-64 rounded-xl bg-slate-900/60 border border-slate-800" />
+        <div className="lg:col-span-2 h-64 rounded-xl bg-noir-900/60 border border-noir-800" />
+        <div className="h-64 rounded-xl bg-noir-900/60 border border-noir-800" />
       </div>
     </div>
   );

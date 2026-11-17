@@ -208,7 +208,12 @@ class VramManager {
 
   private loadConfig(): VramConfig {
     const saved = safeGetItem<VramConfig>(VRAM_CONFIG_KEY);
-    return saved ? { ...DEFAULT_CONFIG, ...saved } : { ...DEFAULT_CONFIG };
+    // preferLocalModels non ha più un interruttore in Impostazioni: un false
+    // salvato prima resterebbe per sempre ed etichetterebbe come cloud il
+    // modello raccomandato. Si ignora il valore salvato e vale il default.
+    return saved
+      ? { ...DEFAULT_CONFIG, ...saved, preferLocalModels: DEFAULT_CONFIG.preferLocalModels }
+      : { ...DEFAULT_CONFIG };
   }
 
   // ── Polling ──

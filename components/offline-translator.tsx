@@ -184,7 +184,7 @@ export default function OfflineTranslator() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-rouge-500" />
       </div>
     );
   }
@@ -196,12 +196,12 @@ export default function OfflineTranslator() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 shadow-lg">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-600 to-noir-700 shadow-lg">
             <WifiOff className="h-5 w-5 text-white" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">{t('offlineTranslator.title')}</h1>
-            <p className="text-xs text-slate-400">{t('offlineTranslator.subtitle')}</p>
+            <p className="text-xs text-noir-400">{t('offlineTranslator.subtitle')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -233,7 +233,7 @@ export default function OfflineTranslator() {
             <div className="flex items-center justify-between bg-red-500/10 border border-red-500/20 rounded-lg p-3">
               <div>
                 <p className="text-sm font-medium text-red-400">{t('offlineTranslator.ollamaNotRunning')}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{t('offlineTranslator.ollamaNotRunningDesc')}</p>
+                <p className="text-xs text-noir-400 mt-0.5">{t('offlineTranslator.ollamaNotRunningDesc')}</p>
               </div>
               <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={handleStartOllama}>
                 {t('offlineTranslator.startOllama')}
@@ -244,7 +244,7 @@ export default function OfflineTranslator() {
           {/* Models */}
           <div>
             <h3 className="text-sm font-semibold text-white/80 mb-2 flex items-center gap-1.5">
-              <Cpu className="h-4 w-4 text-purple-400" /> {t('offlineTranslator.availableModels')}
+              <Cpu className="h-4 w-4 text-rouge-400" /> {t('offlineTranslator.availableModels')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {models.map(model => (
@@ -260,20 +260,20 @@ export default function OfflineTranslator() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-white">{model.name}</span>
                       {model.recommended && (
-                        <span className="text-micro bg-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded-full font-bold">
+                        <span className="text-micro bg-rouge-500/30 text-rouge-300 px-1.5 py-0.5 rounded-full font-bold">
                           {t('offlineTranslator.recommended')}
                         </span>
                       )}
-                      <span className="text-2xs text-slate-500">{model.size_gb} GB</span>
+                      <span className="text-2xs text-noir-500">{model.size_gb} GB</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">{model.description}</p>
+                    <p className="text-[11px] text-noir-400 mt-0.5 truncate">{model.description}</p>
                   </div>
                   {model.installed ? (
                     <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
                   ) : (
                     <Button
                       size="sm"
-                      className="bg-purple-600 hover:bg-purple-700 text-xs shrink-0"
+                      className="bg-rouge-600 hover:bg-rouge-700 text-xs shrink-0"
                       onClick={() => handlePullModel(model.name)}
                       disabled={!status?.ollama_running || isPulling !== ''}
                     >
@@ -298,7 +298,7 @@ export default function OfflineTranslator() {
           <select
             value={sourceLang}
             onChange={e => setSourceLang(e.target.value)}
-            className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+            className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-rouge-500"
           >
             {LANGUAGES.map(l => (
               <option key={l.code} value={l.code}>{l.label}</option>
@@ -307,7 +307,7 @@ export default function OfflineTranslator() {
 
           <button
             onClick={() => { setSourceLang(targetLang); setTargetLang(sourceLang); }}
-            className="p-2 rounded-lg bg-black/30 hover:bg-purple-600/30 text-slate-400 hover:text-purple-400 transition-colors"
+            className="p-2 rounded-lg bg-black/30 hover:bg-rouge-600/30 text-noir-400 hover:text-rouge-400 transition-colors"
             title={t('common.invertiLingue')}
           >
             <ArrowRightLeft className="h-4 w-4" />
@@ -316,7 +316,7 @@ export default function OfflineTranslator() {
           <select
             value={targetLang}
             onChange={e => setTargetLang(e.target.value)}
-            className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+            className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-rouge-500"
           >
             {LANGUAGES.map(l => (
               <option key={l.code} value={l.code}>{l.label}</option>
@@ -329,7 +329,7 @@ export default function OfflineTranslator() {
             <select
               value={selectedModel}
               onChange={e => setSelectedModel(e.target.value)}
-              className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+              className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-rouge-500"
             >
               {status.available_models.map(m => (
                 <option key={m} value={m}>{m}</option>
@@ -341,8 +341,8 @@ export default function OfflineTranslator() {
             onClick={() => setBatchMode(!batchMode)}
             className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
               batchMode
-                ? 'bg-purple-600/30 text-purple-300 border border-purple-500/30'
-                : 'bg-black/30 text-slate-400 border border-white/10 hover:text-white'
+                ? 'bg-rouge-600/30 text-rouge-300 border border-rouge-500/30'
+                : 'bg-black/30 text-noir-400 border border-white/10 hover:text-white'
             }`}
           >
             {batchMode ? t('offlineTranslator.batchOn') : t('offlineTranslator.single')}
@@ -352,7 +352,7 @@ export default function OfflineTranslator() {
         {/* Input */}
         {batchMode ? (
           <div>
-            <label className="text-2xs text-slate-500 uppercase font-semibold mb-1 block">
+            <label className="text-2xs text-noir-500 uppercase font-semibold mb-1 block">
               {t('offlineTranslator.batchPlaceholder')}
             </label>
             <textarea
@@ -360,9 +360,9 @@ export default function OfflineTranslator() {
               onChange={e => setBatchTexts(e.target.value)}
               placeholder={"Hello, how are you?\nWelcome to the game.\nPress any key to continue."}
               rows={6}
-              className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500 resize-none"
+              className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-sm text-white placeholder:text-noir-600 focus:outline-none focus:border-rouge-500 resize-none"
             />
-            <p className="text-2xs text-slate-500 mt-1">
+            <p className="text-2xs text-noir-500 mt-1">
               {batchTexts.split('\n').filter(l => l.trim()).length} {t('offlineTranslator.lines')}
             </p>
           </div>
@@ -372,7 +372,7 @@ export default function OfflineTranslator() {
             onChange={e => setInputText(e.target.value)}
             placeholder={t('offlineTranslator.inputPlaceholder')}
             rows={3}
-            className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500 resize-none"
+            className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-sm text-white placeholder:text-noir-600 focus:outline-none focus:border-rouge-500 resize-none"
             onKeyDown={e => {
               if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
@@ -385,7 +385,7 @@ export default function OfflineTranslator() {
         {/* Translate Button */}
         <div className="flex items-center gap-2">
           <Button
-            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-sm flex-1"
+            className="bg-gradient-to-r from-emerald-600 to-noir-600 hover:from-emerald-700 hover:to-noir-700 text-sm flex-1"
             onClick={handleTranslate}
             disabled={isTranslating || !ollamaReady}
           >
@@ -401,7 +401,7 @@ export default function OfflineTranslator() {
             </p>
           )}
         </div>
-        <p className="text-2xs text-slate-600">{t('offlineTranslator.ctrlEnter')}</p>
+        <p className="text-2xs text-noir-600">{t('offlineTranslator.ctrlEnter')}</p>
       </div>
 
       {/* Results */}
@@ -412,7 +412,7 @@ export default function OfflineTranslator() {
               {t('offlineTranslator.results')} ({results.length})
             </span>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="ghost" className="text-xs text-slate-400 hover:text-white h-7" onClick={copyAllResults}>
+              <Button size="sm" variant="ghost" className="text-xs text-noir-400 hover:text-white h-7" onClick={copyAllResults}>
                 <Copy className="h-3 w-3 mr-1" /> {t('offlineTranslator.copyAll')}
               </Button>
               <Button size="sm" variant="ghost" className="text-xs text-red-400 hover:text-red-300 h-7" onClick={() => setResults([])}>
@@ -425,8 +425,8 @@ export default function OfflineTranslator() {
               <div key={i} className="p-3 hover:bg-white/[0.02] transition-colors group">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <p className="text-2xs text-slate-500 uppercase mb-1">{t('offlineTranslator.original')}</p>
-                    <p className="text-sm text-slate-300">{r.original}</p>
+                    <p className="text-2xs text-noir-500 uppercase mb-1">{t('offlineTranslator.original')}</p>
+                    <p className="text-sm text-noir-300">{r.original}</p>
                   </div>
                   <div>
                     <p className="text-2xs text-emerald-500 uppercase mb-1">{t('offlineTranslator.translation')}</p>
@@ -434,13 +434,13 @@ export default function OfflineTranslator() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center gap-3 text-2xs text-slate-500">
+                  <div className="flex items-center gap-3 text-2xs text-noir-500">
                     <span className="flex items-center gap-1"><Cpu className="h-2.5 w-2.5" /> {r.model}</span>
                     <span className="flex items-center gap-1"><Zap className="h-2.5 w-2.5" /> {r.duration_ms}ms</span>
                   </div>
                   <button
                     onClick={() => copyResult(r.translated)}
-                    className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white transition-all"
+                    className="opacity-0 group-hover:opacity-100 text-noir-400 hover:text-white transition-all"
                     title={t('common.copiaTraduzione')}
                   >
                     <Copy className="h-3.5 w-3.5" />

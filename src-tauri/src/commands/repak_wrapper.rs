@@ -111,7 +111,7 @@ async fn try_download_repak(client: &Client, url: &str, dir: &Path) -> Result<Pa
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).map_err(|e| e.to_string())?;
-        let name = file.mangled_name();
+        let name = file.mangled_name().map_err(|e| e.to_string())?;
         let fname = name.file_name().unwrap_or_default().to_string_lossy().to_string();
         // Nome flessibile: nello zip _cli l'eseguibile può stare in una
         // sottocartella e chiamarsi repak.exe — accetta repak*.exe ovunque.

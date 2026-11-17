@@ -196,6 +196,16 @@ export async function translateStringEntries(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
+      if (!res.success) {
+        // Nessun provider riuscito: translateWithFallback restituisce la SORGENTE.
+        // Non è una traduzione: resta un errore, così contatore ed export CSV/PO
+        // non spacciano l'originale per tradotto (come in cri-patcher.ts).
+        batch.forEach((entry) => {
+          entry.translationStatus = 'error';
+        });
+        continue;
+      }
+
       const translated = res.translations ?? (res as unknown as Record<string, string[]>).results ?? [];
       batch.forEach((entry, idx) => {
         entry.translated = translated[idx] ?? '';
@@ -240,6 +250,16 @@ export async function translatePluginEntries(
         model: options?.model,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
+
+      if (!res.success) {
+        // Nessun provider riuscito: translateWithFallback restituisce la SORGENTE.
+        // Non è una traduzione: resta un errore, così contatore ed export CSV/PO
+        // non spacciano l'originale per tradotto (come in cri-patcher.ts).
+        batch.forEach((entry) => {
+          entry.translationStatus = 'error';
+        });
+        continue;
+      }
 
       const translated = res.translations ?? (res as unknown as Record<string, string[]>).results ?? [];
       batch.forEach((entry, idx) => {

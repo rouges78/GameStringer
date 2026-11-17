@@ -38,8 +38,6 @@ import {
   BookOpen,
   Settings,
   Rss,
-  Plus,
-  X,
   Play,
   Compass,
   Maximize2,
@@ -48,7 +46,9 @@ import {
   SlidersHorizontal,
   Server
 } from 'lucide-react';
-import { getRssFeeds, saveRssFeeds, defaultRssFeeds, type RssFeed } from '@/components/ui/rss-ticker';
+import { newsFeedService, DEFAULT_FEED_SOURCES, type NewsFeedSource } from '@/lib/news-feeds';
+import Link from 'next/link';
+import { mergePageSettings } from './merge-settings';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import { useVersion } from '@/lib/version';
@@ -142,9 +142,9 @@ function SupabaseSettingsCard() {
         </p>
       </CardHeader>
       <CardContent className="p-0 space-y-4">
-        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-noir-800/50 border border-noir-700/50">
           <div className="flex items-center gap-2">
-            <div className={`h-2.5 w-2.5 rounded-full ${enabled && url && anonKey ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+            <div className={`h-2.5 w-2.5 rounded-full ${enabled && url && anonKey ? 'bg-emerald-400 animate-pulse' : 'bg-noir-500'}`} />
             <span className="text-sm font-medium">
               {enabled && url && anonKey
                 ? (t('common.backendActive'))
@@ -202,7 +202,7 @@ function SupabaseSettingsCard() {
               {t('common.runThisSqlInSupabaseSqlEditorToCreateRequiredTables')}
             </p>
             <div className="relative">
-              <pre className="text-micro bg-slate-900 border border-slate-700 rounded-md p-3 max-h-48 overflow-y-auto custom-scrollbar font-mono text-slate-300 whitespace-pre-wrap">
+              <pre className="text-micro bg-noir-900 border border-noir-700 rounded-md p-3 max-h-48 overflow-y-auto custom-scrollbar font-mono text-noir-300 whitespace-pre-wrap">
                 {SUPABASE_MIGRATION_SQL.trim().substring(0, 2000)}
                 {SUPABASE_MIGRATION_SQL.length > 2000 ? t('settingsPage.copyToSeeAll') : ''}
               </pre>
@@ -274,22 +274,22 @@ function CacheStatsCard() {
       <CardContent className="space-y-6">
         {/* App Data Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
-            <HardDrive className="h-6 w-6 mx-auto mb-2 text-blue-400" />
+          <div className="bg-noir-800/50 rounded-lg p-4 text-center">
+            <HardDrive className="h-6 w-6 mx-auto mb-2 text-noir-400" />
             <p className="text-2xl font-bold">{stats?.app_data_size_mb.toFixed(1)}</p>
             <p className="text-xs text-muted-foreground">{t('settingsPage.appDataMb')}</p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
-            <Database className="h-6 w-6 mx-auto mb-2 text-purple-400" />
+          <div className="bg-noir-800/50 rounded-lg p-4 text-center">
+            <Database className="h-6 w-6 mx-auto mb-2 text-rouge-400" />
             <p className="text-2xl font-bold">{stats?.cache_size_mb.toFixed(1)}</p>
             <p className="text-xs text-muted-foreground">{t('settingsPage.coverCacheMb')}</p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+          <div className="bg-noir-800/50 rounded-lg p-4 text-center">
             <Globe className="h-6 w-6 mx-auto mb-2 text-green-400" />
             <p className="text-2xl font-bold">{stats?.cover_count || 0}</p>
             <p className="text-xs text-muted-foreground">{t('settingsPage.savedCovers')}</p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+          <div className="bg-noir-800/50 rounded-lg p-4 text-center">
             <Cpu className="h-6 w-6 mx-auto mb-2 text-yellow-400" />
             <p className="text-2xl font-bold">{stats?.disk_free_gb.toFixed(0)}</p>
             <p className="text-xs text-muted-foreground">{t('settingsPage.freeGbDisk')}</p>
@@ -302,9 +302,9 @@ function CacheStatsCard() {
             <span className="text-muted-foreground">{t('settingsPage.diskSpace')}</span>
             <span>{(stats?.disk_total_gb || 0).toFixed(0)} {t('settingsPage.gbTotal')}</span>
           </div>
-          <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+          <div className="h-3 bg-noir-700 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-green-500 to-noir-500 transition-all duration-500"
               style={{ width: `${Math.min(diskUsedPercent, 100)}%` }}
             />
           </div>
@@ -534,7 +534,7 @@ function AiQualityCard({
     <Card>
       <CardHeader>
         <CardTitle as="h2" className="flex items-center space-x-2">
-          <Brain className="h-5 w-5 text-fuchsia-500" />
+          <Brain className="h-5 w-5 text-rouge-500" />
           <span>{t('aiQuality.title')}</span>
         </CardTitle>
         <p className="text-xs text-muted-foreground mt-1">{t('aiQuality.desc')}</p>
@@ -585,7 +585,7 @@ function AiQualityCard({
 
         {/* Modello embedding + diagnostica (solo se la TM semantica è attiva) */}
         {semanticActive && (
-          <div className="space-y-2 pl-3 border-l-2 border-fuchsia-500/20">
+          <div className="space-y-2 pl-3 border-l-2 border-rouge-500/20">
             <div className="flex items-center gap-2">
               <Label>{t('aiQuality.embeddingTitle')}</Label>
               <InfoTooltip variant="info" content={<p className="text-xs max-w-xs">{t('aiQuality.embeddingDesc')}</p>} />
@@ -603,11 +603,11 @@ function AiQualityCard({
               </SelectContent>
             </Select>
 
-            <div className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-noir-800/50 border border-noir-700/50">
               <div className="flex items-center gap-2 min-w-0">
                 <div
                   className={`h-2.5 w-2.5 rounded-full shrink-0 ${
-                    checking ? 'bg-amber-400 animate-pulse' : status?.available ? 'bg-emerald-400' : 'bg-slate-500'
+                    checking ? 'bg-amber-400 animate-pulse' : status?.available ? 'bg-emerald-400' : 'bg-noir-500'
                   }`}
                 />
                 <span className="text-xs truncate">
@@ -635,7 +635,7 @@ function AiQualityCard({
             )}
 
             {/* Pre-indicizzazione TM ("indicizza ora") */}
-            <div className="mt-2 pt-2 border-t border-slate-700/40 space-y-2">
+            <div className="mt-2 pt-2 border-t border-noir-700/40 space-y-2">
               <p className="text-2xs text-muted-foreground">{t('semanticIndex.hint')}</p>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-2xs text-muted-foreground">{t('semanticIndex.sourceLabel')}</span>
@@ -676,9 +676,9 @@ function AiQualityCard({
               </div>
               {indexProgress && indexProgress.total > 0 && (
                 <div className="space-y-1">
-                  <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-noir-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-fuchsia-500 transition-all duration-300"
+                      className="h-full bg-rouge-500 transition-all duration-300"
                       style={{ width: `${Math.min(100, Math.round((indexProgress.done / indexProgress.total) * 100))}%` }}
                     />
                   </div>
@@ -723,8 +723,6 @@ interface Settings {
     qwenApiKey: string;
     defaultTargetLang: string;
     temperature: number;
-    maxTokens: number;
-    batchSize: number;
     ollamaUrl: string;
     lmStudioUrl: string;
     lmStudioModel: string;
@@ -738,14 +736,6 @@ interface Settings {
 
   // System
   system: Record<string, never>;
-  
-  // Performance
-  performance: {
-    maxConcurrentTasks: number;
-    apiTimeout: number;
-    retryAttempts: number;
-  };
-  
 
   // Display
   display: {
@@ -764,57 +754,55 @@ interface Settings {
   };
 }
 
+// Stato iniziale della pagina. È anche l'elenco dei campi che la pagina possiede
+// nel blob condiviso gameStringerSettings: il Salva scrive solo questi, sopra il
+// blob corrente (vedi mergePageSettings).
+const DEFAULT_SETTINGS: Settings = {
+  translation: {
+    apiKey: '',
+    groqApiKey: '',
+    deepseekApiKey: '',
+    openaiApiKey: '',
+    anthropicApiKey: '',
+    mistralApiKey: '',
+    cohereApiKey: '',
+    togetherApiKey: '',
+    fireworksApiKey: '',
+    openrouterApiKey: '',
+    cerebrasApiKey: '',
+    deeplApiKey: '',
+    qwenApiKey: '',
+    defaultTargetLang: 'en',
+    temperature: 0.3,
+    ollamaUrl: '',
+    lmStudioUrl: 'http://localhost:1234',
+    lmStudioModel: '',
+    modelwizApiKey: '',
+    modelwizUrl: 'http://localhost:8080',
+    reflectionMode: 'auto',
+    semanticTM: 'auto',
+    embeddingModel: ''
+  },
+  system: {},
+  display: {
+    uiScale: 100,
+    fontSize: 'medium',
+    compactMode: false,
+    sidebarWidth: 256,
+    animationsEnabled: true,
+  },
+  privacy: {
+    compatTelemetry: false,
+    crashReports: false,
+    benchmarkTelemetry: false,
+  }
+};
+
 export default function SettingsPage() {
   const _router = useRouter();
   const { version, buildInfo } = useVersion();
   const { t } = useTranslation();
-  const [settings, setSettings] = useState<Settings>({
-    translation: {
-      apiKey: '',
-      groqApiKey: '',
-      deepseekApiKey: '',
-      openaiApiKey: '',
-      anthropicApiKey: '',
-      mistralApiKey: '',
-      cohereApiKey: '',
-      togetherApiKey: '',
-      fireworksApiKey: '',
-      openrouterApiKey: '',
-      cerebrasApiKey: '',
-      deeplApiKey: '',
-      qwenApiKey: '',
-      defaultTargetLang: 'en',
-      temperature: 0.3,
-      maxTokens: 2000,
-      batchSize: 50,
-      ollamaUrl: '',
-      lmStudioUrl: 'http://localhost:1234',
-      lmStudioModel: '',
-      modelwizApiKey: '',
-      modelwizUrl: 'http://localhost:8080',
-      reflectionMode: 'auto',
-      semanticTM: 'auto',
-      embeddingModel: ''
-    },
-    system: {},
-    performance: {
-      maxConcurrentTasks: 5,
-      apiTimeout: 30000,
-      retryAttempts: 3
-    },
-    display: {
-      uiScale: 100,
-      fontSize: 'medium',
-      compactMode: false,
-      sidebarWidth: 256,
-      animationsEnabled: true,
-    },
-    privacy: {
-      compatTelemetry: false,
-      crashReports: false,
-      benchmarkTelemetry: false,
-    }
-  });
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
   const [isSaving, setIsSaving] = useState(false);
   // "Modifiche non salvate": il Salva sta in alto a destra e appena scorri
@@ -859,7 +847,6 @@ export default function SettingsPage() {
             ...parsed,
             translation: { ...prev.translation, ...(parsed.translation || {}) },
             system: { ...prev.system, ...(parsed.system || {}) },
-            performance: { ...prev.performance, ...(parsed.performance || {}) },
             display: { ...prev.display, ...(parsed.display || {}) },
             privacy: { ...prev.privacy, ...(parsed.privacy || {}) },
           };
@@ -883,10 +870,23 @@ export default function SettingsPage() {
     // (save_app_settings) in modo indipendente da localStorage: nel webview Tauri
     // localStorage.setItem può fallire (storage partizionato) e in passato faceva
     // fallire l'intero salvataggio → le API key non venivano mai persistite.
+    // Si scrive sopra il blob CORRENTE, non sopra quello letto al mount: le card
+    // che scrivono da sole (endpoint personalizzati, confronto multi-LLM…) non
+    // devono perdere quello che l'utente ha fatto in questa visita.
+    let current = settings as unknown as Record<string, unknown>;
+    try {
+      const parsed = JSON.parse(localStorage.getItem('gameStringerSettings') || 'null');
+      if (parsed && typeof parsed === 'object') current = parsed;
+    } catch { /* storage illeggibile: si parte dallo stato della pagina, come prima */ }
+    const toSave = mergePageSettings(
+      current,
+      settings as unknown as Record<string, unknown>,
+      DEFAULT_SETTINGS as unknown as Record<string, unknown>,
+    );
     let diskOk = false;
     try {
       const { invoke } = await import('@/lib/tauri-api');
-      await invoke('save_app_settings', { settings });
+      await invoke('save_app_settings', { settings: toSave });
       diskOk = true;
     } catch (e: unknown) {
       clientLogger.error(`save_app_settings fallito:`, String(e));
@@ -894,7 +894,7 @@ export default function SettingsPage() {
     // Cache sincrona in localStorage (best-effort): se lancia, non è fatale
     // perché la fonte di verità (disco) è già stata scritta sopra.
     try {
-      localStorage.setItem('gameStringerSettings', JSON.stringify(settings));
+      localStorage.setItem('gameStringerSettings', JSON.stringify(toSave));
       window.dispatchEvent(new Event('gs-display-changed'));
     } catch (e: unknown) {
       clientLogger.warn('localStorage.setItem settings fallito (non fatale):', String(e));
@@ -937,47 +937,24 @@ export default function SettingsPage() {
 
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(false);
 
-  // RSS Feeds
-  const [rssFeeds, setRssFeeds] = useState<RssFeed[]>([]);
-  const [newFeedUrl, setNewFeedUrl] = useState('');
-  const [newFeedName, setNewFeedName] = useState('');
+  // Feed RSS: la STESSA lista che legge la dashboard (lib/news-feeds.ts) e che
+  // gestisce /news-feeds. Fino al 01/10/2026 questa scheda scriveva una lista
+  // sua ('gamestringer-rss-feeds') che nessuno leggeva: aggiungere o spegnere un
+  // feed qui non cambiava nulla da nessuna parte.
+  const [newsSources, setNewsSources] = useState<NewsFeedSource[]>([]);
 
   useEffect(() => {
-    setRssFeeds(getRssFeeds());
+    setNewsSources(newsFeedService.getSources());
   }, []);
 
-  const handleAddRssFeed = () => {
-    if (!newFeedUrl.trim() || !newFeedName.trim()) {
-      toast.error(t('common.inserisciUrlENomeDelFeed'));
-      return;
-    }
-    const newFeed: RssFeed = { url: newFeedUrl.trim(), name: newFeedName.trim(), enabled: true };
-    const updated = [...rssFeeds, newFeed];
-    setRssFeeds(updated);
-    saveRssFeeds(updated);
-    setNewFeedUrl('');
-    setNewFeedName('');
-    toast.success(t('settingsPage.rssFeedAdded'));
+  const handleToggleNewsSource = (id: string, enabled: boolean) => {
+    newsFeedService.toggleSource(id, enabled);
+    setNewsSources(newsFeedService.getSources());
   };
 
-  const handleRemoveRssFeed = (index: number) => {
-    const updated = rssFeeds.filter((_, i) => i !== index);
-    setRssFeeds(updated);
-    saveRssFeeds(updated);
-    toast.success(t('settingsPage.feedRemoved'));
-  };
-
-  const handleToggleRssFeed = (index: number) => {
-    const updated = rssFeeds.map((feed, i) => 
-      i === index ? { ...feed, enabled: !feed.enabled } : feed
-    );
-    setRssFeeds(updated);
-    saveRssFeeds(updated);
-  };
-
-  const handleResetRssFeeds = () => {
-    setRssFeeds(defaultRssFeeds);
-    saveRssFeeds(defaultRssFeeds);
+  const handleResetNewsSources = () => {
+    for (const def of DEFAULT_FEED_SOURCES) newsFeedService.toggleSource(def.id, def.enabled);
+    setNewsSources(newsFeedService.getSources());
     toast.success(t('common.feedRssRipristinati'));
   };
 
@@ -1058,7 +1035,7 @@ export default function SettingsPage() {
   return (
     <div className="p-4 space-y-4 max-w-7xl mx-auto">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-700 via-noir-600 to-noir-800 p-3">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -1079,7 +1056,7 @@ export default function SettingsPage() {
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-blue-500" />
+                    <BookOpen className="h-5 w-5 text-noir-500" />
                     {t('settings.tutorial.chooseTitle')}
                   </DialogTitle>
                   <DialogDescription>
@@ -1089,11 +1066,11 @@ export default function SettingsPage() {
                 <div className="grid gap-3 py-4">
                   <Button
                     variant="outline"
-                    className="h-auto p-4 justify-start gap-4 hover:bg-blue-500/10 hover:border-blue-500/50"
+                    className="h-auto p-4 justify-start gap-4 hover:bg-noir-500/10 hover:border-noir-500/50"
                     onClick={startNormalTutorial}
                   >
-                    <div className="p-2 rounded-lg bg-blue-500/20">
-                      <Play className="h-5 w-5 text-blue-500" />
+                    <div className="p-2 rounded-lg bg-noir-500/20">
+                      <Play className="h-5 w-5 text-noir-500" />
                     </div>
                     <div className="text-left">
                       <div className="font-medium">{t('settings.tutorial.normalTitle')}</div>
@@ -1102,11 +1079,11 @@ export default function SettingsPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-auto p-4 justify-start gap-4 hover:bg-purple-500/10 hover:border-purple-500/50"
+                    className="h-auto p-4 justify-start gap-4 hover:bg-rouge-500/10 hover:border-rouge-500/50"
                     onClick={startGuidedTutorial}
                   >
-                    <div className="p-2 rounded-lg bg-purple-500/20">
-                      <Compass className="h-5 w-5 text-purple-500" />
+                    <div className="p-2 rounded-lg bg-rouge-500/20">
+                      <Compass className="h-5 w-5 text-rouge-500" />
                     </div>
                     <div className="text-left">
                       <div className="font-medium">{t('settings.tutorial.guidedTitle')}</div>
@@ -1118,7 +1095,7 @@ export default function SettingsPage() {
             </Dialog>
             <Button variant="outline" size="sm" onClick={resetSettings} className="border-white/30 text-white hover:bg-white/10 h-8 text-xs">
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />{t('subtitleTranslator.reset')}</Button>
-            <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-blue-600 hover:bg-blue-500 h-8 text-xs">
+            <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-rouge-600 hover:bg-rouge-500 h-8 text-xs">
               {isSaving ? (
                 <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />{t('settings.saving')}</>
               ) : (
@@ -1184,7 +1161,7 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle as="h2" className="flex items-center space-x-2">
-                <Monitor className="h-5 w-5 text-purple-500" />
+                <Monitor className="h-5 w-5 text-rouge-500" />
                 <span>{t('settingsPage.lmStudioLocale')}</span>
               </CardTitle>
             </CardHeader>
@@ -1225,7 +1202,7 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle as="h2" className="flex items-center space-x-2">
-                <Globe className="h-5 w-5 text-teal-500" />
+                <Globe className="h-5 w-5 text-noir-500" />
                 <span>Alocai ModelWiz</span>
               </CardTitle>
             </CardHeader>
@@ -1265,7 +1242,7 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle as="h2" className="flex items-center space-x-2">
-                <Brain className="h-5 w-5 text-blue-500" />
+                <Brain className="h-5 w-5 text-noir-500" />
                 <span>{t('settings.aiConfig')}</span>
               </CardTitle>
             </CardHeader>
@@ -1548,12 +1525,13 @@ export default function SettingsPage() {
               <details className="group">
                 <summary className="cursor-pointer text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 select-none mb-2">
                   <SlidersHorizontal className="h-3.5 w-3.5" />
-                  {t('heroJob.advancedParams')}
+                  {t('settingsPage.temperatureSection')}
                 </summary>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-3">
-                <div className="space-y-2">
+                {/* Solo la temperatura: token massimi e dimensione batch erano qui ma
+                    nessun provider li leggeva (ogni chiamante ha i suoi valori fissi). */}
+                <div className="space-y-2 mt-3 max-w-xl">
                   <div className="flex items-center gap-2">
-                    <Label>{t('settingsPage.temperatureLabel')} {settings.translation.temperature}</Label>
+                    <Label>{t('settingsPage.temperatureLabel')} {Math.min(1, settings.translation.temperature)}</Label>
                     <InfoTooltip 
                       variant="info"
                       content={
@@ -1561,76 +1539,22 @@ export default function SettingsPage() {
                           <p className="font-semibold">{t('settings.temperatureTooltipTitle')}</p>
                           <p className="text-xs">• <strong>{t('settings.temperatureTooltipLow')}</strong></p>
                           <p className="text-xs">• <strong>{t('settings.temperatureTooltipMid')}</strong></p>
-                          <p className="text-xs">• <strong>{t('settings.temperatureTooltipHigh')}</strong></p>
+                          <p className="text-xs">• <strong>{t('settings.temperatureTooltipHighCapped')}</strong></p>
                           <p className="text-xs text-muted-foreground mt-1">{t('settings.temperatureTooltipRecommended')}</p>
                         </div>
                       }
                     />
                   </div>
                   <Slider
-                    value={[settings.translation.temperature]}
+                    value={[Math.min(1, settings.translation.temperature)]}
                     onValueChange={(value) => updateSetting('translation', 'temperature', value[0])}
-                    max={2}
+                    max={1}
                     min={0}
                     step={0.1}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
+                    className="w-full [&_[data-slot=range]]:bg-rouge-500 [&_[data-slot=thumb]]:bg-rouge-500 [&_[data-slot=thumb]]:border-rouge-500"
                   />
+                  <p className="text-2xs text-muted-foreground">{t('settingsPage.temperatureScope')}</p>
                 </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label>{t('settingsPage.maxTokensLabel')} {settings.translation.maxTokens}</Label>
-                    <InfoTooltip 
-                      variant="info"
-                      content={
-                        <div className="space-y-1">
-                          <p className="font-semibold">{t('settings.maxTokensTooltipTitle')}</p>
-                          <p className="text-xs">{t('settings.maxTokensTooltipDesc')}</p>
-                          <p className="text-xs">• <strong>{t('settings.maxTokensTooltipLow')}</strong></p>
-                          <p className="text-xs">• <strong>{t('settings.maxTokensTooltipMid')}</strong></p>
-                          <p className="text-xs">• <strong>{t('settings.maxTokensTooltipHigh')}</strong></p>
-                          <p className="text-xs text-muted-foreground mt-1">{t('settings.maxTokensTooltipCost')}</p>
-                        </div>
-                      }
-                    />
-                  </div>
-                  <Slider
-                    value={[settings.translation.maxTokens]}
-                    onValueChange={(value) => updateSetting('translation', 'maxTokens', value[0])}
-                    max={4000}
-                    min={100}
-                    step={100}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label>{t('settingsPage.batchSizeLabel')} {settings.translation.batchSize}</Label>
-                    <InfoTooltip 
-                      variant="info"
-                      content={
-                        <div className="space-y-1">
-                          <p className="font-semibold">{t('settings.batchSizeTooltipTitle')}</p>
-                          <p className="text-xs">{t('settings.batchSizeTooltipDesc')}</p>
-                          <p className="text-xs">• <strong>{t('settings.batchSizeTooltipLow')}</strong></p>
-                          <p className="text-xs">• <strong>{t('settings.batchSizeTooltipMid')}</strong></p>
-                          <p className="text-xs">• <strong>{t('settings.batchSizeTooltipHigh')}</strong></p>
-                          <p className="text-xs text-muted-foreground mt-1">{t('settings.batchSizeTooltipCost')}</p>
-                        </div>
-                      }
-                    />
-                  </div>
-                  <Slider
-                    value={[settings.translation.batchSize]}
-                    onValueChange={(value) => updateSetting('translation', 'batchSize', value[0])}
-                    max={200}
-                    min={10}
-                    step={10}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
-                  />
-                </div>
-              </div>
               </details>
             </CardContent>
           </Card>
@@ -1661,60 +1585,9 @@ export default function SettingsPage() {
           <CacheStatsCard />
         </TabsContent>
 
-        {/* Performance Tab */}
+        {/* Performance Tab — task concorrenti, timeout API e tentativi non sono più
+            qui: si salvavano e nessuno li leggeva (audit 01/10/2026). */}
         <TabsContent value="performance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle as="h2" className="flex items-center space-x-2">
-                <Zap className="h-5 w-5 text-yellow-500" />
-                <span>{t('settings.perfConfig')}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <Label>{t('settings.concurrentTasks')}: {settings.performance.maxConcurrentTasks}</Label>
-                  <Slider
-                    value={[settings.performance.maxConcurrentTasks]}
-                    onValueChange={(value) => updateSetting('performance', 'maxConcurrentTasks', value[0])}
-                    max={20}
-                    min={1}
-                    step={1}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.concurrentTasksDesc')}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t('settings.apiTimeout')}: {settings.performance.apiTimeout}</Label>
-                  <Slider
-                    value={[settings.performance.apiTimeout]}
-                    onValueChange={(value) => updateSetting('performance', 'apiTimeout', value[0])}
-                    max={120000}
-                    min={5000}
-                    step={5000}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t('settings.retryAttempts')}: {settings.performance.retryAttempts}</Label>
-                  <Slider
-                    value={[settings.performance.retryAttempts]}
-                    onValueChange={(value) => updateSetting('performance', 'retryAttempts', value[0])}
-                    max={10}
-                    min={1}
-                    step={1}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
-                  />
-                </div>
-              </div>
-
-            </CardContent>
-          </Card>
-
           {/* VRAM Manager */}
           <VramSettingsCard />
         </TabsContent>
@@ -1735,60 +1608,41 @@ export default function SettingsPage() {
                 {t('settingsPage.rssFeedDashboard')}
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-1">
-                {t('settingsPage.rssDesc')}
+                {t('settingsPage.rssNewsDesc')}
               </p>
             </CardHeader>
             <CardContent className="p-0 space-y-4">
-              {/* Add new feed */}
-              <div className="flex gap-2">
-                <Input
-                  placeholder={t('settingsPage.feedNamePlaceholder')}
-                  value={newFeedName}
-                  onChange={(e) => setNewFeedName(e.target.value)}
-                  className="flex-1 h-9 text-sm"
-                />
-                <Input
-                  placeholder={t('settingsPage.feedUrlPlaceholder')}
-                  value={newFeedUrl}
-                  onChange={(e) => setNewFeedUrl(e.target.value)}
-                  className="flex-[2] h-9 text-sm"
-                />
-                <Button onClick={handleAddRssFeed} size="sm" className="h-9 gap-1">
-                  <Plus className="h-4 w-4" />{t('glossaryManager.add')}</Button>
-              </div>
-
-              {/* Feed list */}
+              {/* Feed list — le fonti della dashboard; niente URL liberi: la
+                  dashboard sa leggere solo le fonti di lib/news-feeds.ts. */}
               <div className="space-y-2">
-                {rssFeeds.map((feed, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                {newsSources.map((source) => (
+                  <div key={source.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
                     <Switch
-                      checked={feed.enabled}
-                      onCheckedChange={() => handleToggleRssFeed(index)}
+                      checked={source.enabled}
+                      onCheckedChange={(checked) => handleToggleNewsSource(source.id, checked)}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{feed.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{feed.url}</p>
+                      <p className="text-sm font-medium truncate">{source.icon} {source.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{source.url}</p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveRssFeed(index)}
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
                   </div>
                 ))}
-                {rssFeeds.length === 0 && (
+                {newsSources.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     {t('settingsPage.noFeeds')}
                   </p>
                 )}
               </div>
 
-              {/* Reset button */}
-              <div className="flex justify-end pt-2">
-                <Button variant="outline" size="sm" onClick={handleResetRssFeeds} className="gap-1.5">
+              {/* Reset + gestione completa (categorie, tutti on/off) */}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" asChild className="gap-1.5">
+                  <Link href="/news-feeds">
+                    <Rss className="h-3.5 w-3.5" />
+                    {t('common.manageNewsFeeds')}
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleResetNewsSources} className="gap-1.5">
                   <RotateCcw className="h-3.5 w-3.5" />
                   {t('settingsPage.restoreDefaults')}
                 </Button>
@@ -1813,28 +1667,28 @@ export default function SettingsPage() {
         <TabsContent value="display" className="space-y-3">
           {/* Screen Info - inline compatto */}
           <div className="grid grid-cols-4 gap-2">
-            <div className="bg-slate-800/50 rounded-lg p-2 text-center">
+            <div className="bg-noir-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
-                <Monitor className="h-3.5 w-3.5 text-blue-400" />
+                <Monitor className="h-3.5 w-3.5 text-noir-400" />
                 <span className="text-2xs text-muted-foreground">{t('settingsPage.window')}</span>
               </div>
               <p className="text-sm font-bold">{typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : '...'}</p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-2 text-center">
+            <div className="bg-noir-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
-                <Maximize2 className="h-3.5 w-3.5 text-purple-400" />
+                <Maximize2 className="h-3.5 w-3.5 text-rouge-400" />
                 <span className="text-2xs text-muted-foreground">{t('settingsPage.screen')}</span>
               </div>
               <p className="text-sm font-bold">{typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : '...'}</p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-2 text-center">
+            <div className="bg-noir-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
                 <SlidersHorizontal className="h-3.5 w-3.5 text-green-400" />
                 <span className="text-2xs text-muted-foreground">DPI</span>
               </div>
               <p className="text-sm font-bold">{typeof window !== 'undefined' ? `${(window.devicePixelRatio * 100).toFixed(0)}%` : '...'}</p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-2 text-center">
+            <div className="bg-noir-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
                 <Columns className="h-3.5 w-3.5 text-yellow-400" />
                 <span className="text-2xs text-muted-foreground">{t('settingsPage.ratio')}</span>
@@ -1856,7 +1710,7 @@ export default function SettingsPage() {
                     value={[settings.display.uiScale]}
                     onValueChange={(value) => updateSetting('display', 'uiScale', value[0])}
                     max={150} min={75} step={5}
-                    className="w-full [&_[data-slot=range]]:bg-violet-500 [&_[data-slot=thumb]]:bg-violet-500 [&_[data-slot=thumb]]:border-violet-500"
+                    className="w-full [&_[data-slot=range]]:bg-rouge-500 [&_[data-slot=thumb]]:bg-rouge-500 [&_[data-slot=thumb]]:border-rouge-500"
                   />
                   <div className="flex justify-between text-micro text-muted-foreground">
                     <span>75%</span><span>100%</span><span>150%</span>
@@ -1871,7 +1725,7 @@ export default function SettingsPage() {
                     value={[settings.display.sidebarWidth]}
                     onValueChange={(value) => updateSetting('display', 'sidebarWidth', value[0])}
                     max={320} min={200} step={8}
-                    className="w-full [&_[data-slot=range]]:bg-violet-500 [&_[data-slot=thumb]]:bg-violet-500 [&_[data-slot=thumb]]:border-violet-500"
+                    className="w-full [&_[data-slot=range]]:bg-rouge-500 [&_[data-slot=thumb]]:bg-rouge-500 [&_[data-slot=thumb]]:border-rouge-500"
                   />
                   <div className="flex justify-between text-micro text-muted-foreground">
                     <span>200px</span><span>256px</span><span>320px</span>
@@ -1891,8 +1745,8 @@ export default function SettingsPage() {
                       onClick={() => updateSetting('display', 'fontSize', size)}
                       className={`p-2 rounded-lg border transition-all text-center ${
                         settings.display.fontSize === size
-                          ? 'border-violet-500 bg-violet-500/10'
-                          : 'border-slate-700 hover:border-slate-500'
+                          ? 'border-rouge-500 bg-rouge-500/10'
+                          : 'border-noir-700 hover:border-noir-500'
                       }`}
                     >
                       <Type className={`mx-auto mb-1 ${size === 'small' ? 'h-3 w-3' : size === 'large' ? 'h-5 w-5' : 'h-4 w-4'}`} />
@@ -1906,7 +1760,7 @@ export default function SettingsPage() {
 
               {/* Toggles — inline */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/30">
+                <div className="flex items-center justify-between p-2 rounded-lg bg-noir-800/30">
                   <div>
                     <Label className="text-xs">{t('settingsPage.compact')}</Label>
                     <p className="text-2xs text-muted-foreground">{t('settingsPage.lessPadding')}</p>
@@ -1916,7 +1770,7 @@ export default function SettingsPage() {
                     onCheckedChange={(checked) => updateSetting('display', 'compactMode', checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/30">
+                <div className="flex items-center justify-between p-2 rounded-lg bg-noir-800/30">
                   <div>
                     <Label className="text-xs">{t('settingsPage.animations')}</Label>
                     <p className="text-2xs text-muted-foreground">{t('settingsPage.uiTransitions')}</p>
@@ -1960,7 +1814,7 @@ export default function SettingsPage() {
         {/* Debug & Test Tab */}
         <TabsContent value="debug" className="space-y-3">
           <Card className="p-3">
-            <div className="text-xs font-semibold text-slate-400 mb-3 flex items-center gap-1.5">
+            <div className="text-xs font-semibold text-noir-400 mb-3 flex items-center gap-1.5">
               <TestTube className="h-3.5 w-3.5" />
               {t('settings.debugTools')}
               <Badge variant="outline" className="text-2xs ml-1">{t('settings.developers')}</Badge>
@@ -1972,7 +1826,7 @@ export default function SettingsPage() {
               </Button>
             </div>
             <div className="flex justify-between items-center mb-2">
-              <p className="text-xs font-semibold text-slate-400">{t('settings.debugConsole')}</p>
+              <p className="text-xs font-semibold text-noir-400">{t('settings.debugConsole')}</p>
               <Button onClick={clearDebugResults} variant="ghost" size="xs" className="text-xs gap-1">
                 <Trash2 className="h-3 w-3" />
                 {t('settings.clear')}
@@ -1981,16 +1835,16 @@ export default function SettingsPage() {
             <div className="bg-black/30 rounded-lg p-2 h-[120px] overflow-y-auto">
               <div className="font-mono text-xs space-y-0.5">
                 {debugResults.length > 0 ? debugResults.map((result, index) => (
-                  <div key={index} className="text-gray-300">{result}</div>
+                  <div key={index} className="text-noir-300">{result}</div>
                 )) : (
-                  <div className="text-gray-500 italic">{t('settings.consoleEmpty')}</div>
+                  <div className="text-noir-500 italic">{t('settings.consoleEmpty')}</div>
                 )}
                 {isDebugging && <div className="text-orange-400 animate-pulse">{t('settings.testInProgress')}</div>}
               </div>
             </div>
           </Card>
           <Card className="p-3">
-            <p className="text-xs font-semibold text-slate-400 mb-2">{t('settings.systemInfo')}</p>
+            <p className="text-xs font-semibold text-noir-400 mb-2">{t('settings.systemInfo')}</p>
             <div className="grid grid-cols-4 gap-2 text-xs">
               <div><span className="text-muted-foreground">{t('settingsPage.ver')}</span> <span className="font-mono">{version}</span></div>
               <div><span className="text-muted-foreground">{t('settingsPage.build')}</span> <span className="font-mono">{buildInfo.build}</span></div>
@@ -2005,10 +1859,10 @@ export default function SettingsPage() {
       {/* Barra flottante: compare appena c'è qualcosa di non salvato.
           Il Salva in alto a destra resta, ma non è più l'unico. */}
       {dirty && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl border border-amber-500/40 bg-slate-900/95 shadow-xl backdrop-blur">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl border border-amber-500/40 bg-noir-900/95 shadow-xl backdrop-blur">
           <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" aria-hidden />
           <span className="text-xs text-amber-200">{t('settings.unsavedChanges')}</span>
-          <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-blue-600 hover:bg-blue-500 h-7 text-xs">
+          <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-rouge-600 hover:bg-rouge-500 h-7 text-xs">
             {isSaving ? (
               <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />{t('settings.saving')}</>
             ) : (

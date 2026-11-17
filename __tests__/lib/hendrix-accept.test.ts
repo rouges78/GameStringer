@@ -6,7 +6,17 @@
  * ripararla; si scarta solo se nemmeno il fix ripristina i codici.
  */
 import { describe, it, expect } from 'vitest';
-import { acceptOfflineTranslation } from '@/lib/hendrix-translate';
+import { acceptOfflineTranslation, withOriginalEdges } from '@/lib/hendrix-translate';
+
+describe('withOriginalEdges', () => {
+  it('rimette gli spazi iniziali e finali dell\'originale', () => {
+    expect(withOriginalEdges('      EXIT ', 'USCITA')).toBe('      USCITA ');
+  });
+
+  it('non aggiunge nulla se l\'originale non ha spazi ai bordi', () => {
+    expect(withOriginalEdges('Exit', ' Uscita ')).toBe('Uscita');
+  });
+});
 
 describe('acceptOfflineTranslation', () => {
   it('accetta una traduzione con i codici intatti', () => {

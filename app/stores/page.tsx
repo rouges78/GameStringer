@@ -887,17 +887,17 @@ export default function StoresPage() {
         }).length;
         const activeUtilities = utilityServicesConfig.filter(s => isConnected(s.id)).length;
         return (
-          <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50">
+          <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-noir-800/50 border border-noir-700/50">
             <div className="flex items-center gap-1.5">
-              <div className={`h-2 w-2 rounded-full ${connectedStores > 0 ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`} />
-              <span className="text-xs text-slate-300">
+              <div className={`h-2 w-2 rounded-full ${connectedStores > 0 ? 'bg-green-500 animate-pulse' : 'bg-noir-600'}`} />
+              <span className="text-xs text-noir-300">
                 <span className="font-semibold text-white">{connectedStores}</span>/{storesConfig.length} {t('storesPage.storesCountLabel')}
               </span>
             </div>
-            <div className="h-3 w-px bg-slate-700" />
+            <div className="h-3 w-px bg-noir-700" />
             <div className="flex items-center gap-1.5">
-              <div className={`h-2 w-2 rounded-full ${activeUtilities > 0 ? 'bg-orange-500 animate-pulse' : 'bg-slate-600'}`} />
-              <span className="text-xs text-slate-300">
+              <div className={`h-2 w-2 rounded-full ${activeUtilities > 0 ? 'bg-orange-500 animate-pulse' : 'bg-noir-600'}`} />
+              <span className="text-xs text-noir-300">
                 <span className="font-semibold text-white">{activeUtilities}</span>/{utilityServicesConfig.length} {t('storesPage.servicesCountLabel')}
               </span>
             </div>
@@ -1017,7 +1017,7 @@ export default function StoresPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 px-2 text-2xs border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                        className="h-7 px-2 text-2xs border-rouge-500/50 text-rouge-400 hover:bg-rouge-500/10"
                         onClick={() => setIsFamilySharingOpen(true)}
                         title={t('storesPage.familySharing')}
                       >
@@ -1028,7 +1028,7 @@ export default function StoresPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 px-2 text-2xs border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+                        className="h-7 px-2 text-2xs border-rouge-500/50 text-rouge-400 hover:bg-rouge-500/10"
                         onClick={() => shellOpen('https://www.gog.com/account').catch(() => window.open('https://www.gog.com/account', '_blank'))}
                         title={t('storesPage.openGog')}
                       >
@@ -1063,7 +1063,7 @@ export default function StoresPage() {
                       variant="outline"
                       className={`flex-1 h-7 text-2xs ${
                         store.id === 'rockstar'
-                          ? 'border-slate-700 text-slate-500 cursor-not-allowed'
+                          ? 'border-noir-700 text-noir-500 cursor-not-allowed'
                           : 'border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400'
                       }`}
                       disabled={store.id === 'rockstar' || isLoading || currentLoading}
@@ -1083,7 +1083,7 @@ export default function StoresPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2 text-2xs border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+                          className="h-7 px-2 text-2xs border-rouge-500/50 text-rouge-400 hover:bg-rouge-500/10"
                           onClick={() => shellOpen('https://www.gog.com/en/games').catch(() => window.open('https://www.gog.com/en/games', '_blank'))}
                           title={t('storesPage.gogStore')}
                         >
@@ -1092,7 +1092,7 @@ export default function StoresPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2 text-2xs border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+                          className="h-7 px-2 text-2xs border-rouge-500/50 text-rouge-400 hover:bg-rouge-500/10"
                           onClick={() => shellOpen('https://www.gog.com/galaxy').catch(() => window.open('https://www.gog.com/galaxy', '_blank'))}
                           title={t('common.scaricaGogGalaxy')}
                         >
@@ -1152,7 +1152,7 @@ export default function StoresPage() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-7 w-7 text-slate-400 hover:text-slate-200"
+                  className="h-7 w-7 text-noir-400 hover:text-noir-200"
                   title={(t('stores.downloadApp') || "Scarica l'app {name}").replace('{name}', store.name)}
                   onClick={() => shellOpen(store.appUrl).catch(() => window.open(store.appUrl, '_blank'))}
                 >
@@ -1186,9 +1186,9 @@ export default function StoresPage() {
               }, 100);
             }
           }}
-          className="w-full flex items-center justify-center gap-2 py-1 px-3 rounded bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-1 px-3 rounded bg-noir-800/50 hover:bg-noir-800 border border-noir-700/50 transition-colors"
         >
-          <span className="text-sm font-medium text-slate-300">{t('stores.utilityServices')}</span>
+          <span className="text-sm font-medium text-noir-300">{t('stores.utilityServices')}</span>
           <span className={utilityExpanded ? '' : 'inline-block animate-bounce'}><ChevronDown className={`h-5 w-5 text-orange-400 transition-transform ${utilityExpanded ? 'rotate-180' : ''}`} /></span>
         </button>
         
@@ -1208,11 +1208,11 @@ export default function StoresPage() {
               <Card key={service.id} className="p-1.5 card-hover">
               <div className="flex items-center gap-1.5 mb-0.5">
                 <div className="relative h-5 w-5 flex items-center justify-center flex-shrink-0">
-                  {service.iconType === 'clock' && <Clock className="h-4 w-4 text-blue-500" />}
+                  {service.iconType === 'clock' && <Clock className="h-4 w-4 text-noir-500" />}
                   {service.iconType === 'gamepad' && <Gamepad2 className="h-4 w-4 text-orange-500" />}
                   {service.iconType === 'trophy' && <Trophy className="h-4 w-4 text-yellow-500" />}
                   {service.iconType === 'chart' && <BarChart3 className="h-4 w-4 text-green-500" />}
-                  {service.iconType === 'globe' && <Globe className="h-4 w-4 text-cyan-500" />}
+                  {service.iconType === 'globe' && <Globe className="h-4 w-4 text-noir-500" />}
                   {service.iconType === 'search' && <Search className="h-4 w-4 text-emerald-500" />}
                 </div>
                 <div className="flex-1 min-w-0">

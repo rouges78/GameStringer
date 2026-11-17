@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,7 +41,7 @@ import {
   Database,
   Settings2, Info, Cpu, Wind
 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 // import { api } from '@/lib/api-client';
 import { invoke } from '@/lib/tauri-api';
 import { cn } from '@/lib/utils';
@@ -50,7 +50,6 @@ import { useTranslation } from '@/lib/i18n';
 
 // Neural Translator imports
 import {
-  translateFile,
   initializeNeuralTranslator,
   getSystemStats,
   parseFile,
@@ -88,6 +87,16 @@ const ReviewStep = dynamic(
 );
 import { getRecommendedProvider, computeCostEstimate } from '@/lib/translator-pro/cost-calculator';
 import { projectService } from '@/lib/services/translation-projects';
+import { exportPatchZip } from '@/lib/patch-exporter';
+import { downloadBlob } from '@/lib/patch-generator';
+import { getApiKeys } from '@/lib/ai/ai-translate-direct';
+import { translateFileCancellable } from '@/components/translator-pro/translate-file-cancellable';
+import {
+  type ApplyOutcome,
+  localizationTargetFilename,
+  isAbsolutePath,
+  buildXUnityDictionary,
+} from '@/components/translator-pro/apply-to-game';
 
 // ============================================================================
 // TYPES
@@ -119,12 +128,36 @@ type Step = 'select-game' | 'select-files' | 'configure' | 'translate' | 'result
 
 import { storageManager } from '@/lib/storage-manager';
 import { clientLogger } from '@/lib/client-logger';
-import { setSecureKey } from '@/lib/secure-key-store';
+import { setSecureKey, getSecureKey } from '@/lib/secure-key-store';
 import { isTauri } from '@/lib/tauri-api';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
+// Provider → chiave per-provider scritta dalle Impostazioni (letta con getApiKeys()).
+const SETTINGS_KEY_BY_PROVIDER: Record<string, keyof ReturnType<typeof getApiKeys>> = {
+  'openai': 'openai',
+  'gpt5': 'openai',
+  'gemini': 'gemini',
+  'claude': 'anthropic',
+  'deepseek': 'deepseek',
+  'mistral': 'mistral',
+  'openrouter': 'openrouter',
+  'deepl': 'deepl',
+};
+
+// Provider → nome della chiave nello store cifrato (set_secure_key / get_secure_key).
+const SECURE_KEY_BY_PROVIDER: Record<string, string> = {
+  'openai': 'OPENAI_API_KEY',
+  'gpt5': 'OPENAI_API_KEY',
+  'gemini': 'GEMINI_API_KEY',
+  'claude': 'ANTHROPIC_API_KEY',
+  'deepseek': 'DEEPSEEK_API_KEY',
+  'mistral': 'MISTRAL_API_KEY',
+  'openrouter': 'OPENROUTER_API_KEY',
+  'deepl': 'DEEPL_API_KEY',
+  'google': 'GOOGLE_API_KEY',
+};
+
 export default function TranslatorProPage() {
-  const { toast } = useToast();
   const { t } = useTranslation();
   
   // === URL PARAMS (from Translation Wizard) ===
@@ -176,9 +209,8 @@ export default function TranslatorProPage() {
         if (parsed.translation?.provider) {
           setProvider(parsed.translation.provider);
         }
-        if (parsed.translation?.apiKey) {
-          setApiKey(parsed.translation.apiKey);
-        }
+        // translation.apiKey è la chiave Gemini: la chiave giusta per il provider
+        // scelto la carica l'effetto su [provider] qui sotto.
         if (parsed.translation?.defaultTargetLang) {
           setTargetLanguage(parsed.translation.defaultTargetLang);
         }
@@ -188,37 +220,62 @@ export default function TranslatorProPage() {
     }
   }, []);
 
-  // Carica API key salvata quando cambia provider (fallback per provider specifico)
+  // Ultima chiave caricata o salvata per il provider corrente: il blur salva solo se cambia.
+  const savedApiKeyRef = useRef('');
+
+  // Carica la chiave del provider: prima quella delle Impostazioni, poi lo store cifrato.
   useEffect(() => {
-    // First controlla se c'è una key specifica per questo provider
-    const savedKey = localStorage.getItem(`gamestringer_apikey_${provider}`);
-    if (savedKey) {
-      setApiKey(savedKey);
-      return;
-    }
-    // Altrimenti usa la key globale se il provider corrisponde
-    const globalSettings = localStorage.getItem('gameStringerSettings');
-    if (globalSettings) {
-      try {
-        const parsed = JSON.parse(globalSettings);
-        if (parsed.translation?.provider === provider && parsed.translation?.apiKey) {
-          setApiKey(parsed.translation.apiKey);
-          return;
+    let stale = false;
+    const loadKey = async () => {
+      const settingsName = SETTINGS_KEY_BY_PROVIDER[provider];
+      const secureName = SECURE_KEY_BY_PROVIDER[provider];
+      let key = settingsName ? getApiKeys()[settingsName] : '';
+      let stored: string | null = null;
+      if (secureName) {
+        try {
+          stored = await getSecureKey(secureName);
+          if (stored === '__configured__') stored = null; // segnaposto web, non è la chiave
+        } catch (e: unknown) {
+          clientLogger.warn(`[TranslatorPro] Lettura ${secureName} fallita: ${String(e)}`);
         }
-      } catch (e: unknown) {
-        clientLogger.warn(`[TranslatorPro] Errore parsing impostazioni globali: ${String(e)}`);
       }
-    }
-    setApiKey('');
+      // Le versioni precedenti di questa pagina salvavano la chiave in chiaro in
+      // localStorage: in desktop la spostiamo nello store cifrato e togliamo la copia.
+      const legacyName = `gamestringer_apikey_${provider}`;
+      let legacy: string | null = null;
+      try { legacy = localStorage.getItem(legacyName); } catch { /* storage non disponibile */ }
+      if (legacy && secureName && isTauri()) {
+        try {
+          if (!stored) {
+            await setSecureKey(secureName, legacy);
+            stored = legacy;
+          }
+          localStorage.removeItem(legacyName);
+        } catch (e: unknown) {
+          clientLogger.warn(`[TranslatorPro] Migrazione ${legacyName} fallita: ${String(e)}`);
+        }
+      }
+      key = key || stored || legacy || '';
+      if (stale) return;
+      savedApiKeyRef.current = key;
+      setApiKey(key);
+    };
+    loadKey();
+    return () => { stale = true; };
   }, [provider]);
   
-  // Salva API key quando viene modificata
-  const handleApiKeyChange = (newKey: string) => {
-    setApiKey(newKey);
-    if (newKey) {
-      localStorage.setItem(`gamestringer_apikey_${provider}`, newKey);
-    } else {
-      localStorage.removeItem(`gamestringer_apikey_${provider}`);
+  // Salva nello store cifrato all'uscita dal campo, non a ogni tasto.
+  const handleApiKeyBlur = async () => {
+    const value = apiKey.trim();
+    const secureName = SECURE_KEY_BY_PROVIDER[provider];
+    if (!value || !secureName || value === savedApiKeyRef.current) return;
+    try {
+      // In Tauri passa dal comando Rust (AES-256), non da fetch('/api/secrets').
+      await setSecureKey(secureName, value);
+      savedApiKeyRef.current = value;
+    } catch (err: unknown) {
+      clientLogger.error(`[TranslatorPro] Salvataggio ${secureName} fallito: ${String(err)}`);
+      toast.error(t('common.error'), { description: String(err) });
     }
   };
   
@@ -235,6 +292,8 @@ export default function TranslatorProPage() {
     fromMemory: boolean;
     metadata?: Record<string, unknown>;
   }>>([]); // Accumula results durante la traduzione
+  // Ciclo di traduzione in corso: Annulla / Salva parziali lo fermano davvero.
+  const translationAbortRef = useRef<AbortController | null>(null);
   
   // Results
   const [translatedFiles, setTranslatedFiles] = useState<Map<string, string>>(new Map());
@@ -385,30 +444,8 @@ export default function TranslatorProPage() {
     init();
   }, [sourceLanguage, targetLanguage]);
   
-  // Save API key to the secure store when it changes
-  useEffect(() => {
-    if (!apiKey) return;
-    
-    // Map provider to API key name
-    const keyMap: Record<string, string> = {
-      'openai': 'OPENAI_API_KEY',
-      'gpt5': 'OPENAI_API_KEY',
-      'gemini': 'GEMINI_API_KEY',
-      'claude': 'ANTHROPIC_API_KEY',
-      'deepseek': 'DEEPSEEK_API_KEY',
-      'mistral': 'MISTRAL_API_KEY',
-      'openrouter': 'OPENROUTER_API_KEY',
-    };
-    
-    const keyName = keyMap[provider];
-    if (keyName) {
-      // Salva nello store sicuro: in Tauri passa dal comando Rust (AES-256), non da
-      // fetch('/api/secrets') — quell'endpoint nel webview impacchettato non esiste,
-      // quindi la chiave (es. DeepSeek) non veniva mai salvata.
-      setSecureKey(keyName, apiKey)
-        .catch((err: unknown) => clientLogger.error(`Failed to save API key: ${String(err)}`));
-    }
-  }, [apiKey, provider]);
+  // Uscendo dalla pagina il ciclo di traduzione si ferma: non deve continuare a chiamare l'API.
+  useEffect(() => () => translationAbortRef.current?.abort(), []);
   
   // === COMPUTED ===
   
@@ -829,6 +866,14 @@ export default function TranslatorProPage() {
     const filesToTranslate = selectedFiles.filter(f => f.checked !== false);
     if (filesToTranslate.length === 0) return;
     
+    // Un ciclo ancora vivo (es. dopo Riprova) va fermato prima di avviarne un altro.
+    translationAbortRef.current?.abort();
+    const controller = new AbortController();
+    translationAbortRef.current = controller;
+    const { signal } = controller;
+    // Stringhe di QUESTA corsa: lo stato translatedItems letto qui sotto sarebbe quello del render precedente.
+    const runItems: typeof translatedItems = [];
+
     setIsTranslating(true);
     setIsPaused(false);
     setError(null);
@@ -865,8 +910,9 @@ export default function TranslatorProPage() {
     
     try {
       for (const file of filesToTranslate) {
+        if (signal.aborted) return;
         clientLogger.debug('[Neural Translator] Translating file:', file.name);
-        const result = await translateFile(file.content, file.name, {
+        const result = await translateFileCancellable(file.parseResult, file.name, {
           sourceLanguage,
           targetLanguage,
           provider,
@@ -882,20 +928,24 @@ export default function TranslatorProPage() {
           onItemComplete: (item) => {
             // Accumula results tradotti per salvataggio parziale
             if (item.status === 'completed' && item.translatedText) {
-              setTranslatedItems(prev => [...prev, {
+              const entry = {
                 id: item.id,
                 sourceText: item.sourceText,
-                translatedText: item.translatedText!,
+                translatedText: item.translatedText,
                 fromMemory: item.fromMemory,
                 metadata: item.metadata,
-              }]);
+              };
+              runItems.push(entry);
+              setTranslatedItems(prev => [...prev, entry]);
             }
           }
-        });
+        }, signal);
+        if (!result) return; // annullata: niente risultati, niente step 'results'
         
         setCurrentJob(result.job);
         setTranslatedFiles(prev => new Map(prev).set(file.name, result.translatedContent));
       }
+      if (signal.aborted) return;
       
       // Traccia attività completata
       await activityHistory.add({
@@ -912,23 +962,29 @@ export default function TranslatorProPage() {
         }
       });
       
-      // Salva statistica traduzione per dashboard (su IndexedDB)
-      const savedTranslations = await storageManager.getTranslations();
-      savedTranslations.push({
-        id: `trans_${Date.now()}`,
-        gameId: selectedGame?.id,
-        gameName: selectedGame?.name,
-        title: `Traduzione completata: ${selectedGame?.name || 'File locale'}`,
-        description: `Tradotti ${translatedItems.length} testi in ${targetLanguage}`,
-        activity_type: 'translation',
-        status: 'completed',
-        timestamp: new Date().toISOString()
-      });
-      await storageManager.saveTranslations(savedTranslations);
+      // Salva statistica traduzione per dashboard (su IndexedDB).
+      // Lettura e scrittura strict: con la variante tollerante una lettura fallita
+      // diventa [] e la scrittura cancellerebbe tutte le stringhe dell'Editor.
+      try {
+        const savedTranslations = await storageManager.getTranslationsStrict();
+        savedTranslations.push({
+          id: `trans_${Date.now()}`,
+          gameId: selectedGame?.id,
+          gameName: selectedGame?.name,
+          title: `Traduzione completata: ${selectedGame?.name || 'File locale'}`,
+          description: `Tradotti ${runItems.length} testi in ${targetLanguage}`,
+          activity_type: 'translation',
+          status: 'completed',
+          timestamp: new Date().toISOString()
+        });
+        await storageManager.saveTranslationsStrict(savedTranslations);
+      } catch (e) {
+        clientLogger.warn(`[TranslatorPro] Statistica traduzione non salvata: ${String(e)}`);
+      }
       
       // 🧠 Salva automaticamente in Translation Memory
-      if (translatedItems.length > 0) {
-        const tmBatch = translatedItems
+      if (runItems.length > 0) {
+        const tmBatch = runItems
           .filter(item => item.translatedText && item.sourceText && item.sourceText.length > 2)
           .map(item => ({
             source: item.sourceText,
@@ -943,11 +999,13 @@ export default function TranslatorProPage() {
         }
       }
       
+      if (signal.aborted) return;
       setCurrentStep('results');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : String(err));
+      if (!signal.aborted) setError(err instanceof Error ? err.message : String(err));
     } finally {
-      setIsTranslating(false);
+      // Solo se è ancora la corsa corrente: una corsa vecchia non deve spegnere quella nuova.
+      if (translationAbortRef.current === controller) setIsTranslating(false);
     }
   };
   
@@ -1027,27 +1085,14 @@ export default function TranslatorProPage() {
     clientLogger.debug(`[ExportPatch] Clicked! selectedGame: ${selectedGame?.name}, translatedFiles: ${translatedFiles.size}`);
     
     if (!selectedGame || translatedFiles.size === 0) {
-      toast({
-        title: 'Nessun file da esportare',
+      toast.error('Nessun file da esportare', {
         description: `Completa prima una traduzione. (Game: ${selectedGame?.name || 'none'}, Files: ${translatedFiles.size})`,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (isTauri()) {
-      // /api/export/patch (generazione ZIP server-side) è stub 501 nel desktop.
-      toast({
-        title: t('stores.notAvailable'),
-        description: t('stores.comingSoon'),
-        variant: 'destructive',
       });
       return;
     }
 
     try {
-      toast({
-        title: 'Creazione patch...',
+      toast.info('Creazione patch...', {
         description: 'Generazione del pacchetto ZIP in corso.',
       });
       
@@ -1079,43 +1124,23 @@ export default function TranslatorProPage() {
         notes: `Traduzione automatica da ${sourceLanguage.toUpperCase()} a ${targetLanguage.toUpperCase()}`
       };
       
-      // Chiama API per generare ZIP
-      clientLogger.debug(`[ExportPatch] Calling API with ${files.length} files`);
+      // ZIP generato nel client: /api/export/patch è solo uno stub 501 (export statico).
+      clientLogger.debug(`[ExportPatch] Building ZIP with ${files.length} files`);
       clientLogger.debug(`[ExportPatch] Metadata: ${JSON.stringify(metadata)}`);
       
-      const response = await fetch('/api/export/patch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
-        body: JSON.stringify({
-          files,
-          metadata,
-          format: 'zip',
-          options: {
-            includeBackup: true,
-            includeReadme: true,
-            includeMetadata: true,
-            xunityFormat: true
-          }
-        })
+      const blob = await exportPatchZip(files, metadata, {
+        includeBackup: true,
+        includeReadme: true,
+        includeMetadata: true,
+        xunityFormat: true
       });
-      
-      clientLogger.debug(`[ExportPatch] Response status: ${response.status}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        clientLogger.error('[ExportPatch] API Error:', errorText);
-        throw new Error(`error nella generazione del pacchetto: ${response.status}`);
-      }
-      
-      // Scarica il file ZIP usando Tauri save dialog
-      clientLogger.debug('[ExportPatch] Creating blob...');
-      const blob = await response.blob();
       clientLogger.debug(`[ExportPatch] Blob size: ${blob.size}`);
       
       const filename = `${selectedGame.name.replace(/[^a-zA-Z0-9]/g, '_')}_${targetLanguage}_patch.zip`;
       
-      // Salva il file ZIP sul Desktop
-      try {
+      // Desktop: salva sul Desktop come app/auto-translate (get_desktop_path + save_binary_file).
+      // Un errore qui va al catch esterno: niente fallback silenzioso né toast di successo.
+      if (isTauri()) {
         const arrayBuffer = await blob.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
         
@@ -1141,32 +1166,20 @@ export default function TranslatorProPage() {
         setExportedFilePath(fullPath);
         setExportDialogOpen(true);
         return;
-        
-      } catch (tauriError) {
-        // Fallback per browser normale
-        clientLogger.debug(`[ExportPatch] Tauri not available, using browser download: ${String(tauriError)}`);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
       }
+        
+      // Browser: download diretto
+      downloadBlob(blob, filename);
       clientLogger.debug('[ExportPatch] Download completed!');
       
-      toast({
-        title: '✅ Patch esportata!',
+      toast.success('✅ Patch esportata!', {
         description: 'Il pacchetto ZIP include file tradotti, backup e formato XUnity.AutoTranslator.',
       });
-      
+
     } catch (error: unknown) {
       clientLogger.error(`[ExportPatch] Error: ${String(error)}`);
-      toast({
-        title: 'error esportazione',
+      toast.error('error esportazione', {
         description: error instanceof Error ? error.message : 'error sconosciuto',
-        variant: 'destructive',
       });
     }
   };
@@ -1202,10 +1215,8 @@ export default function TranslatorProPage() {
       }
       
       if (!currentGamePath) {
-        toast({
-          title: 'game non trovato',
+        toast.error('game non trovato', {
           description: 'Non riesco a trovare la cartella del game. Usa "Scarica tutti" e copia manualmente.',
-          variant: 'destructive',
         });
         setApplyStatus('error');
         setIsApplying(false);
@@ -1217,110 +1228,143 @@ export default function TranslatorProPage() {
       clientLogger.debug(`[ApplyToGame] localizationInfo: ${JSON.stringify(localizationInfo)}`);
       clientLogger.debug(`[ApplyToGame] engineInfo: ${JSON.stringify(engineInfo)}`);
       
+      // Esito per ogni file: il riepilogo finale dice cosa è stato scritto davvero.
+      const outcomes: ApplyOutcome[] = [];
+      const failedDetail = (e: unknown) =>
+        t('translatorProPage.applyResult.failed').replace('{error}', e instanceof Error ? e.message : String(e));
+      let method: 'direct' | 'xunity' | 'fallback';
+      let successHint = '';
+
       // METODO 1: File di localizzazione diretti (preferito se disponibili)
       if (localizationInfo?.has_localization && localizationInfo.can_add_language) {
         clientLogger.debug('[ApplyToGame] Usando METODO 1 - File localizzazione diretti');
-        // Prendi il primo file tradotto
-        const [_filename, translatedContent] = Array.from(translatedFiles.entries())[0];
-        
-        try {
-          const savedPath = await invoke<string>('apply_translation_file', {
-            gamePath: currentGamePath,
-            sourceContent: translatedContent,
-            targetLanguage: targetLanguage || 'it',
-          });
-          
-          setApplyStatus('done');
-          toast({
-            title: '✅ Translation applied!',
-            description: `File saved: ${savedPath.split(/[/\\]/).pop()}. Select the translated language in the game options.`,
-          });
-        } catch (e: unknown) {
-          throw new Error(`error salvataggio file: ${e}`);
+        method = 'direct';
+        // Diventa la nuova lingua solo il file tradotto che corrisponde al file lingua
+        // del gioco; per gli altri questo metodo non ha una destinazione.
+        const sourceLoc = localizationInfo.source_file;
+        const folder = localizationInfo.localization_folder;
+        for (const [filename, content] of translatedFiles.entries()) {
+          const original = selectedFiles.find(f => f.name === filename);
+          if (!folder || !sourceLoc || (filename !== sourceLoc.filename && original?.path !== sourceLoc.path)) {
+            outcomes.push({ file: filename, status: 'skipped', detail: t('translatorProPage.applyResult.notLanguageFile') });
+            continue;
+          }
+          // Stesso percorso di apply_translation_file, ma con backup se il file esiste già.
+          const targetName = localizationTargetFilename(sourceLoc.filename, localizationInfo.format, targetLanguage || 'it');
+          try {
+            const result = await invoke<{ success: boolean; backup_path?: string; message: string }>('save_file_with_backup', {
+              filePath: `${folder}/${targetName}`,
+              content,
+              createBackup: true,
+            });
+            if (!result.success) throw new Error(result.message);
+            outcomes.push({ file: `${filename} → ${targetName}`, status: 'written', detail: t('translatorProPage.applyResult.written') });
+            successHint = t('translatorProPage.applyResult.languageHint');
+          } catch (e: unknown) {
+            clientLogger.warn(`[ApplyToGame] error salvataggio file: ${filename} - ${String(e)}`);
+            outcomes.push({ file: filename, status: 'failed', detail: failedDetail(e) });
+          }
         }
       }
       // METODO 2: XUnity AutoTranslator (per Unity senza file loc diretti)
       else if (engineInfo?.is_unity || engineInfo?.can_patch) {
         clientLogger.debug('[ApplyToGame] Usando METODO 2 - XUnity AutoTranslator');
+        method = 'xunity';
         setApplyStatus('checking');
         const hasPatcher = engineInfo?.has_bepinex && engineInfo?.has_xunity;
         
-        // Installa patcher se manca
+        // Installa patcher se manca: senza patcher il dizionario non verrebbe mai letto.
         if (!hasPatcher) {
           setApplyStatus('installing');
-          toast({ title: 'Installazione patcher...', description: 'BepInEx + XUnity AutoTranslator' });
+          toast.info('Installazione patcher...', { description: 'BepInEx + XUnity AutoTranslator' });
           
           try {
             const exeName = selectedGame.name.replace(/[^a-zA-Z0-9]/g, '') + '.exe';
-            await invoke('install_unity_autotranslator', { 
+            const status = await invoke<{ success: boolean; message: string }>('install_unity_autotranslator', {
               gamePath: currentGamePath, 
               gameExeName: exeName,
               targetLang: targetLanguage 
             });
+            if (status && status.success === false) throw new Error(status.message);
           } catch (e: unknown) {
             clientLogger.warn(`Installazione patcher fallita: ${String(e)}`);
+            throw new Error(t('translatorProPage.applyResult.patcherFailed').replace('{error}', e instanceof Error ? e.message : String(e)));
           }
         }
         
         setApplyStatus('applying');
         
-        // Crea dizionario XUnity
-        const dictionaryLines: string[] = [];
-        for (const [, content] of translatedFiles.entries()) {
-          const lines = content.split('\n');
-          for (const line of lines) {
-            if (line.includes('=')) dictionaryLines.push(line);
+        // Dizionario XUnity dalle stringhe tradotte (non dalle righe con '=' dei file)
+        const dictionaryLines = buildXUnityDictionary(translatedItems);
+        const dictionaryFile = '_GameStringer.txt';
+        const xunityPath = `${currentGamePath}/BepInEx/Translation/${targetLanguage}/Text`;
+        if (dictionaryLines.length === 0) {
+          outcomes.push({ file: dictionaryFile, status: 'skipped', detail: t('translatorProPage.applyResult.noEntries') });
+        } else {
+          try {
+            // File generato da GameStringer, non un file del gioco: niente copia di backup
+            // dentro Text/, dove XUnity la caricherebbe come un secondo dizionario.
+            await invoke('ensure_directory', { path: xunityPath });
+            await invoke('write_text_file', {
+              path: `${xunityPath}/${dictionaryFile}`,
+              content: dictionaryLines.join('\n')
+            });
+            outcomes.push({ file: dictionaryFile, status: 'written', detail: t('translatorProPage.applyResult.written') });
+            successHint = t('translatorProPage.applyResult.xunityHint').replace('{n}', String(dictionaryLines.length));
+          } catch (e: unknown) {
+            clientLogger.warn(`[ApplyToGame] Dizionario XUnity non scritto: ${String(e)}`);
+            outcomes.push({ file: dictionaryFile, status: 'failed', detail: failedDetail(e) });
           }
         }
-        
-        const xunityPath = `${currentGamePath}/BepInEx/Translation/${targetLanguage}/Text`;
-        try {
-          await invoke('ensure_directory', { path: xunityPath });
-          await invoke('write_text_file', { 
-            path: `${xunityPath}/_GameStringer.txt`, 
-            content: dictionaryLines.join('\n') 
-          });
-        } catch (e: unknown) {
-          clientLogger.warn(`Fallback a Translation Memory: ${String(e)}`);
-        }
-        
-        setApplyStatus('done');
-        toast({
-          title: '✅ Applicato al game!',
-          description: `${dictionaryLines.length} traduzioni XUnity. Avvia il game!`,
-        });
       }
       // METODO 3: Nessun metodo disponibile - fallback a salvataggio diretto
       else {
         clientLogger.debug('[ApplyToGame] METODO 3 - Fallback salvataggio diretto');
-        // Salva i file tradotti direttamente nella cartella del game
-        let savedCount = 0;
+        method = 'fallback';
+        // Sovrascrive il file originale del gioco (con backup). Senza percorso reale il
+        // file finirebbe nella radice del gioco col solo nome: lo si salta.
         for (const [filename, content] of translatedFiles.entries()) {
+          const originalPath = selectedFiles.find(f => f.name === filename)?.path;
+          if (!originalPath || !isAbsolutePath(originalPath)) {
+            outcomes.push({ file: filename, status: 'skipped', detail: t('translatorProPage.applyResult.unknownLocation') });
+            continue;
+          }
           try {
-            const targetPath = `${currentGamePath}/${filename}`;
-            clientLogger.debug('[ApplyToGame] Salvando:', targetPath);
-            await invoke('write_text_file', { path: targetPath, content });
-            savedCount++;
+            clientLogger.debug('[ApplyToGame] Salvando:', originalPath);
+            const result = await invoke<{ success: boolean; backup_path?: string; message: string }>('save_file_with_backup', {
+              filePath: originalPath,
+              content,
+              createBackup: true,
+            });
+            if (!result.success) throw new Error(result.message);
+            outcomes.push({ file: filename, status: 'written', detail: t('translatorProPage.applyResult.written') });
           } catch (e: unknown) {
             clientLogger.warn(`[ApplyToGame] error salvataggio file: ${filename} - ${String(e)}`);
+            outcomes.push({ file: filename, status: 'failed', detail: failedDetail(e) });
           }
         }
-        
-        if (savedCount > 0) {
-          setApplyStatus('done');
-          toast({
-            title: '✅ File salvati!',
-            description: `${savedCount} file tradotti salvati nella cartella del game.`,
-          });
-        } else {
-          toast({
-            title: '⚠️ Applicazione fallita',
-            description: 'Non sono riuscito a salvare i file. Usa "Scarica tutti" e copia manualmente.',
-            variant: 'destructive',
-          });
-          setApplyStatus('error');
-        }
       }
+        
+      const writtenCount = outcomes.filter(o => o.status === 'written').length;
+      const allWritten = writtenCount > 0 && writtenCount === outcomes.length;
+      setApplyStatus(allWritten ? 'done' : 'error');
+      (allWritten ? toast.success : toast.error)(t(allWritten
+          ? 'translatorProPage.applyResult.allTitle'
+          : writtenCount > 0
+            ? 'translatorProPage.applyResult.partialTitle'
+            : 'translatorProPage.applyResult.noneTitle'), {
+        description: (
+          <div className="space-y-1">
+            <ul className="max-h-40 overflow-y-auto text-xs space-y-0.5">
+              {outcomes.map(o => (
+                <li key={o.file}>{o.status === 'written' ? '✓' : '✗'} {o.file}: {o.detail}</li>
+              ))}
+            </ul>
+            {writtenCount > 0 && successHint && <p className="text-xs">{successHint}</p>}
+            {!allWritten && <p className="text-xs">{t('translatorProPage.applyResult.manualHint')}</p>}
+          </div>
+        ),
+      });
       
       // Salva in Translation Memory (batch per evitare loop di salvataggi)
       const tmBatch = translatedItems
@@ -1333,48 +1377,54 @@ export default function TranslatorProPage() {
         }));
       
       if (tmBatch.length > 0) {
-        await translationMemory.addBatch(tmBatch);
-        clientLogger.debug(`[ApplyToGame] saved ${tmBatch.length} traduzioni in TM`);
-      }
-      
-      // Salva statistica patch per dashboard in IndexedDB
-      try {
-        const savedPatches = await get<unknown[]>('gamePatches') || [];
-        savedPatches.push({
-          id: `patch_${Date.now()}`,
-          gameId: selectedGame.id,
-          gameName: selectedGame.name,
-          gamePath: currentGamePath,
-          method: localizationInfo?.has_localization ? 'direct' : (engineInfo?.is_unity ? 'xunity' : 'fallback'),
-          translationsCount: tmBatch.length,
-          status: 'applied',
-          timestamp: new Date().toISOString()
-        });
-        await set('gamePatches', savedPatches);
-      } catch (e: unknown) {
-        clientLogger.warn(`Errore salvataggio patch in IndexedDB: ${String(e)}`);
-      }
-      
-      // Traccia attività patch per sincronizzazione
-      await activityHistory.add({
-        activity_type: 'patch',
-        title: `Patch applicata: ${selectedGame.name}`,
-        description: `${tmBatch.length} traduzioni applicate al game`,
-        game_name: selectedGame.name,
-        game_id: selectedGame.id,
-        metadata: {
-          method: localizationInfo?.has_localization ? 'direct' : (engineInfo?.is_unity ? 'xunity' : 'fallback'),
-          translations_count: tmBatch.length
+        // I file sono già scritti: un errore della TM non deve far risultare fallita l'applicazione.
+        try {
+          await translationMemory.addBatch(tmBatch);
+          clientLogger.debug(`[ApplyToGame] saved ${tmBatch.length} traduzioni in TM`);
+        } catch (e: unknown) {
+          clientLogger.warn(`[ApplyToGame] Salvataggio TM fallito: ${String(e)}`);
         }
-      });
+      }
+
+      // Patch registrata solo se almeno un file è stato scritto davvero
+      if (writtenCount > 0) {
+        // Salva statistica patch per dashboard in IndexedDB
+        try {
+          const savedPatches = await get<unknown[]>('gamePatches') || [];
+          savedPatches.push({
+            id: `patch_${Date.now()}`,
+            gameId: selectedGame.id,
+            gameName: selectedGame.name,
+            gamePath: currentGamePath,
+            method,
+            translationsCount: tmBatch.length,
+            status: allWritten ? 'applied' : 'partial',
+            timestamp: new Date().toISOString()
+          });
+          await set('gamePatches', savedPatches);
+        } catch (e: unknown) {
+          clientLogger.warn(`Errore salvataggio patch in IndexedDB: ${String(e)}`);
+        }
+
+        // Traccia attività patch per sincronizzazione
+        await activityHistory.add({
+          activity_type: 'patch',
+          title: `Patch applicata: ${selectedGame.name}`,
+          description: `${tmBatch.length} traduzioni applicate al game`,
+          game_name: selectedGame.name,
+          game_id: selectedGame.id,
+          metadata: {
+            method,
+            translations_count: tmBatch.length
+          }
+        });
+      }
       
     } catch (e: unknown) {
       clientLogger.error(`error applicazione: ${String(e)}`);
       setApplyStatus('error');
-      toast({
-        title: 'error',
+      toast.error('error', {
         description: `${e}. Usa "Scarica tutti" e copia manualmente.`,
-        variant: 'destructive',
       });
     } finally {
       setIsApplying(false);
@@ -1554,10 +1604,10 @@ export default function TranslatorProPage() {
                 const parseResult = parseFile(content, localizationInfo.source_file.filename);
                 if (parseResult.strings.length > 0) {
                   setSelectedFiles([{ name: localizationInfo.source_file.filename, path: localizationInfo.source_file.path, content, format: parseResult.format, parseResult }]);
-                  toast({ title: '✓ Caricato!', description: `${parseResult.strings.length} stringhe` });
+                  toast.success('✓ Caricato!', { description: `${parseResult.strings.length} stringhe` });
                 }
               } catch (e: unknown) {
-                toast({ title: 'error', description: `${e}`, variant: 'destructive' });
+                toast.error('error', { description: `${e}` });
               } finally {
                 setIsLoadingFiles(false);
               }
@@ -1726,7 +1776,8 @@ export default function TranslatorProPage() {
                   <Input
                     type="password"
                     value={apiKey}
-                    onChange={(e) => handleApiKeyChange(e.target.value)}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    onBlur={handleApiKeyBlur}
                     placeholder={t('translatorProPage.apiKeyPh')}
                     autoComplete="off"
                   />
@@ -1883,18 +1934,25 @@ export default function TranslatorProPage() {
             selectedGame={selectedGame}
             targetLanguage={targetLanguage}
             onSavePartialResults={() => {
+              translationAbortRef.current?.abort();
               setIsTranslating(false);
 
               // Save partial results to IndexedDB for persistence
+              let saved: Promise<void> | null = null;
               if (translatedItems.length > 0 && selectedFiles.length > 0 && progress) {
                 const partialResults = {
                   timestamp: Date.now(),
                   gameId: selectedGame?.id,
                   gameName: selectedGame?.name,
+                  // La coppia di lingue reale: senza, l'Editor ricadeva su en → lingua predefinita.
+                  sourceLanguage,
+                  targetLanguage,
+                  completed: progress.completed,
+                  total: progress.total,
                   items: translatedItems,
                 };
 
-                set('gamestringer_partial_translations', partialResults).catch((e: unknown) => clientLogger.warn(`Errore IndexedDB: ${String(e)}`));
+                saved = set('gamestringer_partial_translations', partialResults);
                 clientLogger.debug(`[Neural Translator] Salvati ${partialResults.items.length} results parziali in IndexedDB`);
 
                 // Generate translated files from partial results
@@ -1981,14 +2039,21 @@ export default function TranslatorProPage() {
               }
 
               setCurrentStep('results');
-              toast({
-                title: 'results parziali salvati',
-                description: `${progress?.completed || 0} stringhe tradotte su ${progress?.total || 0}. Puoi riprendere più tardi.`,
-              });
+              // "Salvati" solo dopo che la scrittura in IndexedDB è riuscita (e solo se c'era qualcosa da scrivere).
+              saved?.then(
+                () => toast.info('results parziali salvati', {
+                  description: `${progress?.completed || 0} stringhe tradotte su ${progress?.total || 0}. Puoi riprendere più tardi.`,
+                }),
+                (e: unknown) => {
+                  clientLogger.warn(`Errore IndexedDB: ${String(e)}`);
+                  toast.error(t('common.error'), { description: String(e) });
+                },
+              );
             }}
             onCancelTranslation={() => {
+              translationAbortRef.current?.abort();
               setIsTranslating(false);
-              setError('Traduzione annullata dall\'utente');
+              setError(t('common.traduzioneAnnullata'));
             }}
             onRetry={() => setCurrentStep('configure')}
             onViewResults={() => setCurrentStep('results')}
@@ -2032,7 +2097,7 @@ export default function TranslatorProPage() {
               {t('translatorProPage.patchExported')}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="text-muted-foreground space-y-3">
-                <p>{t('translatorProPage.ilPacchettoDiTraduzioneÈStatoS')}</p>
+                <p>{t('translatorProPage.patchSavedTo')}</p>
                 <code className="block bg-muted p-3 rounded text-primary text-sm break-all">
                   {exportedFilePath}
                 </code>

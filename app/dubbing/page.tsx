@@ -10,13 +10,17 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Mic, Play, Pause, Square, Volume2, Languages,
   CheckCircle, AlertCircle, Loader2, FolderOpen, FileAudio,
   BarChart3, Clock
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
-import { DubbingPipeline, type DubbingConfig, type DubbingProgress, type DubbingResult } from '@/lib/voice/dubbing-pipeline';
+import { DubbingPipeline, type DubbingConfig, type DubbingProgress, type DubbingResult, type ScanSummary } from '@/lib/voice/dubbing-pipeline';
 import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
@@ -56,9 +60,28 @@ export default function DubbingPage() {
 
   // Pipeline state
   const [progress, setProgress] = useState<DubbingProgress | null>(null);
-  const [_result, setResult] = useState<DubbingResult | null>(null);
+  const [result, setResult] = useState<DubbingResult | null>(null);
   const { t } = useTranslation();
   const pipelineRef = useRef<DubbingPipeline | null>(null);
+
+  // Conferma prima delle chiamate a pagamento: la pipeline aspetta questa Promise.
+  // Il riepilogo resta impostato dopo la risposta: durante l'animazione di
+  // chiusura il dialogo mostrerebbe altrimenti "0 file".
+  const [paidConfirm, setPaidConfirm] = useState<ScanSummary | null>(null);
+  const [paidConfirmOpen, setPaidConfirmOpen] = useState(false);
+  const paidConfirmResolveRef = useRef<((ok: boolean) => void) | null>(null);
+
+  const askPaidConfirmation = useCallback((summary: ScanSummary) => new Promise<boolean>(resolve => {
+    paidConfirmResolveRef.current = resolve;
+    setPaidConfirm(summary);
+    setPaidConfirmOpen(true);
+  }), []);
+
+  const answerPaidConfirmation = (ok: boolean) => {
+    paidConfirmResolveRef.current?.(ok);
+    paidConfirmResolveRef.current = null;
+    setPaidConfirmOpen(false);
+  };
 
   const isRunning = progress?.isRunning || false;
 
@@ -100,17 +123,37 @@ export default function DubbingPage() {
     const pipeline = new DubbingPipeline(config);
     pipelineRef.current = pipeline;
 
+    setResult(null);
     toast.info(t('common.aiDubbingAvviato'));
-    const dubbingResult = await pipeline.run(setProgress);
-    setResult(dubbingResult);
+    let declined = false;
+    const dubbingResult = await pipeline.run(setProgress, async (summary) => {
+      const ok = await askPaidConfirmation(summary);
+      declined = !ok;
+      return ok;
+    });
     pipelineRef.current = null;
 
-    if (dubbingResult.success) {
-      toast.success(`Dubbing completato! ${dubbingResult.stats.patched} file audio patchati`);
-    } else {
-      toast.error(`Dubbing completato con ${dubbingResult.stats.errors} errori`);
+    // Conferma rifiutata: nessuna chiamata a pagamento è partita, si torna allo stato iniziale.
+    if (declined) {
+      setProgress(null);
+      toast.info(t('common.dubbingAnnullato'));
+      return;
     }
-  }, [gamePath, gameName, sourceLang, targetLang, ttsProvider, sttProvider, defaultVoice, enableLipSync, enableSubtitles, subtitleFormat, durationMatching]);
+    setResult(dubbingResult);
+
+    // Verde solo se qualcosa è stato davvero patchato, e senza nascondere gli errori.
+    // Un passo fallito (es. lip sync) o rimasto a metà (annullato) non è "completato".
+    const { patched, errors } = dubbingResult.stats;
+    const failedStep = dubbingResult.steps.find(s => s.status === 'failed');
+    const allStepsDone = dubbingResult.steps.every(s => s.status === 'completed');
+    if (dubbingResult.success && errors === 0 && allStepsDone) {
+      toast.success(t('dubbingPage.doneToast').replace('{n}', String(patched)));
+    } else if (dubbingResult.success) {
+      toast.warning(t('dubbingPage.partialToast').replace('{n}', String(patched)).replace('{errors}', String(errors)), { description: failedStep?.error });
+    } else {
+      toast.error(t('dubbingPage.failedToast'), { description: failedStep?.error });
+    }
+  }, [gamePath, gameName, sourceLang, targetLang, ttsProvider, sttProvider, defaultVoice, enableLipSync, enableSubtitles, subtitleFormat, durationMatching, askPaidConfirmation]);
 
   const handlePause = () => pipelineRef.current?.pause();
   const handleResume = () => pipelineRef.current?.resume();
@@ -126,13 +169,13 @@ export default function DubbingPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Mic className="h-6 w-6 text-purple-400" />
+          <Mic className="h-6 w-6 text-rouge-400" />
           <h1 className="text-2xl font-bold">{t('common.aiDubbingPipeline')}</h1>
           <Badge variant="outline" className="text-amber-400 border-amber-400/50">{t('dubbingPage.labsExperimental')}</Badge>
         </div>
         <div className="flex gap-2">
           {!isRunning ? (
-            <Button onClick={handleStart} className="bg-purple-600 hover:bg-purple-700 gap-2" disabled={!gamePath}>
+            <Button onClick={handleStart} className="bg-rouge-600 hover:bg-rouge-700 gap-2" disabled={!gamePath}>
               <Play className="h-4 w-4" /> {t('dubbingPage.startDubbing')}</Button>
           ) : (
             <>
@@ -224,7 +267,8 @@ export default function DubbingPage() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="openai_whisper">OpenAI Whisper</SelectItem>
-                    <SelectItem value="groq_whisper">{t('dubbingPage.groqWhisper')}</SelectItem>
+                    {/* La pipeline trascrive solo con OpenAI Whisper: Groq non ha ancora un percorso. */}
+                    <SelectItem value="groq_whisper" disabled>{t('dubbingPage.groqWhisperUnavailable')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -259,11 +303,11 @@ export default function DubbingPage() {
         <div className="lg:col-span-2 space-y-4">
           {/* Overall progress */}
           {progress && (
-            <Card className="bg-zinc-900/50 border-purple-800/30">
+            <Card className="bg-noir-900/50 border-rouge-800/30">
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">
-                    {currentStep ? currentStep.name : 'Completato'}
+                    {currentStep ? currentStep.name : paidConfirmOpen ? t('dubbingPage.paidConfirmTitle') : result && !result.success ? t('common.error') : t('common.completato')}
                   </span>
                   <span className="text-sm text-muted-foreground">{overallProgress}%</span>
                 </div>
@@ -284,15 +328,18 @@ export default function DubbingPage() {
                   {progress.steps.map((step) => (
                     <div key={step.id} className="flex items-center gap-3 py-1.5">
                       {step.status === 'completed' && <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />}
-                      {step.status === 'running' && <Loader2 className="h-4 w-4 text-purple-400 animate-spin shrink-0" />}
+                      {step.status === 'running' && <Loader2 className="h-4 w-4 text-rouge-400 animate-spin shrink-0" />}
                       {step.status === 'failed' && <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />}
-                      {step.status === 'pending' && <div className="h-4 w-4 rounded-full border border-zinc-600 shrink-0" />}
-                      {step.status === 'skipped' && <div className="h-4 w-4 rounded-full bg-zinc-700 shrink-0" />}
+                      {step.status === 'pending' && <div className="h-4 w-4 rounded-full border border-noir-600 shrink-0" />}
+                      {step.status === 'skipped' && <div className="h-4 w-4 rounded-full bg-noir-700 shrink-0" />}
 
                       <div className="flex-1 min-w-0">
-                        <span className={`text-sm ${step.status === 'running' ? 'text-purple-300 font-medium' : step.status === 'completed' ? 'text-green-400' : 'text-muted-foreground'}`}>
+                        <span className={`text-sm ${step.status === 'running' ? 'text-rouge-300 font-medium' : step.status === 'completed' ? 'text-green-400' : 'text-muted-foreground'}`}>
                           {step.name}
                         </span>
+                        {step.status === 'failed' && step.error && (
+                          <p className="text-xs text-red-400 truncate" title={step.error}>{step.error}</p>
+                        )}
                       </div>
 
                       {step.status === 'running' && (
@@ -317,27 +364,27 @@ export default function DubbingPage() {
           {/* Stats */}
           {progress && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Card className="bg-zinc-900/50">
+              <Card className="bg-noir-900/50">
                 <CardContent className="p-3 text-center">
-                  <div className="text-2xl font-bold text-blue-400">{progress.stats.totalAudioFiles}</div>
+                  <div className="text-2xl font-bold text-noir-400">{progress.stats.totalAudioFiles}</div>
                   <div className="text-xs text-muted-foreground flex items-center justify-center gap-1"><FileAudio className="h-3 w-3" />{t('common.audioFiles')}</div>
                 </CardContent>
               </Card>
-              <Card className="bg-zinc-900/50">
+              <Card className="bg-noir-900/50">
                 <CardContent className="p-3 text-center">
                   <div className="text-2xl font-bold text-green-400">{progress.stats.patched}</div>
                   <div className="text-xs text-muted-foreground flex items-center justify-center gap-1"><CheckCircle className="h-3 w-3" />{t('common.patchati')}</div>
                 </CardContent>
               </Card>
-              <Card className="bg-zinc-900/50">
+              <Card className="bg-noir-900/50">
                 <CardContent className="p-3 text-center">
                   <div className="text-2xl font-bold text-red-400">{progress.stats.errors}</div>
                   <div className="text-xs text-muted-foreground flex items-center justify-center gap-1"><AlertCircle className="h-3 w-3" /> {t('dubbingPage.errors')}</div>
                 </CardContent>
               </Card>
-              <Card className="bg-zinc-900/50">
+              <Card className="bg-noir-900/50">
                 <CardContent className="p-3 text-center">
-                  <div className="text-2xl font-bold text-purple-400">
+                  <div className="text-2xl font-bold text-rouge-400">
                     {progress.stats.avgTranscriptionConfidence > 0 ? `${Math.round(progress.stats.avgTranscriptionConfidence * 100)}%` : '--'}
                   </div>
                   <div className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Mic className="h-3 w-3" /> {t('dubbingPage.confidence')}</div>
@@ -359,11 +406,11 @@ export default function DubbingPage() {
                       <div key={seg.id} className="flex items-center gap-2 py-1 text-xs">
                         {seg.status === 'complete' && <CheckCircle className="h-3 w-3 text-green-500 shrink-0" />}
                         {seg.status === 'error' && <AlertCircle className="h-3 w-3 text-red-500 shrink-0" />}
-                        {['transcribing', 'translating', 'synthesizing', 'patching'].includes(seg.status) && <Loader2 className="h-3 w-3 text-purple-400 animate-spin shrink-0" />}
-                        {seg.status === 'pending' && <div className="h-3 w-3 rounded-full border border-zinc-700 shrink-0" />}
+                        {['transcribing', 'translating', 'synthesizing', 'patching'].includes(seg.status) && <Loader2 className="h-3 w-3 text-rouge-400 animate-spin shrink-0" />}
+                        {seg.status === 'pending' && <div className="h-3 w-3 rounded-full border border-noir-700 shrink-0" />}
                         <span className="text-muted-foreground truncate flex-1">{seg.fileName}</span>
-                        {seg.originalText && <span className="text-zinc-500 truncate max-w-[150px]">{seg.originalText.substring(0, 30)}</span>}
-                        {seg.translatedText && <span className="text-cyan-400 truncate max-w-[150px]">{seg.translatedText.substring(0, 30)}</span>}
+                        {seg.originalText && <span className="text-noir-500 truncate max-w-[150px]">{seg.originalText.substring(0, 30)}</span>}
+                        {seg.translatedText && <span className="text-noir-400 truncate max-w-[150px]">{seg.translatedText.substring(0, 30)}</span>}
                       </div>
                     ))}
                   </div>
@@ -374,9 +421,9 @@ export default function DubbingPage() {
 
           {/* Empty state */}
           {!progress && (
-            <Card className="bg-zinc-900/30 border-dashed border-zinc-700">
+            <Card className="bg-noir-900/30 border-dashed border-noir-700">
               <CardContent className="p-12 text-center">
-                <Mic className="h-12 w-12 text-purple-400/50 mx-auto mb-4" />
+                <Mic className="h-12 w-12 text-rouge-400/50 mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">{t('common.aiDubbingPipeline')}</h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
                   {t('dubbingPage.selectFolderPrompt')}</p>
@@ -385,6 +432,26 @@ export default function DubbingPage() {
           )}
         </div>
       </div>
+
+      {/* Conferma costi: ogni file trovato è una trascrizione a pagamento */}
+      <AlertDialog open={paidConfirmOpen} onOpenChange={(open) => { if (!open) answerPaidConfirmation(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('dubbingPage.paidConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('dubbingPage.paidConfirmDesc')
+                .replace('{count}', String(paidConfirm?.fileCount ?? 0))
+                .replace('{size}', ((paidConfirm?.totalBytes ?? 0) / (1024 * 1024)).toFixed(1))}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('dubbingPage.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => answerPaidConfirmation(true)}>
+              {t('dubbingPage.paidConfirmProceed').replace('{count}', String(paidConfirm?.fileCount ?? 0))}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

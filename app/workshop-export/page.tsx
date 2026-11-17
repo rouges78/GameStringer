@@ -113,7 +113,7 @@ export default function WorkshopExportPage() {
   return (
     <div className="container mx-auto p-4 space-y-3">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500 p-3 text-white">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-noir-600 via-rouge-500 to-rouge-500 p-3 text-white">
         <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative flex items-center gap-2.5">
           <div className="p-2 bg-black/30 rounded-lg border border-white/10">
@@ -131,7 +131,7 @@ export default function WorkshopExportPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Config Form */}
         <div className="lg:col-span-2 space-y-3">
-          <Card className="bg-zinc-900/50 border-zinc-800">
+          <Card className="bg-noir-900/50 border-noir-800">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">{t('ueTranslator.configuration')}</CardTitle>
             </CardHeader>
@@ -258,12 +258,12 @@ export default function WorkshopExportPage() {
           </Card>
 
           {/* Files */}
-          <Card className="bg-zinc-900/50 border-zinc-800">
+          <Card className="bg-noir-900/50 border-noir-800">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">{t('workshopExportPage.translatedFiles')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="border-2 border-dashed border-zinc-700 rounded-lg p-4 text-center">
+              <div className="border-2 border-dashed border-noir-700 rounded-lg p-4 text-center">
                 <input
                   type="file"
                   multiple
@@ -272,19 +272,19 @@ export default function WorkshopExportPage() {
                   id="file-upload"
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  <Package className="h-8 w-8 mx-auto text-zinc-500 mb-2" />
-                  <p className="text-xs text-zinc-400">{t('workshopExportPage.clickToAdd')}</p>
-                  <p className="text-2xs text-zinc-600">{t('workshopExportPage.supportedFormats')}</p>
+                  <Package className="h-8 w-8 mx-auto text-noir-500 mb-2" />
+                  <p className="text-xs text-noir-400">{t('workshopExportPage.clickToAdd')}</p>
+                  <p className="text-2xs text-noir-600">{t('workshopExportPage.supportedFormats')}</p>
                 </label>
               </div>
 
               {files.length > 0 && (
                 <div className="space-y-1">
                   {files.map((file, i) => (
-                    <div key={i} className="flex items-center justify-between p-1.5 rounded bg-zinc-800/50 text-xs">
+                    <div key={i} className="flex items-center justify-between p-1.5 rounded bg-noir-800/50 text-xs">
                       <span className="truncate">{file.name}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-zinc-500">{(file.size / 1024).toFixed(1)} KB</span>
+                        <span className="text-noir-500">{(file.size / 1024).toFixed(1)} KB</span>
                         <button onClick={() => handleRemoveFile(i)} className="text-red-400 hover:text-red-300">&times;</button>
                       </div>
                     </div>
@@ -298,7 +298,7 @@ export default function WorkshopExportPage() {
         {/* Preview & Export */}
         <div className="space-y-3">
           {/* Validation */}
-          <Card className="bg-zinc-900/50 border-zinc-800">
+          <Card className="bg-noir-900/50 border-noir-800">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">{t('workshopExportPage.validation')}</CardTitle>
             </CardHeader>
@@ -322,21 +322,21 @@ export default function WorkshopExportPage() {
           </Card>
 
           {/* Package Preview */}
-          <Card className="bg-zinc-900/50 border-zinc-800">
+          <Card className="bg-noir-900/50 border-noir-800">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-1">
                 <Eye className="h-3 w-3" /> {t('workshopExportPage.packagePreview')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1 text-2xs text-zinc-400">
+            <CardContent className="space-y-1 text-2xs text-noir-400">
               <div>workshop_item.json</div>
               <div>README.md</div>
               <div>preview.svg</div>
               <div>install.bat / install.sh</div>
               {files.map((f, i) => (
-                <div key={i} className="text-zinc-500">content/{f.name}</div>
+                <div key={i} className="text-noir-500">content/{f.name}</div>
               ))}
-              <div className="pt-1 border-t border-zinc-800 text-zinc-500">
+              <div className="pt-1 border-t border-noir-800 text-noir-500">
                 {files.length} {t('common.file')}, ~{(files.reduce((s, f) => s + f.size, 0) / 1024).toFixed(0)} KB
               </div>
             </CardContent>
@@ -357,7 +357,7 @@ export default function WorkshopExportPage() {
             )}
           </Button>
           
-          <p className="text-2xs text-zinc-600 text-center">
+          <p className="text-2xs text-noir-600 text-center">
             {t('workshopExportPage.footerNote')}
           </p>
         </div>

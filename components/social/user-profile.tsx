@@ -58,8 +58,10 @@ import {
   type ActivityItem
 } from '@/lib/social/social';
 import { getThreads, type ForumThread } from '@/lib/social/forum';
+import { clientLogger } from '@/lib/client-logger';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 // ─── ACHIEVEMENT BADGE ───────────────────────────────────────────────────────
 
@@ -80,7 +82,7 @@ function AchievementBadge({ achievement }: { achievement: Achievement }) {
       </div>
       <div>
         <p className="text-sm font-medium text-white">{achievement.name}</p>
-        <p className="text-xs text-slate-400">{achievement.description}</p>
+        <p className="text-xs text-noir-400">{achievement.description}</p>
       </div>
     </div>
   );
@@ -92,12 +94,12 @@ function ActivityItemCard({ activity }: { activity: ActivityItem }) {
   const { t } = useTranslation();
   const getActivityIcon = () => {
     switch (activity.activity_type) {
-      case 'thread_created': return <MessageSquare className="h-4 w-4 text-blue-400" />;
+      case 'thread_created': return <MessageSquare className="h-4 w-4 text-noir-400" />;
       case 'post_created': return <MessageSquare className="h-4 w-4 text-emerald-400" />;
-      case 'translation_shared': return <Languages className="h-4 w-4 text-purple-400" />;
-      case 'friend_added': return <Users className="h-4 w-4 text-pink-400" />;
+      case 'translation_shared': return <Languages className="h-4 w-4 text-rouge-400" />;
+      case 'friend_added': return <Users className="h-4 w-4 text-rouge-400" />;
       case 'achievement_unlocked': return <Trophy className="h-4 w-4 text-amber-400" />;
-      default: return <Star className="h-4 w-4 text-slate-400" />;
+      default: return <Star className="h-4 w-4 text-noir-400" />;
     }
   };
 
@@ -113,16 +115,16 @@ function ActivityItemCard({ activity }: { activity: ActivityItem }) {
   };
 
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-slate-700/50 last:border-0">
+    <div className="flex items-start gap-3 py-3 border-b border-noir-700/50 last:border-0">
       <div className="mt-0.5">{getActivityIcon()}</div>
       <div className="flex-1">
-        <p className="text-sm text-slate-300">{getActivityText()}</p>
+        <p className="text-sm text-noir-300">{getActivityText()}</p>
         {activity.metadata && (
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-noir-500 mt-0.5">
             {(activity.metadata as { title?: string }).title}
           </p>
         )}
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-noir-500 mt-1">
           {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true, locale: it })}
         </p>
       </div>
@@ -134,11 +136,11 @@ function ActivityItemCard({ activity }: { activity: ActivityItem }) {
 
 function ThreadCard({ thread }: { thread: ForumThread }) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer">
-      <MessageSquare className="h-5 w-5 text-blue-400" />
+    <div className="flex items-center gap-3 p-3 rounded-lg bg-noir-800/30 hover:bg-noir-800/50 transition-colors cursor-pointer">
+      <MessageSquare className="h-5 w-5 text-noir-400" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white truncate">{thread.title}</p>
-        <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5">
+        <div className="flex items-center gap-3 text-xs text-noir-400 mt-0.5">
           <span className="flex items-center gap-1">
             <MessageSquare className="h-3 w-3" />
             {thread.reply_count}
@@ -159,6 +161,11 @@ function ThreadCard({ thread }: { thread: ForumThread }) {
 interface UserProfileProps {
   userId?: string;
   username?: string;
+  /**
+   * uid di Supabase Auth dell'utente corrente: `profile.user_id` è normalizzato
+   * all'`id` di user_profiles (= uid Supabase), quindi l'id del profilo LOCALE
+   * qui non combacia mai e il proprio profilo non risultava "proprio".
+   */
   currentUserId?: string;
   onClose?: () => void;
 }
@@ -171,6 +178,8 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
   const [threads, setThreads] = useState<ForumThread[]>([]);
   const [friends, setFriends] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  // Caricamento fallito (rete/backend): va detto, non spacciato per "utente non trovato".
+  const [loadFailed, setLoadFailed] = useState(false);
   const [friendshipStatus, setFriendshipStatus] = useState<'none' | 'pending' | 'friends'>('none');
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -190,6 +199,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setLoadFailed(false);
     try {
       let profileData: UserProfile | null = null;
       
@@ -241,7 +251,8 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
         setFriendshipStatus(isFriend ? 'friends' : 'none');
       }
     } catch (error) {
-      console.error('[UserProfile] Error loading data:', error);
+      clientLogger.error('[UserProfile] Error loading data:', error);
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -277,10 +288,12 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
 
   const handleSaveProfile = async () => {
     if (!profile) return;
-    const success = await updateProfile(profile.user_id, editForm);
+    const success = await updateProfile(profile.user_id, editForm).catch(() => false);
     if (success) {
       setProfile({ ...profile, ...editForm });
       setIsEditing(false);
+    } else {
+      toast.error(t('common.impossibileSalvareLeModifiche'));
     }
   };
 
@@ -289,17 +302,28 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rouge-500" />
       </div>
     );
   }
 
   if (!profile) {
+    if (loadFailed) {
+      return (
+        <div className="flex flex-col items-center justify-center h-96 text-center">
+          <User className="h-16 w-16 text-noir-500 mb-4" />
+          <p className="text-sm text-noir-400">{t('forum.backendUnavailable')}</p>
+          <Button variant="outline" size="sm" onClick={loadData} className="mt-4">
+            {t('common.retry')}
+          </Button>
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-center justify-center h-96 text-center">
-        <User className="h-16 w-16 text-slate-500 mb-4" />
+        <User className="h-16 w-16 text-noir-500 mb-4" />
         <h3 className="text-lg font-semibold text-white">{t('userProfile.userNotFound')}</h3>
-        <p className="text-sm text-slate-400">{t('userProfile.profileNotExist')}</p>
+        <p className="text-sm text-noir-400">{t('userProfile.profileNotExist')}</p>
       </div>
     );
   }
@@ -311,13 +335,13 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
       {/* Banner & Avatar */}
       <div className="relative">
         <div 
-          className="h-40 rounded-t-xl bg-gradient-to-r from-blue-600 to-purple-600"
+          className="h-40 rounded-t-xl bg-gradient-to-r from-noir-600 to-rouge-600"
           style={profile.banner_url ? { backgroundImage: `url(${profile.banner_url})`, backgroundSize: 'cover' } : {}}
         />
         <div className="absolute -bottom-12 left-6 flex items-end gap-4">
-          <Avatar className="h-24 w-24 border-4 border-slate-900">
+          <Avatar className="h-24 w-24 border-4 border-noir-900">
             <AvatarImage src={profile.avatar_url || undefined} />
-            <AvatarFallback className="bg-slate-700 text-2xl">
+            <AvatarFallback className="bg-noir-700 text-2xl">
               {profile.username.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
@@ -325,7 +349,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
       </div>
 
       {/* Profile Header */}
-      <div className="pt-14 px-6 pb-4 bg-slate-800/50 rounded-b-xl">
+      <div className="pt-14 px-6 pb-4 bg-noir-800/50 rounded-b-xl">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2">
@@ -333,25 +357,25 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
                 {profile.display_name || profile.username}
               </h1>
               {profile.is_verified && (
-                <Badge className="bg-blue-500">
+                <Badge className="bg-rouge-500">
                   <Check className="h-3 w-3 mr-1" />
                   {t('userProfile.verified')}
                 </Badge>
               )}
               {profile.is_moderator && (
-                <Badge className="bg-purple-500">
+                <Badge className="bg-rouge-500">
                   <Shield className="h-3 w-3 mr-1" />
                   {t('userProfile.moderator')}
                 </Badge>
               )}
             </div>
-            <p className="text-slate-400">@{profile.username}</p>
+            <p className="text-noir-400">@{profile.username}</p>
             
             {profile.bio && (
-              <p className="text-sm text-slate-300 mt-2 max-w-lg">{profile.bio}</p>
+              <p className="text-sm text-noir-300 mt-2 max-w-lg">{profile.bio}</p>
             )}
 
-            <div className="flex items-center gap-4 mt-3 text-sm text-slate-400">
+            <div className="flex items-center gap-4 mt-3 text-sm text-noir-400">
               {profile.location && (
                 <span className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
@@ -363,7 +387,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
                   href={profile.website} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-blue-400 hover:underline"
+                  className="flex items-center gap-1 text-noir-400 hover:underline"
                 >
                   <LinkIcon className="h-4 w-4" />
                   {t('userProfile.website')}
@@ -392,7 +416,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
                   </DialogHeader>
                   <div className="space-y-4 mt-4 max-h-[60vh] overflow-y-auto">
                       <div>
-                        <label className="text-sm text-slate-400">{t('userProfile.displayName')}</label>
+                        <label className="text-sm text-noir-400">{t('userProfile.displayName')}</label>
                         <Input
                           value={editForm.display_name}
                           onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
@@ -401,7 +425,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-slate-400">{t('userProfile.avatarUrl')}</label>
+                        <label className="text-sm text-noir-400">{t('userProfile.avatarUrl')}</label>
                         <Input
                           value={editForm.avatar_url}
                           onChange={(e) => setEditForm({ ...editForm, avatar_url: e.target.value })}
@@ -410,7 +434,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-slate-400">{t('userProfile.bannerUrl')}</label>
+                        <label className="text-sm text-noir-400">{t('userProfile.bannerUrl')}</label>
                         <Input
                           value={editForm.banner_url}
                           onChange={(e) => setEditForm({ ...editForm, banner_url: e.target.value })}
@@ -419,7 +443,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-slate-400">{t('userProfile.bio')}</label>
+                        <label className="text-sm text-noir-400">{t('userProfile.bio')}</label>
                         <Textarea
                           value={editForm.bio}
                           onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
@@ -429,7 +453,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-slate-400">{t('userProfile.location')}</label>
+                        <label className="text-sm text-noir-400">{t('userProfile.location')}</label>
                         <Input
                           value={editForm.location}
                           onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
@@ -438,7 +462,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-slate-400">{t('userProfile.website')}</label>
+                        <label className="text-sm text-noir-400">{t('userProfile.website')}</label>
                         <Input
                           value={editForm.website}
                           onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
@@ -447,7 +471,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-slate-400">{t('userProfile.discordTag')}</label>
+                        <label className="text-sm text-noir-400">{t('userProfile.discordTag')}</label>
                         <Input
                           value={editForm.discord_tag}
                           onChange={(e) => setEditForm({ ...editForm, discord_tag: e.target.value })}
@@ -456,7 +480,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-slate-400">{t('userProfile.steamId')}</label>
+                        <label className="text-sm text-noir-400">{t('userProfile.steamId')}</label>
                         <Input
                           value={editForm.steam_id}
                           onChange={(e) => setEditForm({ ...editForm, steam_id: e.target.value })}
@@ -520,26 +544,26 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
         </div>
 
         {/* Stats */}
-        <div className="flex items-center gap-6 mt-6 pt-4 border-t border-slate-700/50">
+        <div className="flex items-center gap-6 mt-6 pt-4 border-t border-noir-700/50">
           <div className="text-center">
             <div className="text-xl font-bold text-white">{profile.stats?.threads || 0}</div>
-            <div className="text-xs text-slate-400">{t('userProfile.threads')}</div>
+            <div className="text-xs text-noir-400">{t('userProfile.threads')}</div>
           </div>
           <div className="text-center">
             <div className="text-xl font-bold text-white">{profile.stats?.posts || 0}</div>
-            <div className="text-xs text-slate-400">{t('userProfile.replies')}</div>
+            <div className="text-xs text-noir-400">{t('userProfile.replies')}</div>
           </div>
           <div className="text-center">
             <div className="text-xl font-bold text-white">{profile.stats?.translations || 0}</div>
-            <div className="text-xs text-slate-400">{t('userProfile.translations')}</div>
+            <div className="text-xs text-noir-400">{t('userProfile.translations')}</div>
           </div>
           <div className="text-center">
             <div className="text-xl font-bold text-white">{profile.stats?.likes_received || 0}</div>
-            <div className="text-xs text-slate-400">{t('userProfile.likesReceived')}</div>
+            <div className="text-xs text-noir-400">{t('userProfile.likesReceived')}</div>
           </div>
           <div className="text-center">
             <div className="text-xl font-bold text-white">{friends.length}</div>
-            <div className="text-xs text-slate-400">{t('userProfile.friendsCount')}</div>
+            <div className="text-xs text-noir-400">{t('userProfile.friendsCount')}</div>
           </div>
         </div>
       </div>
@@ -554,13 +578,13 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
         </TabsList>
 
         <TabsContent value="activity" className="mt-4">
-          <div className="bg-slate-800/30 rounded-xl p-4">
+          <div className="bg-noir-800/30 rounded-xl p-4">
             {activities.length > 0 ? (
               activities.map(activity => (
                 <ActivityItemCard key={activity.id} activity={activity} />
               ))
             ) : (
-              <p className="text-center text-slate-500 py-8">{t('userProfile.noActivity')}</p>
+              <p className="text-center text-noir-500 py-8">{t('userProfile.noActivity')}</p>
             )}
           </div>
         </TabsContent>
@@ -572,7 +596,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
                 <ThreadCard key={thread.id} thread={thread} />
               ))
             ) : (
-              <p className="text-center text-slate-500 py-8">{t('userProfile.noThreads')}</p>
+              <p className="text-center text-noir-500 py-8">{t('userProfile.noThreads')}</p>
             )}
           </div>
         </TabsContent>
@@ -584,7 +608,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
                 <AchievementBadge key={achievement.id} achievement={achievement} />
               ))
             ) : (
-              <p className="text-center text-slate-500 py-8 col-span-2">{t('userProfile.noAchievements')}</p>
+              <p className="text-center text-noir-500 py-8 col-span-2">{t('userProfile.noAchievements')}</p>
             )}
           </div>
         </TabsContent>
@@ -595,22 +619,22 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
               friends.map(friend => (
                 <div 
                   key={friend.user_id}
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer"
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-noir-800/30 hover:bg-noir-800/50 transition-colors cursor-pointer"
                 >
                   <Avatar className="h-16 w-16">
                     <AvatarImage src={friend.avatar_url || undefined} />
-                    <AvatarFallback className="bg-slate-700">
+                    <AvatarFallback className="bg-noir-700">
                       {friend.username.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="text-center">
                     <p className="text-sm font-medium text-white">{friend.display_name || friend.username}</p>
-                    <p className="text-xs text-slate-400">@{friend.username}</p>
+                    <p className="text-xs text-noir-400">@{friend.username}</p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-center text-slate-500 py-8 col-span-4">{t('userProfile.noFriends')}</p>
+              <p className="text-center text-noir-500 py-8 col-span-4">{t('userProfile.noFriends')}</p>
             )}
           </div>
         </TabsContent>

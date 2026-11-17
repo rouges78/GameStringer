@@ -135,34 +135,29 @@ export default function ActivityHistoryPage() {
   // Colore badge per tipo
   const getColorClass = (type: ActivityType) => {
     const colorMap: Record<string, string> = {
-      purple: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+      rouge: 'bg-rouge-500/20 text-rouge-400 border-rouge-500/30',
       orange: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
       green: 'bg-green-500/20 text-green-400 border-green-500/30',
-      blue: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-      cyan: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-      pink: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
-      gray: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
       yellow: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-      indigo: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
-      slate: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+      noir: 'bg-noir-500/20 text-noir-400 border-noir-500/30',
     };
-    return colorMap[activityColors[type]] || colorMap.slate;
+    return colorMap[activityColors[type]] || colorMap.noir;
   };
 
   // Totale attività
   const totalActivities = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800/50 to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-noir-900 via-noir-800/50 to-noir-900 p-6">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-noir-500 to-noir-600">
               <History className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-noir-400 to-noir-400 bg-clip-text text-transparent">
                 {t('activity.title')}
               </h1>
               <p className="text-muted-foreground">
@@ -198,7 +193,7 @@ export default function ActivityHistoryPage() {
           {(['translation', 'patch', 'steam_sync', 'game_launched', 'other'] as ActivityType[]).map((type) => (
             <Card 
               key={type}
-              className={`bg-slate-800/50 border-slate-700 cursor-pointer transition-all hover:scale-105 ${
+              className={`bg-noir-800/50 border-noir-700 cursor-pointer transition-all hover:scale-105 ${
                 filter === type ? 'ring-2 ring-primary' : ''
               }`}
               onClick={() => setFilter(filter === type ? 'all' : type)}
@@ -246,7 +241,7 @@ export default function ActivityHistoryPage() {
         </div>
 
         {/* Activity List */}
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card className="bg-noir-800/50 border-noir-700">
           <CardHeader className="pb-3">
             <CardTitle as="h2" className="text-lg flex items-center gap-2">
               <Clock className="h-5 w-5" />
@@ -269,7 +264,7 @@ export default function ActivityHistoryPage() {
                   {activities.map((activity) => (
                     <div
                       key={activity.id}
-                      className="flex items-start gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-700/50 hover:border-slate-600 transition-colors group"
+                      className="flex items-start gap-3 p-3 rounded-lg bg-noir-900/50 border border-noir-700/50 hover:border-noir-600 transition-colors group"
                     >
                       {/* Icon */}
                       <div className={`p-2 rounded-lg ${getColorClass(activity.activity_type)}`}>
@@ -323,7 +318,7 @@ export default function ActivityHistoryPage() {
             
             {/* Pagination */}
             {total > PAGE_SIZE && (
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-noir-700">
                 <p className="text-sm text-muted-foreground">
                   Pagina {page + 1} di {Math.ceil(total / PAGE_SIZE)}
                 </p>

@@ -99,14 +99,14 @@ function getFormatColor(format: string): string {
   if (format.includes('Sierra') || format.includes('VMD') || format.includes('RBT') || format.includes('DUK'))
     return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
   if (format.includes('Bink') || format.includes('BIK'))
-    return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+    return 'bg-noir-500/20 text-noir-400 border-noir-500/30';
   if (format.includes('Smacker') || format.includes('SMK'))
-    return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+    return 'bg-rouge-500/20 text-rouge-400 border-rouge-500/30';
   if (format.includes('CRI') || format.includes('Sofdec'))
     return 'bg-red-500/20 text-red-400 border-red-500/30';
   if (format.includes('ROQ'))
     return 'bg-green-500/20 text-green-400 border-green-500/30';
-  return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
+  return 'bg-noir-500/20 text-noir-400 border-noir-500/30';
 }
 
 // ── Main Component ─────────────────────────────────────────────────────
@@ -394,7 +394,7 @@ export default function VideoExtractorPage() {
   return (
     <div className="container mx-auto p-6 space-y-6 animate-fade-in">
       {/* ── Hero Header ─────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 animate-shimmer p-4 shadow-xl shadow-purple-900/50 text-white">
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-rouge-600 via-rouge-600 to-rouge-600 animate-shimmer p-4 shadow-xl shadow-rouge-900/50 text-white">
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -440,13 +440,13 @@ export default function VideoExtractorPage() {
       )}
 
       {/* ── Scan Section ───────────────────────────────────────────── */}
-      <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4 space-y-4">
+      <div className="bg-noir-900/50 rounded-lg border border-noir-800 p-4 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <FolderOpen className="w-5 h-5 text-purple-400" />
+            <FolderOpen className="w-5 h-5 text-rouge-400" />
             <h2 className="font-semibold text-white">{t('common.scansionaCartellaGioco')}</h2>
             {gameName && (
-              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+              <Badge className="bg-rouge-500/20 text-rouge-300 border-rouge-500/30">
                 {gameName}
               </Badge>
             )}
@@ -456,7 +456,7 @@ export default function VideoExtractorPage() {
             {gameId && (
               <Link
                 href={`/library/?id=${encodeURIComponent(gameId)}&name=${encodeURIComponent(gameName)}`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 hover:text-indigo-300 text-xs font-medium transition-all no-underline"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rouge-500/10 hover:bg-rouge-500/20 border border-rouge-500/20 text-rouge-400 hover:text-rouge-300 text-xs font-medium transition-all no-underline"
               >
                 <Gamepad2 className="w-3.5 h-3.5" />
                 {t('videoExtractor.gameSheet')}</Link>
@@ -473,13 +473,13 @@ export default function VideoExtractorPage() {
                 {t('videoExtractor.chooseFromLibrary')}<ChevronDown className={`w-3 h-3 transition-transform ${showGamePicker ? 'rotate-180' : ''}`} />
               </Button>
               {showGamePicker && (
-                <div className="absolute right-0 top-full mt-1 w-80 max-h-72 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 overflow-hidden">
-                  <div className="p-2 border-b border-zinc-800">
+                <div className="absolute right-0 top-full mt-1 w-80 max-h-72 bg-noir-900 border border-noir-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                  <div className="p-2 border-b border-noir-800">
                     <Input
                       value={gamePickerSearch}
                       onChange={(e) => setGamePickerSearch(e.target.value)}
                       placeholder={t('videoExtractor.searchInstalledGame')}
-                      className="h-7 text-xs bg-zinc-800/50 border-zinc-700"
+                      className="h-7 text-xs bg-noir-800/50 border-noir-700"
                       autoFocus
                     />
                   </div>
@@ -490,18 +490,18 @@ export default function VideoExtractorPage() {
                       .map(game => (
                         <button
                           key={game.id || game.steam_app_id}
-                          className="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:bg-purple-500/10 hover:text-white transition-colors border-b border-zinc-800/50 last:border-0"
+                          className="w-full text-left px-3 py-2 text-xs text-noir-300 hover:bg-rouge-500/10 hover:text-white transition-colors border-b border-noir-800/50 last:border-0"
                           onClick={() => selectGameFromLibrary(game)}
                         >
                           <div className="font-medium truncate">{game.title}</div>
                           {game.install_path && (
-                            <div className="text-[10px] text-zinc-500 truncate mt-0.5">{game.install_path}</div>
+                            <div className="text-[10px] text-noir-500 truncate mt-0.5">{game.install_path}</div>
                           )}
                         </button>
                       ))
                     }
                     {libraryGames.filter(g => !gamePickerSearch || g.title.toLowerCase().includes(gamePickerSearch.toLowerCase())).length === 0 && (
-                      <div className="p-4 text-center text-xs text-zinc-500">{t('common.nessunGiocoInstallatoTrovato')}</div>
+                      <div className="p-4 text-center text-xs text-noir-500">{t('common.nessunGiocoInstallatoTrovato')}</div>
                     )}
                   </div>
                 </div>
@@ -515,13 +515,13 @@ export default function VideoExtractorPage() {
             value={gamePath}
             onChange={(e) => setGamePath(e.target.value)}
             placeholder="Percorso della cartella del gioco (es. C:\Steam\steamapps\common\Gabriel Knight 2)"
-            className="flex-1 bg-zinc-800/50 border-zinc-700"
+            className="flex-1 bg-noir-800/50 border-noir-700"
             onKeyDown={(e) => e.key === 'Enter' && handleScan()}
           />
           <Button
             onClick={handleScan}
             disabled={scanning || !gamePath.trim()}
-            className="bg-purple-600 hover:bg-purple-500"
+            className="bg-rouge-600 hover:bg-rouge-500"
           >
             {scanning ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Search className="w-4 h-4 mr-2" />}
             {scanning ? 'Scansione...' : 'Scansiona'}
@@ -534,21 +534,21 @@ export default function VideoExtractorPage() {
         <>
           {/* Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-3">
-              <div className="text-xs text-zinc-500 mb-1">{t('common.fileVideo')}</div>
+            <div className="bg-noir-900/50 rounded-lg border border-noir-800 p-3">
+              <div className="text-xs text-noir-500 mb-1">{t('common.fileVideo')}</div>
               <div className="text-xl font-bold text-white">{scanResult.total_files}</div>
             </div>
-            <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-3">
-              <div className="text-xs text-zinc-500 mb-1">{t('common.dimensioneTotale')}</div>
+            <div className="bg-noir-900/50 rounded-lg border border-noir-800 p-3">
+              <div className="text-xs text-noir-500 mb-1">{t('common.dimensioneTotale')}</div>
               <div className="text-xl font-bold text-white">{formatSize(scanResult.total_size_bytes)}</div>
             </div>
-            <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-3">
-              <div className="text-xs text-zinc-500 mb-1">{t('videoExtractor.formatsFound')}</div>
+            <div className="bg-noir-900/50 rounded-lg border border-noir-800 p-3">
+              <div className="text-xs text-noir-500 mb-1">{t('videoExtractor.formatsFound')}</div>
               <div className="text-xl font-bold text-white">{scanResult.format_summary.length}</div>
             </div>
-            <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-3">
-              <div className="text-xs text-zinc-500 mb-1">{t('common.selezionati')}</div>
-              <div className="text-xl font-bold text-purple-400">{selectedFiles.size}</div>
+            <div className="bg-noir-900/50 rounded-lg border border-noir-800 p-3">
+              <div className="text-xs text-noir-500 mb-1">{t('common.selezionati')}</div>
+              <div className="text-xl font-bold text-rouge-400">{selectedFiles.size}</div>
             </div>
           </div>
 
@@ -569,7 +569,7 @@ export default function VideoExtractorPage() {
             {filterFormat !== 'all' && (
               <Badge
                 variant="outline"
-                className="cursor-pointer bg-zinc-700/30 text-zinc-400 border-zinc-600 hover:bg-zinc-600/30"
+                className="cursor-pointer bg-noir-700/30 text-noir-400 border-noir-600 hover:bg-noir-600/30"
                 onClick={() => setFilterFormat('all')}
               >
                 {t('videoExtractor.showAll')}</Badge>
@@ -588,21 +588,21 @@ export default function VideoExtractorPage() {
             <div className="flex-1" />
 
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-noir-500" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('videoExtractor.searchFiles')}
-                className="pl-8 h-8 w-48 bg-zinc-800/50 border-zinc-700 text-xs"
+                className="pl-8 h-8 w-48 bg-noir-800/50 border-noir-700 text-xs"
               />
             </div>
           </div>
 
           {/* File List */}
-          <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 overflow-hidden">
+          <div className="bg-noir-900/50 rounded-lg border border-noir-800 overflow-hidden">
             <div className="max-h-[500px] overflow-y-auto">
               {filteredFiles.length === 0 ? (
-                <div className="p-8 text-center text-zinc-500">
+                <div className="p-8 text-center text-noir-500">
                   <FileVideo className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>{t('videoExtractor.noVideoFiles')}{filterFormat !== 'all' ? ' per questo formato' : ''}</p>
                 </div>
@@ -610,8 +610,8 @@ export default function VideoExtractorPage() {
                 filteredFiles.map((file) => (
                   <div key={file.path}>
                     <div
-                      className={`flex items-center gap-3 px-4 py-2.5 border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors cursor-pointer ${
-                        selectedFiles.has(file.path) ? 'bg-purple-500/10' : ''
+                      className={`flex items-center gap-3 px-4 py-2.5 border-b border-noir-800/50 hover:bg-noir-800/30 transition-colors cursor-pointer ${
+                        selectedFiles.has(file.path) ? 'bg-rouge-500/10' : ''
                       }`}
                     >
                       {/* Checkbox */}
@@ -619,19 +619,19 @@ export default function VideoExtractorPage() {
                         type="checkbox"
                         checked={selectedFiles.has(file.path)}
                         onChange={() => toggleFile(file.path)}
-                        className="w-4 h-4 rounded border-zinc-600 text-purple-500 focus:ring-purple-500 bg-zinc-800"
+                        className="w-4 h-4 rounded border-noir-600 text-rouge-500 focus:ring-rouge-500 bg-noir-800"
                       />
 
                       {/* Thumbnail */}
                       <div
-                        className="w-12 h-8 rounded bg-zinc-800 border border-zinc-700 overflow-hidden flex-shrink-0 cursor-pointer"
+                        className="w-12 h-8 rounded bg-noir-800 border border-noir-700 overflow-hidden flex-shrink-0 cursor-pointer"
                         onClick={() => { loadThumbnail(file.path); }}
                       >
                         {thumbnails[file.path] ? (
                           <img src={thumbnails[file.path]} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <FileVideo className="w-3 h-3 text-zinc-600" />
+                            <FileVideo className="w-3 h-3 text-noir-600" />
                           </div>
                         )}
                       </div>
@@ -648,11 +648,11 @@ export default function VideoExtractorPage() {
                               {t('videoExtractor.convertible')}</Badge>
                           )}
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-zinc-500 mt-0.5">
+                        <div className="flex items-center gap-3 text-xs text-noir-500 mt-0.5">
                           <span>{file.relative_path}</span>
                           <span>{formatSize(file.size_bytes)}</span>
                           {file.width && file.height && (
-                            <span className="text-zinc-400">{file.width}x{file.height}</span>
+                            <span className="text-noir-400">{file.width}x{file.height}</span>
                           )}
                           {file.frame_count && (
                             <span>{file.frame_count} {t('videoExtractor.frameLabel')}</span>
@@ -663,7 +663,7 @@ export default function VideoExtractorPage() {
                       {/* Expand button */}
                       <button
                         onClick={() => analyzeHeader(file.path)}
-                        className="p-1.5 rounded hover:bg-zinc-700/50 text-zinc-400 hover:text-white transition-colors"
+                        className="p-1.5 rounded hover:bg-noir-700/50 text-noir-400 hover:text-white transition-colors"
                       >
                         {expandedFile === file.path ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                       </button>
@@ -671,26 +671,26 @@ export default function VideoExtractorPage() {
 
                     {/* Expanded Header Info */}
                     {expandedFile === file.path && headerInfo[file.path] && (
-                      <div className="px-12 py-3 bg-zinc-800/30 border-b border-zinc-800/50">
+                      <div className="px-12 py-3 bg-noir-800/30 border-b border-noir-800/50">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                           <div>
-                            <span className="text-zinc-500">{t('videoExtractor.formatLabel')}</span>
+                            <span className="text-noir-500">{t('videoExtractor.formatLabel')}</span>
                             <span className="ml-2 text-white">{headerInfo[file.path].format_name}</span>
                           </div>
                           {headerInfo[file.path].width && (
                             <div>
-                              <span className="text-zinc-500">{t('videoExtractor.resolutionLabel')}</span>
+                              <span className="text-noir-500">{t('videoExtractor.resolutionLabel')}</span>
                               <span className="ml-2 text-white">{headerInfo[file.path].width}x{headerInfo[file.path].height}</span>
                             </div>
                           )}
                           {headerInfo[file.path].frame_count && (
                             <div>
-                              <span className="text-zinc-500">{t('videoExtractor.frameColon')}</span>
+                              <span className="text-noir-500">{t('videoExtractor.frameColon')}</span>
                               <span className="ml-2 text-white">{headerInfo[file.path].frame_count}</span>
                             </div>
                           )}
                           <div>
-                            <span className="text-zinc-500">{t('videoExtractor.audioLabel')}</span>
+                            <span className="text-noir-500">{t('videoExtractor.audioLabel')}</span>
                             <span className="ml-2 text-white">
                               {headerInfo[file.path].has_audio
                                 ? `${headerInfo[file.path].audio_sample_rate || '?'} Hz`
@@ -699,7 +699,7 @@ export default function VideoExtractorPage() {
                           </div>
                           {headerInfo[file.path].extra_info.map(([key, val]) => (
                             <div key={key}>
-                              <span className="text-zinc-500">{key}:</span>
+                              <span className="text-noir-500">{key}:</span>
                               <span className="ml-2 text-white">{val}</span>
                             </div>
                           ))}
@@ -714,20 +714,20 @@ export default function VideoExtractorPage() {
 
           {/* ── Conversion Section ──────────────────────────────────── */}
           {selectedFiles.size > 0 && (
-            <div className="bg-zinc-900/50 rounded-lg border border-purple-500/30 p-4 space-y-4">
+            <div className="bg-noir-900/50 rounded-lg border border-rouge-500/30 p-4 space-y-4">
               <div className="flex items-center gap-3">
-                <Settings2 className="w-5 h-5 text-purple-400" />
+                <Settings2 className="w-5 h-5 text-rouge-400" />
                 <h2 className="font-semibold text-white">{t('common.opzioniConversione')}</h2>
-                <Badge className="bg-purple-500/20 text-purple-400">
+                <Badge className="bg-rouge-500/20 text-rouge-400">
                   {selectedFiles.size} {t('videoExtractor.filesSelected')}</Badge>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Preset */}
                 <div>
-                  <label className="text-xs text-zinc-500 mb-1 block">{t('videoExtractor.preset')}</label>
+                  <label className="text-xs text-noir-500 mb-1 block">{t('videoExtractor.preset')}</label>
                   <Select value={selectedPreset} onValueChange={setSelectedPreset}>
-                    <SelectTrigger className="bg-zinc-800/50 border-zinc-700">
+                    <SelectTrigger className="bg-noir-800/50 border-noir-700">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -740,12 +740,12 @@ export default function VideoExtractorPage() {
 
                 {/* Output Directory */}
                 <div className="md:col-span-2">
-                  <label className="text-xs text-zinc-500 mb-1 block">{t('videoExtractor.outputDirEmpty')}</label>
+                  <label className="text-xs text-noir-500 mb-1 block">{t('videoExtractor.outputDirEmpty')}</label>
                   <Input
                     value={outputDir}
                     onChange={(e) => setOutputDir(e.target.value)}
                     placeholder={t('common.lasciaVuotoPerSalvareAccantoAiFileOriginali')}
-                    className="bg-zinc-800/50 border-zinc-700"
+                    className="bg-noir-800/50 border-noir-700"
                   />
                 </div>
               </div>
@@ -755,7 +755,7 @@ export default function VideoExtractorPage() {
                 <Button
                   onClick={handleConvert}
                   disabled={converting || ffmpegAvailable !== true}
-                  className="bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 px-6"
+                  className="bg-gradient-to-r from-rouge-600 to-rouge-600 hover:from-rouge-500 hover:to-rouge-500 px-6"
                 >
                   {converting ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -774,7 +774,7 @@ export default function VideoExtractorPage() {
               {converting && (
                 <div className="space-y-2">
                   <Progress value={conversionProgress} className="h-2" />
-                  <p className="text-xs text-zinc-500">{t('videoExtractor.converting')}</p>
+                  <p className="text-xs text-noir-500">{t('videoExtractor.converting')}</p>
                 </div>
               )}
 
@@ -804,7 +804,7 @@ export default function VideoExtractorPage() {
                             {result.input_path.split(/[/\\]/).pop()}
                           </p>
                           {result.success && result.output_size && (
-                            <p className="text-zinc-500 truncate">
+                            <p className="text-noir-500 truncate">
                               → {result.output_path.split(/[/\\]/).pop()} ({formatSize(result.output_size)})
                             </p>
                           )}
@@ -816,7 +816,7 @@ export default function VideoExtractorPage() {
                     ))}
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 text-xs text-zinc-400">
+                  <div className="flex items-center gap-2 pt-2 text-xs text-noir-400">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                     {conversionResults.filter(r => r.success).length} / {conversionResults.length} {t('videoExtractor.convertedSuccess')}</div>
                 </div>
@@ -826,9 +826,9 @@ export default function VideoExtractorPage() {
 
           {/* ── AI Upscale Section ────────────────────────────────── */}
           {selectedFiles.size > 0 && (
-            <div className="bg-zinc-900/50 rounded-lg border border-fuchsia-500/30 p-4 space-y-4">
+            <div className="bg-noir-900/50 rounded-lg border border-rouge-500/30 p-4 space-y-4">
               <div className="flex items-center gap-3">
-                <Maximize2 className="w-5 h-5 text-fuchsia-400" />
+                <Maximize2 className="w-5 h-5 text-rouge-400" />
                 <h2 className="font-semibold text-white">{t('videoExtractor.aiUpscaling')}</h2>
                 {realesrganAvailable === true ? (
                   <Badge className="bg-emerald-500/20 text-emerald-400">{t('common.disponibile')}</Badge>
@@ -838,9 +838,9 @@ export default function VideoExtractorPage() {
               </div>
 
               {realesrganAvailable === false && (
-                <div className="text-xs text-zinc-400 space-y-1">
-                  <p>Per usare l&apos;AI upscaling, scarica <a href="https://github.com/xinntao/Real-ESRGAN/releases" target="_blank" rel="noopener" className="text-fuchsia-400 underline">Real-ESRGAN ncnn Vulkan</a> e aggiungilo al PATH.</p>
-                  <p className="text-zinc-500">{t('videoExtractor.upscalingHint')}</p>
+                <div className="text-xs text-noir-400 space-y-1">
+                  <p>Per usare l&apos;AI upscaling, scarica <a href="https://github.com/xinntao/Real-ESRGAN/releases" target="_blank" rel="noopener" className="text-rouge-400 underline">Real-ESRGAN ncnn Vulkan</a> e aggiungilo al PATH.</p>
+                  <p className="text-noir-500">{t('videoExtractor.upscalingHint')}</p>
                 </div>
               )}
 
@@ -848,9 +848,9 @@ export default function VideoExtractorPage() {
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="text-xs text-zinc-500 mb-1 block">{t('common.modello')}</label>
+                      <label className="text-xs text-noir-500 mb-1 block">{t('common.modello')}</label>
                       <Select value={upscaleModel} onValueChange={setUpscaleModel}>
-                        <SelectTrigger className="bg-zinc-800/50 border-zinc-700">
+                        <SelectTrigger className="bg-noir-800/50 border-noir-700">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -861,9 +861,9 @@ export default function VideoExtractorPage() {
                       </Select>
                     </div>
                     <div>
-                      <label className="text-xs text-zinc-500 mb-1 block">{t('videoExtractor.scale')}</label>
+                      <label className="text-xs text-noir-500 mb-1 block">{t('videoExtractor.scale')}</label>
                       <Select value={String(upscaleScale)} onValueChange={(v) => setUpscaleScale(Number(v))}>
-                        <SelectTrigger className="bg-zinc-800/50 border-zinc-700">
+                        <SelectTrigger className="bg-noir-800/50 border-noir-700">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -873,12 +873,12 @@ export default function VideoExtractorPage() {
                       </Select>
                     </div>
                     <div>
-                      <label className="text-xs text-zinc-500 mb-1 block">{t('videoExtractor.outputDir')}</label>
+                      <label className="text-xs text-noir-500 mb-1 block">{t('videoExtractor.outputDir')}</label>
                       <Input
                         value={outputDir}
                         onChange={(e) => setOutputDir(e.target.value)}
                         placeholder={t('common.stessaCartella')}
-                        className="bg-zinc-800/50 border-zinc-700"
+                        className="bg-noir-800/50 border-noir-700"
                       />
                     </div>
                   </div>
@@ -886,7 +886,7 @@ export default function VideoExtractorPage() {
                   <Button
                     onClick={handleUpscale}
                     disabled={upscaling || selectedFiles.size === 0}
-                    className="bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 hover:to-pink-500 px-6"
+                    className="bg-gradient-to-r from-rouge-600 to-rouge-600 hover:from-rouge-500 hover:to-rouge-500 px-6"
                   >
                     {upscaling ? (
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -896,7 +896,7 @@ export default function VideoExtractorPage() {
                     {upscaling ? 'Upscaling AI in corso...' : `Upscale ${selectedFiles.size} Video con AI`}
                   </Button>
 
-                  <p className="text-[11px] text-zinc-500">
+                  <p className="text-[11px] text-noir-500">
                     {t('videoExtractor.upscalingPipeline')}</p>
                 </>
               )}
@@ -904,10 +904,10 @@ export default function VideoExtractorPage() {
           )}
 
           {/* ── Supported Formats Info ──────────────────────────────── */}
-          <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+          <div className="bg-noir-900/50 rounded-lg border border-noir-800 p-4">
             <div className="flex items-center gap-2 mb-3">
-              <Info className="w-4 h-4 text-zinc-500" />
-              <h3 className="text-sm font-medium text-zinc-400">{t('videoExtractor.supportedFormats')}</h3>
+              <Info className="w-4 h-4 text-noir-500" />
+              <h3 className="text-sm font-medium text-noir-400">{t('videoExtractor.supportedFormats')}</h3>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               {[
@@ -920,7 +920,7 @@ export default function VideoExtractorPage() {
                 { name: 'BK2 (Bink 2)', games: 'Giochi moderni', ffmpeg: false },
                 { name: 'AVI/WMV', games: 'Giochi PC vari', ffmpeg: true },
               ].map(fmt => (
-                <div key={fmt.name} className="p-2 rounded bg-zinc-800/30 border border-zinc-800">
+                <div key={fmt.name} className="p-2 rounded bg-noir-800/30 border border-noir-800">
                   <div className="flex items-center gap-1.5">
                     <span className="font-medium text-white">{fmt.name}</span>
                     {fmt.ffmpeg ? (
@@ -929,7 +929,7 @@ export default function VideoExtractorPage() {
                       <AlertTriangle className="w-3 h-3 text-amber-400" />
                     )}
                   </div>
-                  <p className="text-zinc-500 mt-0.5">{fmt.games}</p>
+                  <p className="text-noir-500 mt-0.5">{fmt.games}</p>
                 </div>
               ))}
             </div>

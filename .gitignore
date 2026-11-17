@@ -171,3 +171,6 @@ _gs_split/
 
 # Asset OCR generati da scripts/prepare-tesseract-assets.js (~47 MB)
 /public/tesseract/
+
+# Preserved local data archive (not the active profiles)
+/gamestringer_data_archive/

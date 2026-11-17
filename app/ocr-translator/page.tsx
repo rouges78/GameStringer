@@ -14,7 +14,9 @@ import { translateSingleSmart, translateWithFallback } from '@/lib/ai/ai-transla
 import { clientLogger } from '@/lib/client-logger';
 import { ollamaFetch } from '@/lib/ai/ollama-http';
 import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
+import { isOcrLanguageMissing, toOverlayTexts, OCR_OVERLAY_TEXTS_EVENT } from '@/lib/ocr-overlay-payload';
 
+// Niente `confidence`: Windows OCR non la fornisce (il backend mandava 0.9 fisso).
 interface DetectedText {
   text: string;
   translated?: string | null;
@@ -22,14 +24,12 @@ interface DetectedText {
   y?: number;
   width?: number;
   height?: number;
-  confidence: number;
 }
 
 interface OcrConfig {
   language: string;
   target_language: string;
   capture_interval_ms: number;
-  min_confidence: number;
   region: { x: number; y: number; width: number; height: number } | null;
   target_window: number | null;
 }
@@ -58,7 +58,6 @@ export default function OcrTranslatorPage() {
     language: 'ja',
     target_language: 'it',
     capture_interval_ms: 500,
-    min_confidence: 0.5,
     region: null,
     target_window: null,
   });
@@ -88,6 +87,10 @@ export default function OcrTranslatorPage() {
   const [translationError, setTranslationError] = useState<string | null>(null);
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [ocrProvider, setOcrProvider] = useState<'libre' | 'ollama' | 'vlm' | 'gemini'>('libre');
+  // L'autostart gira in una closure del primo render: legge il provider da qui,
+  // non dallo stato, che lì resterebbe fermo a 'libre'.
+  const ocrProviderRef = useRef(ocrProvider);
+  useEffect(() => { ocrProviderRef.current = ocrProvider; }, [ocrProvider]);
   const [ollamaModel, setOllamaModel] = useState('deepseek-ocr');
   const [lastTranslationTime, setLastTranslationTime] = useState(0);
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -125,6 +128,18 @@ export default function OcrTranslatorPage() {
     } catch {}
   };
 
+  // L'overlay copre l'area che l'OCR legge — regione, finestra del gioco o
+  // monitor principale — perché le coordinate dei testi sono relative a quella.
+  const openOverlay = async (cfg: OcrConfig) => {
+    await invoke('toggle_ocr_overlay', { show: true, region: cfg.region });
+    setOverlayOpen(true);
+    // Il VLM cattura lo schermo (capture_screen_region), non la finestra:
+    // le sue coordinate sono relative al monitor, non alla finestra del gioco.
+    if (cfg.target_window && ocrProviderRef.current !== 'vlm') {
+      await invoke('position_overlay_on_window', { hwnd: cfg.target_window });
+    }
+  };
+
   // ── Auto-routing dalla pagina del gioco (RPG Maker classico) ──
   // Deep-link: /ocr-translator?game=<nome>&src=ja&tgt=it&autostart=1
   // Pre-seleziona la finestra del gioco e, se autostart, avvia OCR + overlay.
@@ -153,7 +168,6 @@ export default function OcrTranslatorPage() {
         language: src || 'ja',
         target_language: tgt || 'it',
         capture_interval_ms: 500,
-        min_confidence: 0.5,
         region: null,
         target_window: match ? match.hwnd : null,
       };
@@ -166,16 +180,23 @@ export default function OcrTranslatorPage() {
       if (!auto) return;
 
       try {
-        await invoke('start_ocr_translator', { config: nextCfg });
+        // Come in toggleOcr: il VLM non usa il loop OCR di Windows, e un
+        // language pack mancante non deve bloccarne l'avvio.
+        if (ocrProviderRef.current !== 'vlm') {
+          await invoke('start_ocr_translator', { config: nextCfg });
+        }
         setIsRunning(true);
         toast.success(t('ocrTranslator.liveOcrStarted'));
         try {
-          await invoke('toggle_ocr_overlay', { show: true });
-          setOverlayOpen(true);
-          await invoke('position_overlay_on_window', { hwnd: match.hwnd });
-        } catch { /* overlay opzionale */ }
+          await openOverlay(nextCfg);
+        } catch (e: unknown) {
+          // overlay opzionale
+          clientLogger.warn('[OCR] Overlay non aperto', e);
+        }
       } catch (e: unknown) {
-        toast.error(`OCR: ${e}`);
+        toast.error(isOcrLanguageMissing(e)
+          ? t('ocrTranslator.languagePackMissing').replace('{lang}', nextCfg.language)
+          : `OCR: ${e}`);
       }
     })();
 
@@ -293,7 +314,6 @@ export default function OcrTranslatorPage() {
             setDetectedTexts([{
               text: 'Immagine analizzata (VLM)',
               translated: translated,
-              confidence: 1.0,
               x: 50,
               y: 50,
               width: capture.width - 100,
@@ -357,6 +377,20 @@ export default function OcrTranslatorPage() {
     };
   }, [isRunning, ocrProvider, config.language, config.target_language, geminiApiKey]);
 
+  // L'overlay ascolta `ocr-translations`: senza questo invio si apriva e
+  // restava vuoto. Vale anche per il VLM, che riempie detectedTexts da sé.
+  useEffect(() => {
+    if (!overlayOpen) return;
+    (async () => {
+      try {
+        const { emit } = await import('@tauri-apps/api/event');
+        await emit(OCR_OVERLAY_TEXTS_EVENT, toOverlayTexts(detectedTexts));
+      } catch (e: unknown) {
+        clientLogger.warn('[OCR] Invio testi all\'overlay non riuscito', e);
+      }
+    })();
+  }, [detectedTexts, overlayOpen]);
+
   const toggleOcr = async () => {
     try {
       if (isRunning) {
@@ -371,12 +405,18 @@ export default function OcrTranslatorPage() {
           toast.info(t('ocrTranslator.stopCapture'));
         }
       } else {
-        await invoke('start_ocr_translator', { config });
+        // Il VLM cattura e legge da sé: il loop OCR di Windows lavorerebbe a
+        // vuoto, e un language pack mancante non deve bloccarlo.
+        if (ocrProvider !== 'vlm') {
+          await invoke('start_ocr_translator', { config });
+        }
         setIsRunning(true);
         toast.success(t('ocrTranslator.startCapture'));
       }
     } catch (e: unknown) {
-      toast.error(`Error: ${e}`);
+      toast.error(isOcrLanguageMissing(e)
+        ? t('ocrTranslator.languagePackMissing').replace('{lang}', config.language)
+        : `Error: ${e}`);
     }
   };
 
@@ -472,7 +512,7 @@ export default function OcrTranslatorPage() {
   return (
     <div className="p-4 max-w-4xl mx-auto space-y-3 animate-fade-in">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -499,10 +539,10 @@ export default function OcrTranslatorPage() {
       </div>
 
       {/* Mode Tabs */}
-      <div className="flex gap-1 p-1 rounded-lg bg-slate-800/50 border border-slate-700/50">
-        <button onClick={() => setMode('live')} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${mode === 'live' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+      <div className="flex gap-1 p-1 rounded-lg bg-noir-800/50 border border-noir-700/50">
+        <button onClick={() => setMode('live')} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${mode === 'live' ? 'bg-rouge-600 text-white shadow-lg' : 'text-noir-400 hover:text-white hover:bg-noir-700/50'}`}>
           <Monitor className="h-4 w-4" />{t('ocrTranslator.liveCapture')}</button>
-        <button onClick={() => setMode('screenshot')} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${mode === 'screenshot' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+        <button onClick={() => setMode('screenshot')} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${mode === 'screenshot' ? 'bg-rouge-600 text-white shadow-lg' : 'text-noir-400 hover:text-white hover:bg-noir-700/50'}`}>
           <ImageIcon className="h-4 w-4" />{t('ocrTranslator.screenshot')}</button>
       </div>
 
@@ -513,13 +553,13 @@ export default function OcrTranslatorPage() {
           <Card className="border border-dashed border-muted-foreground/20">
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-xs font-bold shadow-md">1</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-noir-500 to-noir-500 text-white text-xs font-bold shadow-md">1</span>
                 {t('ocrTranslator.languages')}</div>
               <div className="flex items-center gap-2 pl-8">
                 <select className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm" value={config.language} onChange={(e) => setConfig({...config, language: e.target.value})}>
                   {SOURCE_LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
                 </select>
-                <ArrowRight className="h-4 w-4 text-blue-400" />
+                <ArrowRight className="h-4 w-4 text-noir-400" />
                 <select className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm" value={config.target_language} onChange={(e) => setConfig({...config, target_language: e.target.value})}>
                   {TARGET_LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
                 </select>
@@ -529,30 +569,30 @@ export default function OcrTranslatorPage() {
 
           {/* Drop zone */}
           <div
-            className={`rounded-xl border-2 border-dashed p-8 text-center transition-all ${screenshotSrc ? 'border-blue-500/40 bg-blue-900/10' : 'border-slate-600/40 hover:border-blue-500/40 hover:bg-blue-900/5'}`}
+            className={`rounded-xl border-2 border-dashed p-8 text-center transition-all ${screenshotSrc ? 'border-noir-500/40 bg-noir-900/10' : 'border-noir-600/40 hover:border-noir-500/40 hover:bg-noir-900/5'}`}
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleFileDrop}
           >
             {screenshotProcessing ? (
               <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-10 w-10 animate-spin text-blue-400" />
-                <p className="text-sm text-blue-300">{t('ocrTranslator.analyzing')}</p>
+                <Loader2 className="h-10 w-10 animate-spin text-noir-400" />
+                <p className="text-sm text-noir-300">{t('ocrTranslator.analyzing')}</p>
               </div>
             ) : screenshotSrc ? (
               <div className="space-y-3">
                 <div className="relative inline-block">
-                  <img src={screenshotSrc} alt={t('ocrTranslator.screenshot')} className="max-h-[300px] rounded-lg border border-slate-700 mx-auto" />
+                  <img src={screenshotSrc} alt={t('ocrTranslator.screenshot')} className="max-h-[300px] rounded-lg border border-noir-700 mx-auto" />
                   <button onClick={() => { setScreenshotSrc(null); setScreenshotTexts([]); }} className="absolute -top-2 -right-2 p-1 rounded-full bg-red-500 text-white hover:bg-red-400">
                     <X className="h-3 w-3" />
                   </button>
                 </div>
-                <p className="text-2xs text-slate-500">{t('ocrTranslator.dragToReplace')}</p>
+                <p className="text-2xs text-noir-500">{t('ocrTranslator.dragToReplace')}</p>
               </div>
             ) : (
               <div className="space-y-3">
-                <ImageIcon className="h-12 w-12 text-slate-500 mx-auto" />
-                <p className="text-sm text-slate-300">{t('ocrTranslator.dragScreenshot')}</p>
-                <p className="text-2xs text-slate-500">{t('ocrTranslator.or')}</p>
+                <ImageIcon className="h-12 w-12 text-noir-500 mx-auto" />
+                <p className="text-sm text-noir-300">{t('ocrTranslator.dragScreenshot')}</p>
+                <p className="text-2xs text-noir-500">{t('ocrTranslator.or')}</p>
                 <div className="flex items-center justify-center gap-2">
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
                   <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => fileInputRef.current?.click()}>
@@ -566,11 +606,11 @@ export default function OcrTranslatorPage() {
 
           {/* Screenshot results */}
           {screenshotTexts.length > 0 && (
-            <Card className="border border-blue-800/30">
+            <Card className="border border-noir-800/30">
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Scan className="h-4 w-4 text-blue-400" />
+                    <Scan className="h-4 w-4 text-noir-400" />
                     <span className="text-sm font-medium text-white">{screenshotTexts.length}  {t('ocrTranslator.linesExtracted')}</span>
                   </div>
                   <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={copyAllTranslations}>
@@ -579,12 +619,12 @@ export default function OcrTranslatorPage() {
                 <ScrollArea className="max-h-[400px]">
                   <div className="space-y-1.5">
                     {screenshotTexts.map((text, i) => (
-                      <div key={i} className="flex gap-3 p-2.5 rounded-lg bg-slate-800/40 border border-slate-700/30 hover:bg-slate-800/60 transition-colors">
+                      <div key={i} className="flex gap-3 p-2.5 rounded-lg bg-noir-800/40 border border-noir-700/30 hover:bg-noir-800/60 transition-colors">
                         <div className="flex-1 min-w-0">
-                          <p className="text-2xs text-slate-500 mb-0.5">{t('ocrTranslator.original')}</p>
-                          <p className="text-xs text-slate-300">{text.original}</p>
+                          <p className="text-2xs text-noir-500 mb-0.5">{t('ocrTranslator.original')}</p>
+                          <p className="text-xs text-noir-300">{text.original}</p>
                         </div>
-                        <ArrowRight className="h-3 w-3 text-blue-400 mt-4 shrink-0" />
+                        <ArrowRight className="h-3 w-3 text-noir-400 mt-4 shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-2xs text-emerald-500 mb-0.5">{t('common.traduzione')}</p>
                           <p className="text-xs text-emerald-300">{text.translated}</p>
@@ -606,12 +646,12 @@ export default function OcrTranslatorPage() {
           {/* Step 1: Lingue */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-xs font-bold shadow-md">1</span>
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-noir-500 to-noir-500 text-white text-xs font-bold shadow-md">1</span>
               {t('ocrTranslator.chooseLanguages')}
             </div>
             <div className="flex items-center gap-2 pl-8">
               <select 
-                className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm hover:border-blue-500/50 transition-colors"
+                className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm hover:border-noir-500/50 transition-colors"
                 value={config.language}
                 onChange={(e) => setConfig({...config, language: e.target.value})}
                 disabled={isRunning}
@@ -620,9 +660,9 @@ export default function OcrTranslatorPage() {
                   <option key={l.code} value={l.code}>{l.flag} {l.name}</option>
                 ))}
               </select>
-              <div className="p-1.5 rounded-full bg-blue-500/10"><ArrowRight className="h-4 w-4 text-blue-400" /></div>
+              <div className="p-1.5 rounded-full bg-noir-500/10"><ArrowRight className="h-4 w-4 text-noir-400" /></div>
               <select 
-                className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm hover:border-blue-500/50 transition-colors"
+                className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm hover:border-noir-500/50 transition-colors"
                 value={config.target_language}
                 onChange={(e) => setConfig({...config, target_language: e.target.value})}
                 disabled={isRunning}
@@ -638,7 +678,7 @@ export default function OcrTranslatorPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-xs font-bold shadow-md">2</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-noir-500 to-noir-500 text-white text-xs font-bold shadow-md">2</span>
                 {t('ocrTranslator.selectGameWindow')}
               </div>
               <Button variant="ghost" size="sm" onClick={loadWindows} disabled={isRunning}>
@@ -647,7 +687,7 @@ export default function OcrTranslatorPage() {
             </div>
             <div className="pl-8 space-y-2">
               <select 
-                className="w-full h-9 px-3 rounded-lg border bg-background text-sm hover:border-blue-500/50 transition-colors"
+                className="w-full h-9 px-3 rounded-lg border bg-background text-sm hover:border-noir-500/50 transition-colors"
                 value={config.target_window ?? ''}
                 onChange={(e) => setConfig({...config, target_window: e.target.value ? Number(e.target.value) : null})}
                 disabled={isRunning}
@@ -672,7 +712,7 @@ export default function OcrTranslatorPage() {
           <div className="pl-8">
             <button 
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-blue-400 transition-colors"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-noir-400 transition-colors"
             >
               <Settings2 className="h-3.5 w-3.5" />
               {t('ocrTranslator.advancedOptions')}
@@ -709,7 +749,7 @@ export default function OcrTranslatorPage() {
                 <form onSubmit={(e) => e.preventDefault()}>
                   <label className="text-xs text-muted-foreground mb-2 block">
                     {t('ocrTranslator.geminiApiKey')} 
-                    <a href="https://aistudio.google.com/apikey" target="_blank" className="text-blue-400 hover:underline ml-1">{t('ocrTranslator.getForFree')}</a>
+                    <a href="https://aistudio.google.com/apikey" target="_blank" className="text-noir-400 hover:underline ml-1">{t('ocrTranslator.getForFree')}</a>
                   </label>
                   <input 
                     type="password"
@@ -731,20 +771,7 @@ export default function OcrTranslatorPage() {
                     value={config.capture_interval_ms}
                     onChange={(e) => setConfig({...config, capture_interval_ms: Number(e.target.value)})}
                     disabled={isRunning}
-                    className="w-full accent-blue-500"
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs mb-2">
-                    <span>{t('ocrTranslator.minConfidenceLabel')}</span>
-                    <span className="font-mono">{Math.round(config.min_confidence * 100)}%</span>
-                  </div>
-                  <input 
-                    type="range" min="30" max="90" step="5"
-                    value={config.min_confidence * 100}
-                    onChange={(e) => setConfig({...config, min_confidence: Number(e.target.value) / 100})}
-                    disabled={isRunning}
-                    className="w-full accent-blue-500"
+                    className="w-full accent-noir-500"
                   />
                 </div>
               </div>
@@ -756,7 +783,7 @@ export default function OcrTranslatorPage() {
             <Button 
               onClick={toggleOcr}
               size="default"
-              className={`w-full h-11 text-sm font-medium shadow-lg transition-all ${isRunning ? 'bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 shadow-red-500/25' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-blue-500/25'}`}
+              className={`w-full h-11 text-sm font-medium shadow-lg transition-all ${isRunning ? 'bg-gradient-to-r from-red-500 to-rouge-500 hover:from-red-600 hover:to-rouge-600 shadow-red-500/25' : 'bg-gradient-to-r from-noir-600 to-noir-600 hover:from-noir-500 hover:to-noir-500 shadow-noir-500/25'}`}
             >
               {isRunning ? (
                 <>
@@ -777,16 +804,21 @@ export default function OcrTranslatorPage() {
               <Button 
                 onClick={async () => {
                   try {
-                    await invoke('toggle_ocr_overlay', { show: !overlayOpen });
-                    setOverlayOpen(!overlayOpen);
-                    toast.success(overlayOpen ? t('ocrTranslator.overlayClosed') : t('ocrTranslator.overlayOpened'));
+                    if (overlayOpen) {
+                      await invoke('toggle_ocr_overlay', { show: false });
+                      setOverlayOpen(false);
+                      toast.success(t('ocrTranslator.overlayClosed'));
+                    } else {
+                      await openOverlay(config);
+                      toast.success(t('ocrTranslator.overlayOpened'));
+                    }
                   } catch (e: unknown) {
                     toast.error(`error overlay: ${e}`);
                   }
                 }}
                 variant="ghost"
                 size="sm"
-                className="h-7 text-xs text-blue-400 hover:bg-blue-500/10"
+                className="h-7 text-xs text-noir-400 hover:bg-noir-500/10"
                 disabled={!isRunning}
               >
                 <Layers className="h-3 w-3 mr-1" />
@@ -803,9 +835,9 @@ export default function OcrTranslatorPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Monitor className="h-4 w-4 text-blue-400" />
+                <Monitor className="h-4 w-4 text-noir-400" />
                 <span className="font-medium">{t('ocrTranslator.detectedTexts')}</span>
-                {isTranslating && <Loader2 className="h-4 w-4 animate-spin text-blue-400" />}
+                {isTranslating && <Loader2 className="h-4 w-4 animate-spin text-noir-400" />}
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <span className="text-muted-foreground">{detectedTexts.length} {t('ocrTranslator.detected')}</span>

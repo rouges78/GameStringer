@@ -57,18 +57,18 @@ export function PacksTab() {
       {/* Toolbar: ricerca + sort + pubblica */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-noir-500" />
           <Input
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder={t('patchHubPage.searchPlaceholder')}
-            className="pl-9 bg-slate-900/60 border-slate-700/60"
+            className="pl-9 bg-noir-900/60 border-noir-700/60"
           />
         </div>
         <select
           value={sortBy}
           onChange={e => setSortBy(e.target.value as SortBy)}
-          className="h-9 rounded-md border border-slate-700/60 bg-slate-900/60 px-2 text-sm text-slate-300"
+          className="h-9 rounded-md border border-noir-700/60 bg-noir-900/60 px-2 text-sm text-noir-300"
           aria-label={t('patchHubPage.sortDownloads')}
         >
           <option value="downloads">{t('patchHubPage.sortDownloads')}</option>
@@ -88,16 +88,16 @@ export function PacksTab() {
 
       {/* Contenuto */}
       {loading ? (
-        <div className="flex items-center justify-center py-16 text-slate-400">
+        <div className="flex items-center justify-center py-16 text-noir-400">
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
       ) : packs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-slate-800/60 flex items-center justify-center">
-            <Package className="h-7 w-7 text-slate-600" />
+          <div className="w-14 h-14 rounded-2xl bg-noir-800/60 flex items-center justify-center">
+            <Package className="h-7 w-7 text-noir-600" />
           </div>
-          <p className="text-sm font-medium text-slate-300">{t('patchHubPage.emptyTitle')}</p>
-          <p className="text-xs text-slate-500 max-w-sm">{t('patchHubPage.emptyHint')}</p>
+          <p className="text-sm font-medium text-noir-300">{t('patchHubPage.emptyTitle')}</p>
+          <p className="text-xs text-noir-500 max-w-sm">{t('patchHubPage.emptyHint')}</p>
           <Button size="sm" variant="outline" onClick={() => router.push('/patch-hub')}>
             <Package className="h-4 w-4 mr-1.5" />
             {t('communityHub.openPatchHub')}

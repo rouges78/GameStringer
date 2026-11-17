@@ -262,7 +262,7 @@ export function FineTuningManager({ gameId }: { gameId?: string }) {
             <div key={model.id} className="flex items-center justify-between p-3 border rounded-lg">
               <div className="flex items-center gap-2">
                 {model.status === 'completed' && <CheckCircle className="h-4 w-4 text-emerald-400" />}
-                {model.status === 'training' && <Loader2 className="h-4 w-4 animate-spin text-blue-400" />}
+                {model.status === 'training' && <Loader2 className="h-4 w-4 animate-spin text-noir-400" />}
                 {model.status === 'pending' && <Clock className="h-4 w-4 text-amber-400" />}
                 {model.status === 'failed' && <XCircle className="h-4 w-4 text-destructive" />}
                 <div>

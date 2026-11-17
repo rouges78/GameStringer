@@ -48,12 +48,12 @@ const ISSUE_COLORS: Record<IssueType, string> = {
   markup_tag_visible: 'bg-yellow-500',
   placeholder_corrupted: 'bg-red-500',
   encoding_error: 'bg-red-600',
-  untranslated_mixed: 'bg-blue-500',
+  untranslated_mixed: 'bg-rouge-500',
   html_entity: 'bg-orange-500',
   escape_sequence: 'bg-orange-500',
-  rpgmaker_tag: 'bg-purple-500',
-  unity_richtext: 'bg-cyan-500',
-  unreal_format: 'bg-indigo-500',
+  rpgmaker_tag: 'bg-rouge-500',
+  unity_richtext: 'bg-noir-500',
+  unreal_format: 'bg-rouge-500',
 };
 
 const ISSUE_NAMES: Record<IssueType, string> = {
@@ -135,7 +135,7 @@ export function TranslationFixer() {
     switch (severity) {
       case 'error': return 'text-red-500 border-red-500/30 bg-red-500/10';
       case 'warning': return 'text-yellow-500 border-yellow-500/30 bg-yellow-500/10';
-      default: return 'text-blue-500 border-blue-500/30 bg-blue-500/10';
+      default: return 'text-noir-500 border-noir-500/30 bg-noir-500/10';
     }
   };
 
@@ -147,7 +147,7 @@ export function TranslationFixer() {
   return (
     <div className="space-y-6">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-teal-500 to-cyan-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-noir-500 to-noir-600 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -178,13 +178,13 @@ export function TranslationFixer() {
       </div>
 
       {/* Input Area */}
-      <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+      <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-teal-500/20">
-              <FileText className="h-4 w-4 text-teal-400" />
+            <div className="p-1.5 rounded-lg bg-noir-500/20">
+              <FileText className="h-4 w-4 text-noir-400" />
             </div>
-            <span className="text-teal-100">{t('translationFixer.textToAnalyze')}</span>
+            <span className="text-noir-100">{t('translationFixer.textToAnalyze')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -195,7 +195,7 @@ export function TranslationFixer() {
               setAnalyzed(false);
             }}
             placeholder={t('translationFixer.placeholder')}
-            className="min-h-[120px] font-mono text-sm bg-black/20 border-teal-500/30 focus:border-teal-500/50"
+            className="min-h-[120px] font-mono text-sm bg-black/20 border-noir-500/30 focus:border-noir-500/50"
           />
         </CardContent>
       </Card>
@@ -253,7 +253,7 @@ export function TranslationFixer() {
                   <Button 
                     onClick={handleGenerateConfig}
                     variant="outline"
-                    className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
+                    className="w-full border-noir-500/50 text-noir-400 hover:bg-noir-500/10 hover:border-noir-400"
                     size="sm"
                   >
                     <Settings className="h-4 w-4 mr-2" />

@@ -117,6 +117,11 @@ export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unk
       // decisione vera (inizializzare il sottosistema o amputarlo) è in
       // roadmap [notifications-dead-subsystem].
       clientLogger.debug(`🔎 ${cmd}: sottosistema eventi-notifiche mai inizializzato (noto).`);
+    } else if (cmd === 'check_for_updates' && errorMessage.includes('Errore connessione GitHub')) {
+      // Offline, firewall o GitHub irraggiungibile: il controllo aggiornamenti
+      // all'avvio fallisce e useUpdateCheck lo gestisce già (warn, nessun badge).
+      // In rosso faceva comparire l'overlay "1 Issue" di Next a ogni avvio offline.
+      clientLogger.warn(`🔎 ${cmd}: GitHub non raggiungibile, controllo aggiornamenti saltato.`);
     } else {
       clientLogger.error(`Errore durante l'invocazione del comando Tauri '${cmd}':`, error);
     }

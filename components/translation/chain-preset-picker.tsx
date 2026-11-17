@@ -75,7 +75,7 @@ export function ChainPresetPicker({
   return (
     <div className="mt-1.5">
       <div className="flex items-center gap-1.5">
-        <span className="text-micro font-bold uppercase tracking-wider text-slate-500 shrink-0">
+        <span className="text-micro font-bold uppercase tracking-wider text-noir-500 shrink-0">
           {t('chainPreset.label')}
         </span>
         <button
@@ -83,10 +83,10 @@ export function ChainPresetPicker({
           disabled={disabled}
           aria-expanded={aperto}
           onClick={() => setAperto((v) => !v)}
-          className="flex flex-1 items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-micro font-bold uppercase tracking-wider text-slate-300 transition-all hover:bg-white/10 disabled:opacity-50"
+          className="flex flex-1 items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-micro font-bold uppercase tracking-wider text-noir-300 transition-all hover:bg-white/10 disabled:opacity-50"
         >
           <span className="truncate">{nome(attivo)}</span>
-          <span className="flex items-center gap-1 shrink-0 text-indigo-300">
+          <span className="flex items-center gap-1 shrink-0 text-rouge-300">
             <Coins className="h-3 w-3" />
             {stimaAttiva ? formattaStima(stimaAttiva) : '—'}
             <ChevronDown className={`h-3 w-3 transition-transform ${aperto ? 'rotate-180' : ''}`} />
@@ -95,7 +95,7 @@ export function ChainPresetPicker({
       </div>
 
       {aperto && (
-        <div role="radiogroup" aria-label={t('chainPreset.label')} className="mt-1 space-y-0.5 rounded-lg border border-white/10 bg-slate-900/60 p-1">
+        <div role="radiogroup" aria-label={t('chainPreset.label')} className="mt-1 space-y-0.5 rounded-lg border border-white/10 bg-noir-900/60 p-1">
           {CHAIN_PRESETS.map((p) => {
             const s = stime.get(p.id)!;
             const active = p.id === value;
@@ -111,16 +111,16 @@ export function ChainPresetPicker({
                   setAperto(false);
                 }}
                 className={`flex w-full items-start justify-between gap-2 rounded-md px-2 py-1.5 text-left transition-all disabled:opacity-50 ${
-                  active ? 'bg-indigo-600/30 text-indigo-100' : 'text-slate-300 hover:bg-white/5'
+                  active ? 'bg-rouge-600/30 text-rouge-100' : 'text-noir-300 hover:bg-white/5'
                 }`}
               >
                 <span className="min-w-0">
                   <span className="block truncate text-xs font-semibold">{nome(p)}</span>
-                  <span className="block truncate text-micro text-slate-400">{descrizione(p)}</span>
+                  <span className="block truncate text-micro text-noir-400">{descrizione(p)}</span>
                 </span>
                 <span className="shrink-0 text-right">
-                  <span className="block text-micro font-bold text-indigo-300">{formattaStima(s)}</span>
-                  <span className="block text-micro text-slate-500">{p.quality}</span>
+                  <span className="block text-micro font-bold text-rouge-300">{formattaStima(s)}</span>
+                  <span className="block text-micro text-noir-500">{p.quality}</span>
                 </span>
               </button>
             );
@@ -132,7 +132,7 @@ export function ChainPresetPicker({
               come in compat-badge e auto-translate-stepper. Passare un secondo
               argomento a t() non darebbe errore — lascerebbe «{n}» a schermo in
               tutte e 12 le lingue. */}
-          <p className="px-2 pt-1 text-micro leading-snug text-slate-500">
+          <p className="px-2 pt-1 text-micro leading-snug text-noir-500">
             {t('chainPreset.disclaimer').replace('{n}', volume.toLocaleString())}
           </p>
         </div>

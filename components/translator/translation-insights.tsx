@@ -37,15 +37,15 @@ const CONTENT_TYPE_ICONS: Record<ContentType, React.ElementType> = {
 };
 
 const CONTENT_TYPE_COLORS: Record<ContentType, string> = {
-  ui: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  dialogue: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  ui: 'bg-noir-500/20 text-noir-400 border-noir-500/30',
+  dialogue: 'bg-rouge-500/20 text-rouge-400 border-rouge-500/30',
   narrative: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  system: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+  system: 'bg-noir-500/20 text-noir-400 border-noir-500/30',
   item: 'bg-green-500/20 text-green-400 border-green-500/30',
-  tutorial: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+  tutorial: 'bg-noir-500/20 text-noir-400 border-noir-500/30',
   achievement: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  subtitle: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
-  unknown: 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+  subtitle: 'bg-rouge-500/20 text-rouge-400 border-rouge-500/30',
+  unknown: 'bg-noir-500/20 text-noir-400 border-noir-500/30'
 };
 
 const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
@@ -209,7 +209,7 @@ export function QualityScoreBar({ score, showDetails = false }: QualityScoreBarP
       )}
       
       {showDetails && score.details.length > 0 && (
-        <div className="text-2xs space-y-0.5 pt-1 border-t border-slate-700">
+        <div className="text-2xs space-y-0.5 pt-1 border-t border-noir-700">
           {score.details.slice(0, 4).map((detail, i) => (
             <p key={i} className="text-muted-foreground">{detail}</p>
           ))}
@@ -260,7 +260,7 @@ export function TranslationInsights({
       )}
       
       {classification.metadata.hasCharacterLimit && (
-        <Badge variant="outline" className="text-2xs px-1.5 h-5 bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
+        <Badge variant="outline" className="text-2xs px-1.5 h-5 bg-noir-500/10 text-noir-400 border-noir-500/30">
           ≤{classification.metadata.estimatedCharLimit}
         </Badge>
       )}
@@ -303,24 +303,24 @@ export function BatchInsightsSummary({ items, targetLanguage = 'en' }: BatchInsi
     : null;
   
   return (
-    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700 space-y-3">
+    <div className="p-3 rounded-lg bg-noir-800/50 border border-noir-700 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-400">{t('translationInsightsComp.contentAnalysis')}</span>
-        <span className="text-xs text-slate-500">{items.length} items</span>
+        <span className="text-xs font-medium text-noir-400">{t('translationInsightsComp.contentAnalysis')}</span>
+        <span className="text-xs text-noir-500">{items.length} items</span>
       </div>
       
       <div className="flex flex-wrap gap-1.5">
         {sortedTypes.map(([type, count]) => (
           <div key={type} className="flex items-center gap-1">
             <ContentTypeBadge type={type as ContentType} size="sm" />
-            <span className="text-xs text-slate-500">×{count}</span>
+            <span className="text-xs text-noir-500">×{count}</span>
           </div>
         ))}
       </div>
       
       {avgScore !== null && (
-        <div className="flex items-center justify-between pt-2 border-t border-slate-700">
-          <span className="text-xs text-slate-400">{t('translationInsightsComp.avgQualityScore')}</span>
+        <div className="flex items-center justify-between pt-2 border-t border-noir-700">
+          <span className="text-xs text-noir-400">{t('translationInsightsComp.avgQualityScore')}</span>
           <QualityScoreBadge score={avgScore} size="md" />
         </div>
       )}

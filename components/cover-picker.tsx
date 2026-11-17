@@ -437,7 +437,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
       <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ImageIcon className="h-5 w-5 text-blue-400" />
+            <ImageIcon className="h-5 w-5 text-noir-400" />
             {t('coverPicker.chooseCoverFor')} {gameName}
           </DialogTitle>
           <DialogDescription>
@@ -499,7 +499,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
                   <Button 
                     onClick={handleUseCustomUrl} 
                     disabled={!customUrlPreview || saving}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-rouge-600 hover:bg-rouge-700"
                   >
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   </Button>
@@ -510,9 +510,9 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
               
               {/* Preview */}
               {customUrlPreview && (
-                <div className="border rounded-lg p-4 bg-slate-900/50">
+                <div className="border rounded-lg p-4 bg-noir-900/50">
                   <p className="text-sm font-medium mb-2">{t('coverPickerComp.anteprima')}</p>
-                  <div className="aspect-[460/215] bg-slate-800 rounded overflow-hidden max-w-md">
+                  <div className="aspect-[460/215] bg-noir-800 rounded overflow-hidden max-w-md">
                     <img 
                       src={customUrlPreview} 
                       alt={t('coverPicker.previewAlt')} 
@@ -538,7 +538,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
           <div className="flex-1 overflow-y-auto">
             {igdbLoading ? (
               <div className="flex items-center justify-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+                <Loader2 className="h-8 w-8 animate-spin text-rouge-400" />
                 <span className="ml-2 text-muted-foreground">{t('coverPickerComp.cercandoSuIgdb')}</span>
               </div>
             ) : igdbError ? (
@@ -559,11 +559,11 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
                     className={cn(
                       "relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200",
                       selectedCover?.id === cover.id
-                        ? "border-purple-500 ring-2 ring-purple-500/30 scale-[1.02]"
-                        : "border-transparent hover:border-purple-500/50"
+                        ? "border-rouge-500 ring-2 ring-rouge-500/30 scale-[1.02]"
+                        : "border-transparent hover:border-rouge-500/50"
                     )}
                   >
-                    <div className="aspect-[460/215] bg-slate-800 relative">
+                    <div className="aspect-[460/215] bg-noir-800 relative">
                       <img
                         src={cover.thumb || cover.url}
                         alt={t('coverPicker.igdbCoverAlt')}
@@ -576,7 +576,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-64 text-center">
-                <Search className="h-12 w-12 text-gray-500 mb-3" />
+                <Search className="h-12 w-12 text-noir-500 mb-3" />
                 <p className="text-muted-foreground">{t('coverPickerComp.nessunaCoverTrovataSuIgdb')}</p>
               </div>
             )}
@@ -620,7 +620,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
                           : "border-transparent hover:border-emerald-500/50"
                       )}
                     >
-                      <div className="aspect-[2/3] bg-slate-800 relative">
+                      <div className="aspect-[2/3] bg-noir-800 relative">
                         <img
                           src={cover.thumb || cover.url}
                           alt={t('coverPicker.webCoverAlt')}
@@ -637,7 +637,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-center pt-4 border-t border-slate-700">
+                <div className="flex justify-center pt-4 border-t border-noir-700">
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -649,7 +649,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-64 text-center">
-                <Search className="h-12 w-12 text-gray-500 mb-3" />
+                <Search className="h-12 w-12 text-noir-500 mb-3" />
                 <p className="text-muted-foreground mb-4">{t('common.nessunaCoverTrovataSulWeb')}</p>
                 <Button 
                   variant="outline" 
@@ -692,12 +692,12 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
           <div className="flex-1 overflow-y-auto mt-4 pr-2">
             {loading ? (
               <div className="flex items-center justify-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+                <Loader2 className="h-8 w-8 animate-spin text-noir-400" />
                 <span className="ml-2 text-muted-foreground">{t('coverPickerComp.caricamentoCover')}</span>
               </div>
             ) : showApiKeyInput ? (
               <div className="flex flex-col items-center justify-center h-64 text-center px-4">
-                <Key className="h-12 w-12 text-blue-400 mb-3" />
+                <Key className="h-12 w-12 text-noir-400 mb-3" />
                 <h3 className="text-lg font-semibold mb-2">{t('coverPickerComp.apiKeyRichiesta')}</h3>
                 <p className="text-sm text-muted-foreground mb-4 max-w-md">
                   {t('coverPicker.apiKeyNeeded')}</p>
@@ -705,7 +705,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
                   href="https://www.steamgriddb.com/profile/preferences/api" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 text-sm mb-4 underline"
+                  className="inline-flex items-center gap-1 text-noir-400 hover:text-noir-300 text-sm mb-4 underline"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   {t('coverPicker.getApiKey')}</a>
@@ -739,12 +739,12 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
                     className={cn(
                       "relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200",
                       selectedCover?.id === cover.id && selectedCover?.type === cover.type
-                        ? "border-blue-500 ring-2 ring-blue-500/30 scale-[1.02]"
-                        : "border-transparent hover:border-blue-500/50"
+                        ? "border-rouge-500 ring-2 ring-noir-500/30 scale-[1.02]"
+                        : "border-transparent hover:border-noir-500/50"
                     )}
                   >
                     {/* Thumbnail */}
-                    <div className="aspect-[460/215] bg-slate-800 relative">
+                    <div className="aspect-[460/215] bg-noir-800 relative">
                       <img
                         src={cover.thumb || cover.url}
                         alt={`Cover by ${cover.author}`}
@@ -754,8 +754,8 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
                       
                       {/* Selected overlay */}
                       {selectedCover?.id === cover.id && selectedCover?.type === cover.type && (
-                        <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                          <div className="bg-blue-500 rounded-full p-2">
+                        <div className="absolute inset-0 bg-noir-500/20 flex items-center justify-center">
+                          <div className="bg-rouge-500 rounded-full p-2">
                             <Check className="h-5 w-5 text-white" />
                           </div>
                         </div>
@@ -818,7 +818,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
             <Button 
               onClick={handleSelectCover} 
               disabled={!selectedCover || saving}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-rouge-600 hover:bg-rouge-700"
             >
               {saving ? (
                 <>

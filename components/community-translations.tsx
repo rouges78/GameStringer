@@ -300,16 +300,16 @@ const CommunityTranslations: React.FC<CommunityTranslationsProps> = ({
       case 'approved': return 'bg-green-100 text-green-800';
       case 'rejected': return 'bg-red-100 text-red-800';
       case 'needs_review': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-blue-100 text-blue-800';
+      default: return 'bg-noir-100 text-noir-800';
     }
   };
 
   const getBadgeColor = (rarity: string) => {
     switch (rarity) {
-      case 'legendary': return 'bg-purple-100 text-purple-800';
+      case 'legendary': return 'bg-rouge-100 text-rouge-800';
       case 'epic': return 'bg-orange-100 text-orange-800';
-      case 'rare': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'rare': return 'bg-noir-100 text-noir-800';
+      default: return 'bg-noir-100 text-noir-800';
     }
   };
 
@@ -497,7 +497,7 @@ const CommunityTranslations: React.FC<CommunityTranslationsProps> = ({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-blue-600" />
+              <Users className="h-5 w-5 text-noir-600" />
               <div>
                 <p className="text-2xl font-bold">89</p>
                 <p className="text-sm text-muted-foreground">{t('communityTranslations.activeContributors')}</p>
@@ -509,7 +509,7 @@ const CommunityTranslations: React.FC<CommunityTranslationsProps> = ({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-purple-600" />
+              <Globe className="h-5 w-5 text-rouge-600" />
               <div>
                 <p className="text-2xl font-bold">12</p>
                 <p className="text-sm text-muted-foreground">{t('common.lingueSupportate')}</p>
@@ -659,7 +659,7 @@ const CommunityTranslations: React.FC<CommunityTranslationsProps> = ({
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
-                                className={`h-3 w-3 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                                className={`h-3 w-3 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-noir-300'}`}
                               />
                             ))}
                           </div>
@@ -699,7 +699,7 @@ const CommunityTranslations: React.FC<CommunityTranslationsProps> = ({
                     onClick={() => setReviewRating(rating)}
                   >
                     <Star
-                      className={`h-5 w-5 ${rating <= reviewRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                      className={`h-5 w-5 ${rating <= reviewRating ? 'fill-yellow-400 text-yellow-400' : 'text-noir-300'}`}
                     />
                   </Button>
                 ))}

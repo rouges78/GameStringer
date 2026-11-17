@@ -491,27 +491,25 @@ pub fn extract_renpy_strings(file_path: String) -> Result<RenpyExtractionResult,
 
 /// Extract the first double-quoted string from a line, handling escaped quotes.
 fn extract_first_quoted(s: &str) -> Option<String> {
-    let bytes = s.as_bytes();
-    let mut i = 0;
-    // Find opening quote
-    while i < bytes.len() {
-        if bytes[i] == b'"' { break; }
-        i += 1;
-    }
-    if i >= bytes.len() { return None; }
-    i += 1; // skip opening quote
+    // Per CARATTERI, non per byte: `byte as char` trasformava ogni byte di un
+    // carattere UTF-8 in un carattere Latin-1, e il pallino U+2022 diventava
+    // tre caratteri senza senso. L'originale estratto non combaciava più col
+    // testo del gioco, quindi la traduzione di ogni riga con un carattere non
+    // ASCII non si applicava (Scarlet Hollow, 13/11/2026).
+    let mut chars = s.chars().skip_while(|&c| c != '"');
+    chars.next()?; // opening quote
     let mut result = String::new();
-    while i < bytes.len() {
-        if bytes[i] == b'\\' && i + 1 < bytes.len() {
-            // Keep escape sequences as-is in the extracted string
-            result.push('\\');
-            result.push(bytes[i + 1] as char);
-            i += 2;
-        } else if bytes[i] == b'"' {
-            return if result.is_empty() { None } else { Some(result) };
-        } else {
-            result.push(bytes[i] as char);
-            i += 1;
+    while let Some(c) = chars.next() {
+        match c {
+            '\\' => {
+                // Keep escape sequences as-is in the extracted string
+                result.push('\\');
+                if let Some(next) = chars.next() {
+                    result.push(next);
+                }
+            }
+            '"' => return if result.is_empty() { None } else { Some(result) },
+            _ => result.push(c),
         }
     }
     None // unterminated string
@@ -1077,6 +1075,18 @@ pub fn get_renpy_translation_stats(strings: Vec<RenpyString>) -> RenpyStats {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn quoted_text_keeps_non_ascii_characters() {
+        assert_eq!(
+            extract_first_quoted("text \"{size=24}\u{2022} Caf\u{e9} \\\"ok\\\"{/size}\" xpos 10").as_deref(),
+            Some("{size=24}\u{2022} Caf\u{e9} \\\"ok\\\"{/size}"),
+        );
+        assert_eq!(
+            extract_quoted_strings("\"\u{2022} uno\" \"due\""),
+            vec!["\u{2022} uno".to_string(), "due".to_string()],
+        );
+    }
     use std::fs;
     use tempfile::TempDir;
 

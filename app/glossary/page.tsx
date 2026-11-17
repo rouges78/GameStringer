@@ -15,13 +15,13 @@ import {
   BookOpen, Plus, Search, Trash2, Edit, Download, Upload, Sparkles,
   Lock, RefreshCw, Unlock, Save, FileJson, FileSpreadsheet,
   Wand2, Info, Settings,
-  Edit3, FolderTree, Globe, Loader2, UploadCloud,
+  Edit3, Globe, Loader2, UploadCloud,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import {
   loadGlossary, createGlossary, deleteGlossary, listGlossaries,
-  addTerm, updateTerm, deleteTerm, searchTerms, extractTerms,
+  addTerm, updateTerm, deleteTerm, searchTerms, extractTerms, loadGameSourceTexts,
   exportToCsv, exportToJson, importFromCsv, importFromJson,
   addDefaultTerms, loadGlossaryConfig, saveGlossaryConfig, getGlossaryConfig,
   type AutoGlossary, type AutoGlossaryEntry, type GlossaryTier, type GlossaryCategory,
@@ -53,6 +53,15 @@ const CATEGORY_EMOJI: Record<GlossaryCategory, string> = {
   ui: '🖥️', system: '⚙️', lore: '📚', creature: '🐉', faction: '🏰', other: '📌',
 };
 
+// Gli ID gioco non sono uniformi tra le pagine (steam_123, steam_family_123, 123):
+// per il deep link ?gameId= confronta anche la parte senza prefisso Steam.
+function findGlossaryGameId(all: AutoGlossary[], wanted: string): string | null {
+  const exact = all.find(g => g.gameId === wanted);
+  if (exact) return exact.gameId;
+  const bare = (id: string) => id.replace(/^steam_(?:family_)?/, '');
+  return all.find(g => bare(g.gameId) === bare(wanted))?.gameId ?? null;
+}
+
 export default function GlossaryPage() {
   const { t } = useTranslation();
   const [glossaries, setGlossaries] = useState<AutoGlossary[]>([]);
@@ -82,6 +91,11 @@ export default function GlossaryPage() {
   const [createSourceLang, setCreateSourceLang] = useState('en');
   const [createTargetLang, setCreateTargetLang] = useState('en');
   useDefaultTargetLang(setCreateTargetLang);
+  // Gioco arrivato via ?gameId= che non ha ancora un glossario (spiegato nel dialog di creazione)
+  const [missingDeepLinkGameId, setMissingDeepLinkGameId] = useState<string | null>(null);
+
+  // Testi reali del gioco selezionato per l'estrazione AI (null = in caricamento)
+  const [gameTexts, setGameTexts] = useState<string[] | null>(null);
 
   // Community (glossari condivisi per gioco)
   const [communityList, setCommunityList] = useState<import('@/lib/social/community-glossary').CommunityGlossaryInfo[]>([]);
@@ -156,7 +170,16 @@ export default function GlossaryPage() {
   useEffect(() => {
     const loaded = loadGlossaryConfig();
     setConfig(loaded);
-    refreshGlossaries();
+    // Deep link dall'Editor (/glossary?gameId=…): apri il glossario di QUEL
+    // gioco, non il primo della lista. Se non esiste ancora, proponi di crearlo.
+    const wantedGameId = new URLSearchParams(window.location.search).get('gameId');
+    const matchedGameId = wantedGameId ? findGlossaryGameId(listGlossaries(), wantedGameId) : null;
+    refreshGlossaries(matchedGameId);
+    if (wantedGameId && !matchedGameId) {
+      setMissingDeepLinkGameId(wantedGameId);
+      setCreateGameId(wantedGameId);
+      setShowCreateDialog(true);
+    }
   }, []);
 
   // Carica le varianti community quando si apre il tab (o cambia gioco)
@@ -165,10 +188,12 @@ export default function GlossaryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, selectedGameId]);
 
-  function refreshGlossaries() {
+  function refreshGlossaries(preferredGameId?: string | null) {
     const all = listGlossaries();
     setGlossaries(all);
-    if (all.length > 0 && !selectedGameId) {
+    if (preferredGameId) {
+      setSelectedGameId(preferredGameId);
+    } else if (all.length > 0 && !selectedGameId) {
       setSelectedGameId(all[0].gameId);
     }
   }
@@ -177,6 +202,21 @@ export default function GlossaryPage() {
     if (!selectedGameId) return null;
     return loadGlossary(selectedGameId);
   }, [selectedGameId, glossaries]);
+
+  const extractGameId = selectedGlossary?.gameId;
+  const extractTargetLang = selectedGlossary?.targetLang;
+  useEffect(() => {
+    if (!extractGameId || !extractTargetLang) {
+      setGameTexts(null);
+      return;
+    }
+    let cancelled = false;
+    setGameTexts(null);
+    loadGameSourceTexts(extractGameId, extractTargetLang)
+      .then(texts => { if (!cancelled) setGameTexts(texts); })
+      .catch(() => { if (!cancelled) setGameTexts([]); });
+    return () => { cancelled = true; };
+  }, [extractGameId, extractTargetLang]);
 
   const filteredTerms = useMemo(() => {
     if (!selectedGameId) return [];
@@ -270,24 +310,17 @@ export default function GlossaryPage() {
   }
 
   async function handleExtractTerms() {
-    if (!selectedGlossary) return;
+    // Solo testi veri del gioco: senza, il pulsante è disabilitato e spiegato.
+    if (!selectedGlossary || !gameTexts || gameTexts.length === 0) return;
     setExtracting(true);
 
     try {
-      // Usa testi di esempio per l'estrazione (in produzione verrebbero dai file del gioco)
-      const sampleTexts = [
-        'Press Start to begin your adventure',
-        'Save your progress before entering the dungeon',
-        'Your HP is low! Use a potion.',
-        'The quest "Dragon Slayer" has been completed.',
-      ];
-
       toast.info(t('common.estrazioneTerminiInCorso'));
 
       const result = await extractTerms(
         selectedGlossary.gameId,
         selectedGlossary.gameName,
-        sampleTexts,
+        gameTexts,
         selectedGlossary.sourceLang,
         selectedGlossary.targetLang
       );
@@ -372,7 +405,7 @@ export default function GlossaryPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <BookOpen className="h-6 w-6 text-purple-400" />
+            <BookOpen className="h-6 w-6 text-rouge-400" />
             <div>
               <h1 className="text-xl font-bold">{t('glossaryPage.autoGlossary')}</h1>
               <p className="text-xs text-muted-foreground">
@@ -381,14 +414,11 @@ export default function GlossaryPage() {
           </div>
           <div className="flex gap-2 items-center">
             <Link href="/editor">
-              <Button variant="outline" size="sm" className="text-slate-400 hover:text-blue-400">
+              <Button variant="outline" size="sm" className="text-noir-400 hover:text-noir-400">
                 <Edit3 className="h-3.5 w-3.5 mr-1" />{t('subtitleTranslator.editor')}</Button>
             </Link>
-            <Link href="/batch">
-              <Button variant="outline" size="sm" className="text-slate-400 hover:text-sky-400">
-                <FolderTree className="h-3.5 w-3.5 mr-1" />{t('aiTranslator.batch')}</Button>
-            </Link>
-            <div className="h-5 w-px bg-slate-700" />
+            {/* Batch nascosto: /batch dichiara "non implementato" e tiene disabilitato Avvia. */}
+            <div className="h-5 w-px bg-noir-700" />
             <Button variant="outline" size="sm" onClick={() => setShowConfigDialog(true)}>
               <Settings className="h-3.5 w-3.5 mr-1" />
               {t('glossaryPage.config')}</Button>
@@ -567,18 +597,18 @@ export default function GlossaryPage() {
 
             {/* === EXTRACTION TAB === */}
             <TabsContent value="extract" className="space-y-4 mt-3">
-              <Card className="border-purple-500/30 bg-gradient-to-r from-purple-950/20 to-indigo-950/20">
+              <Card className="border-rouge-500/30 bg-gradient-to-r from-rouge-950/20 to-rouge-950/20">
                 <CardHeader className="pb-3">
                   <CardTitle as="h2" className="flex items-center gap-2 text-base">
-                    <Sparkles className="h-5 w-5 text-purple-400" />
-                    {t('glossaryPage.autoTermExtraction')}<Badge className="text-2xs bg-purple-600/80 text-white border-0">AI</Badge>
+                    <Sparkles className="h-5 w-5 text-rouge-400" />
+                    {t('glossaryPage.autoTermExtraction')}<Badge className="text-2xs bg-rouge-600/80 text-white border-0">AI</Badge>
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
                     {t('glossaryPage.extractionDesc1')}</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/20 border border-white/5">
-                    <Info className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                    <Info className="h-4 w-4 text-noir-400 flex-shrink-0" />
                     <p className="text-[11px] text-muted-foreground">
                       {t('glossaryPage.extractionDesc2')}</p>
                   </div>
@@ -586,8 +616,8 @@ export default function GlossaryPage() {
                   <div className="flex gap-2">
                     <Button
                       onClick={handleExtractTerms}
-                      disabled={extracting}
-                      className="bg-purple-600 hover:bg-purple-700"
+                      disabled={extracting || !gameTexts || gameTexts.length === 0}
+                      className="bg-rouge-600 hover:bg-rouge-700"
                     >
                       {extracting ? (
                         <>
@@ -603,6 +633,14 @@ export default function GlossaryPage() {
                       <Wand2 className="h-4 w-4 mr-1.5" />
                       {t('glossaryPage.addDefaultTerms')}</Button>
                   </div>
+                  {gameTexts && gameTexts.length === 0 && (
+                    <p className="text-[11px] text-amber-400">
+                      {t('glossaryPage.noGameTexts')}</p>
+                  )}
+                  {gameTexts && gameTexts.length > 0 && (
+                    <p className="text-[11px] text-muted-foreground">
+                      {t('glossaryPage.gameTextsAvailable').replace('{count}', String(gameTexts.length))}</p>
+                  )}
 
                   <div className="space-y-2">
                     <h3 className="text-xs font-semibold text-muted-foreground">{t('glossaryPage.thirdTierSystem')}</h3>
@@ -692,7 +730,7 @@ export default function GlossaryPage() {
                 <CardContent className="flex items-center justify-between gap-3 py-4">
                   <div className="min-w-0">
                     <p className="text-sm font-medium flex items-center gap-1.5">
-                      <UploadCloud className="h-4 w-4 text-violet-400" />
+                      <UploadCloud className="h-4 w-4 text-rouge-400" />
                       {t('communityGlossary.publishTitle')}
                     </p>
                     <p className="text-2xs text-muted-foreground">
@@ -734,7 +772,7 @@ export default function GlossaryPage() {
                   ) : (
                     <div className="space-y-2">
                       {communityList.map((g) => (
-                        <div key={g.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-800/60 bg-slate-900/40">
+                        <div key={g.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-noir-800/60 bg-noir-900/40">
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-medium truncate">
                               {g.sourceLanguage.toUpperCase()} → {g.targetLanguage.toUpperCase()} · {g.termsCount} {t('communityGlossary.termsLabel')}
@@ -855,7 +893,11 @@ export default function GlossaryPage() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>{t('glossaryPage.newGlossary')}</DialogTitle>
-              <DialogDescription>{t('glossaryPage.createForGame')}</DialogDescription>
+              <DialogDescription>
+                {missingDeepLinkGameId && createGameId === missingDeepLinkGameId
+                  ? t('glossaryPage.noGlossaryForGame')
+                  : t('glossaryPage.createForGame')}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
               <div className="space-y-1">

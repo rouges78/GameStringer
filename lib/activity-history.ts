@@ -73,16 +73,16 @@ export const activityIcons: Record<ActivityType, string> = {
 
 // Colori per tipo
 export const activityColors: Record<ActivityType, string> = {
-  translation: 'purple',
+  translation: 'rouge',
   patch: 'orange',
   steam_sync: 'green',
-  game_added: 'blue',
-  game_launched: 'cyan',
-  profile_created: 'pink',
-  settings_changed: 'gray',
+  game_added: 'noir',
+  game_launched: 'noir',
+  profile_created: 'rouge',
+  settings_changed: 'noir',
   import_export: 'yellow',
-  translation_bridge: 'indigo',
-  other: 'slate',
+  translation_bridge: 'rouge',
+  other: 'noir',
 };
 
 // Localized activity type names
@@ -251,6 +251,20 @@ export class ActivityHistoryClient {
       activity_type: 'patch',
       title: `Patch creata: ${gameName}`,
       description: patchName,
+      game_name: gameName,
+      game_id: gameId,
+    });
+  }
+
+  /**
+   * Traccia un giro di traduzione che non ha scritto nulla nel gioco.
+   * Non è una patch: tipo e titolo restano fuori dal conteggio delle patch.
+   */
+  async trackAttempt(gameName: string, gameId?: string, details?: string): Promise<void> {
+    await this.add({
+      activity_type: 'other',
+      title: `Nessun file scritto: ${gameName}`,
+      description: details,
       game_name: gameName,
       game_id: gameId,
     });

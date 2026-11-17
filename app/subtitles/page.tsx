@@ -20,20 +20,23 @@ export default function SubtitlesPage() {
   // Funzione di traduzione che usa l'API
   const handleTranslate = async (texts: string[], targetLang: string): Promise<string[]> => {
     // Traduzione client-side (translateSmart), non più /api/translate (ora stub 501).
+    // Una riga fallita torna come '' (non tradotta), mai come il testo sorgente
+    // spacciato per traduzione: con success:false translations È il sorgente.
+    // L'avviso sulle righe non tradotte lo dà SubtitleTranslator, una volta per giro.
     try {
       const { translateSmart } = await import('@/lib/ai/ai-translate-direct');
       const result = await translateSmart({ texts, targetLanguage: targetLang });
-      return texts.map((text, i) => result.translations[i] ?? text);
+      return texts.map((_, i) => (result.success ? result.translations[i] ?? '' : ''));
     } catch (error: unknown) {
       clientLogger.error("Translation error:", error);
-      return texts; // fallback: testi originali
+      return texts.map(() => '');
     }
   };
 
   return (
     <div className="container mx-auto p-6 space-y-6 animate-fade-in">
       {/* Hero Header - Compatto e Blu */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-4 shadow-xl shadow-blue-900/50 text-white">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-4 shadow-xl shadow-noir-900/50 text-white">
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
@@ -65,8 +68,8 @@ export default function SubtitlesPage() {
       {/* Features - Compatto */}
       <div className="grid grid-cols-4 gap-3">
         <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border">
-          <div className="p-1.5 bg-blue-500/10 rounded">
-            <Film className="w-3.5 h-3.5 text-blue-500" />
+          <div className="p-1.5 bg-noir-500/10 rounded">
+            <Film className="w-3.5 h-3.5 text-noir-500" />
           </div>
           <div>
             <p className="text-xs font-medium">{t('subtitleTranslator.multiFormat')}</p>
@@ -74,8 +77,8 @@ export default function SubtitlesPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border">
-          <div className="p-1.5 bg-indigo-500/10 rounded">
-            <Clock className="w-3.5 h-3.5 text-indigo-500" />
+          <div className="p-1.5 bg-rouge-500/10 rounded">
+            <Clock className="w-3.5 h-3.5 text-rouge-500" />
           </div>
           <div>
             <p className="text-xs font-medium">{t('subtitleTranslator.timingPreserved')}</p>
@@ -83,8 +86,8 @@ export default function SubtitlesPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border">
-          <div className="p-1.5 bg-teal-500/10 rounded">
-            <Sparkles className="w-3.5 h-3.5 text-teal-500" />
+          <div className="p-1.5 bg-noir-500/10 rounded">
+            <Sparkles className="w-3.5 h-3.5 text-noir-500" />
           </div>
           <div>
             <p className="text-xs font-medium">{t('subtitleTranslator.integratedEditor')}</p>
@@ -92,8 +95,8 @@ export default function SubtitlesPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border">
-          <div className="p-1.5 bg-cyan-500/10 rounded">
-            <Languages className="w-3.5 h-3.5 text-cyan-500" />
+          <div className="p-1.5 bg-noir-500/10 rounded">
+            <Languages className="w-3.5 h-3.5 text-noir-500" />
           </div>
           <div>
             <p className="text-xs font-medium">{t('subtitleTranslator.qaValidation')}</p>

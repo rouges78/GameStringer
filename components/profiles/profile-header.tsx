@@ -223,9 +223,9 @@ export function ProfileHeader() {
         <Button variant="ghost" aria-label={currentProfile.name} className="relative h-10 w-auto px-3 hover:bg-accent/50">
             <div className="flex items-center space-x-3">
               {/* Avatar */}
-              <Avatar className="h-8 w-8 ring-2 ring-indigo-500/20">
+              <Avatar className="h-8 w-8 ring-2 ring-rouge-500/20">
                 <AvatarImage src={avatarUrl || undefined} alt={currentProfile.name} />
-                <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-blue-700 text-white text-sm font-semibold">
+                <AvatarFallback className="bg-gradient-to-br from-rouge-600 to-noir-700 text-white text-sm font-semibold">
                   {getInitials(currentProfile.name)}
                 </AvatarFallback>
               </Avatar>
@@ -240,15 +240,15 @@ export function ProfileHeader() {
           </Button>
         </DropdownMenuTrigger>
         
-        <DropdownMenuContent className="w-64 z-[70] border-slate-800 bg-slate-950/95 backdrop-blur-xl" align="end" forceMount>
+        <DropdownMenuContent className="w-64 z-[70] border-noir-800 bg-noir-950/95 backdrop-blur-xl" align="end" forceMount>
           <DropdownMenuLabel className="font-normal p-3">
             <div className="flex flex-col space-y-1.5">
               {/* Profile Header - Compatto */}
               <div className="flex items-center space-x-2">
                 <button onClick={() => setShowAvatarUpload(true)} className="relative group shrink-0">
-                  <Avatar className="h-8 w-8 ring-2 ring-indigo-500/30 group-hover:ring-indigo-500/60 transition-all">
+                  <Avatar className="h-8 w-8 ring-2 ring-rouge-500/30 group-hover:ring-rouge-500/60 transition-all">
                     <AvatarImage src={avatarUrl || undefined} alt={currentProfile.name} />
-                    <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-blue-700 text-white text-xs font-semibold">
+                    <AvatarFallback className="bg-gradient-to-br from-rouge-600 to-noir-700 text-white text-xs font-semibold">
                       {getInitials(currentProfile.name)}
                     </AvatarFallback>
                   </Avatar>
@@ -258,17 +258,17 @@ export function ProfileHeader() {
                 </button>
                 <div className="flex flex-col flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-medium leading-none text-slate-100 truncate">
+                    <p className="text-sm font-medium leading-none text-noir-100 truncate">
                       {currentProfile.name}
                     </p>
                     <Badge className="text-[10px] px-1.5 py-0 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30 shrink-0">
                       {t('profile.active')}
                     </Badge>
                   </div>
-                  <p className="text-[10px] leading-none text-slate-500 font-mono mt-0.5">
+                  <p className="text-[10px] leading-none text-noir-500 font-mono mt-0.5">
                     ID: {currentProfile.id.slice(0, 6)}...
                   </p>
-                  <p className="text-[10px] leading-none text-slate-400 mt-0.5 truncate">
+                  <p className="text-[10px] leading-none text-noir-400 mt-0.5 truncate">
                     {getLastAccessedText(currentProfile.last_accessed)}
                   </p>
                 </div>
@@ -307,8 +307,8 @@ export function ProfileHeader() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex items-center gap-1 cursor-help text-slate-400">
-                        <span className="font-medium text-slate-200 text-xs">{profiles.length}</span>
+                      <div className="flex items-center gap-1 cursor-help text-noir-400">
+                        <span className="font-medium text-noir-200 text-xs">{profiles.length}</span>
                         <span className="text-[10px]">{t('profile.profilesCreated')}</span>
                       </div>
                     </TooltipTrigger>
@@ -318,7 +318,7 @@ export function ProfileHeader() {
                   </Tooltip>
                 </TooltipProvider>
                 <div 
-                  className="flex items-center gap-1 cursor-pointer hover:text-indigo-400 transition-colors text-slate-400 text-[10px]"
+                  className="flex items-center gap-1 cursor-pointer hover:text-rouge-400 transition-colors text-noir-400 text-[10px]"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -392,7 +392,7 @@ export function ProfileHeader() {
 
       {/* Profile Manager Dialog */}
       <Dialog open={showProfileManager} onOpenChange={setShowProfileManager}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-slate-900/60 backdrop-blur-2xl border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] p-6">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-noir-900/60 backdrop-blur-2xl border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] p-6">
           <DialogHeader className="mb-4">
             <DialogTitle>{t('profile.profileManagement')}</DialogTitle>
           </DialogHeader>

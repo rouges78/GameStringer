@@ -26,7 +26,7 @@ export function useKeyboardShortcuts() {
     { key: ',', ctrl: true, action: () => router.push('/settings'), description: 'Impostazioni' },
     
     // Quick actions
-    { key: 'b', ctrl: true, action: () => router.push('/batch-translation'), description: 'Batch Translation' },
+    // Ctrl+B tolta: /batch-translation fa fallire ogni job con BATCH_NON_IMPLEMENTATO.
     { key: 'j', ctrl: true, action: () => router.push('/guide'), description: 'Guida' },
     { key: 'w', ctrl: true, action: () => router.push('/workshop'), description: 'Steam Workshop' },
     { key: 'g', ctrl: true, action: () => router.push('/glossary'), description: 'Glossario' },

@@ -83,7 +83,7 @@ export function HltbStats({ gameName, className }: HltbStatsProps) {
   if (loading) {
     return (
       <div className={cn("flex items-center gap-2 bg-black/30 border border-white/10 rounded-lg px-3 py-2", className)}>
-        <Clock className="h-3.5 w-3.5 text-purple-400" />
+        <Clock className="h-3.5 w-3.5 text-rouge-400" />
         <span className="text-xs text-white/70">HLTB</span>
         <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
       </div>
@@ -99,7 +99,7 @@ export function HltbStats({ gameName, className }: HltbStatsProps) {
       icon: Target, 
       label: 'Main', 
       value: formatHours(data.main),
-      color: 'text-blue-400',
+      color: 'text-noir-400',
     },
     { 
       icon: Gamepad2, 
@@ -117,7 +117,7 @@ export function HltbStats({ gameName, className }: HltbStatsProps) {
       icon: Layers, 
       label: 'All', 
       value: formatHours(data.all_styles),
-      color: 'text-purple-400',
+      color: 'text-rouge-400',
     },
   ];
 
@@ -125,7 +125,7 @@ export function HltbStats({ gameName, className }: HltbStatsProps) {
     <div className={cn("flex items-center gap-3 bg-black/30 border border-white/10 rounded-lg px-3 py-2", className)}>
       {/* Icon + Label */}
       <div className="flex items-center gap-1.5">
-        <Clock className="h-3.5 w-3.5 text-purple-400" />
+        <Clock className="h-3.5 w-3.5 text-rouge-400" />
         <span className="text-xs font-medium text-white/70">HLTB</span>
       </div>
 
@@ -150,7 +150,7 @@ export function HltbStats({ gameName, className }: HltbStatsProps) {
           href={data.url} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="ml-auto text-2xs text-muted-foreground hover:text-purple-400 flex items-center gap-0.5 transition-colors"
+          className="ml-auto text-2xs text-muted-foreground hover:text-rouge-400 flex items-center gap-0.5 transition-colors"
         >
           <ExternalLink className="h-2.5 w-2.5" />
         </a>

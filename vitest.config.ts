@@ -14,14 +14,11 @@ export default defineConfig({
     // test entra in un render-loop (es. mock con identità instabile nelle
     // dependency di un effect, vedi notification-center.test) l'OOM emerge
     // in secondi invece di saturare la RAM per minuti.
+    // Vitest 4 ha rimosso `poolOptions`: isolate ed execArgv stanno al primo
+    // livello (singleFork: false era già il default).
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: false,
-        isolate: true,
-        execArgv: ['--max-old-space-size=2048'],
-      },
-    },
+    isolate: true,
+    execArgv: ['--max-old-space-size=2048'],
     exclude: [
       '**/node_modules/**',
       '**/dist/**',

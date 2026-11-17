@@ -96,7 +96,7 @@ function PackDetail({ packId, onBack }: { packId: string; onBack: () => void }) 
 
   if (!pack) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-slate-500 gap-3">
+      <div className="flex flex-col items-center justify-center h-64 text-noir-500 gap-3">
         <Package className="h-8 w-8 opacity-30" />
         <p className="text-sm">{t('patchHubPage.notFound')}</p>
         <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-3.5 w-3.5 mr-1" /> {t('patchHubPage.notFoundBack')}</Button>
@@ -106,7 +106,7 @@ function PackDetail({ packId, onBack }: { packId: string; onBack: () => void }) 
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Button variant="ghost" size="sm" onClick={onBack} className="mb-4 text-slate-400 hover:text-amber-300">
+      <Button variant="ghost" size="sm" onClick={onBack} className="mb-4 text-noir-400 hover:text-amber-300">
         <ArrowLeft className="h-3.5 w-3.5 mr-1" /> {t('patchHubPage.title')}
       </Button>
 
@@ -116,7 +116,7 @@ function PackDetail({ packId, onBack }: { packId: string; onBack: () => void }) 
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-semibold text-slate-200">{pack.name}</h1>
+            <h1 className="text-xl font-semibold text-noir-200">{pack.name}</h1>
             <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_CLS[pack.status]}`}>
               {t(`patchHubPage.${STATUS_KEY[pack.status]}`)}
             </span>
@@ -134,7 +134,7 @@ function PackDetail({ packId, onBack }: { packId: string; onBack: () => void }) 
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-noir-500 mt-0.5">
             {pack.gameName} · <span className="uppercase">{pack.sourceLanguage}→{pack.targetLanguage}</span> · v{pack.version} · {t('patchHubPage.by')}{' '}
             {/* ?profile= e non /u/<username>: con output:'export' la route
                 dinamica emette solo /u/_ (vedi app/u/[username]/page.tsx) */}
@@ -156,9 +156,9 @@ function PackDetail({ packId, onBack }: { packId: string; onBack: () => void }) 
           { label: t('patchHubPage.statDownloads'), value: pack.downloads.toLocaleString() },
           { label: t('patchHubPage.statSize'), value: formatBytes(pack.size) },
         ].map((s) => (
-          <div key={s.label} className="rounded-lg border border-slate-800/60 bg-slate-900/40 px-3 py-2.5">
-            <div className="text-base font-semibold text-slate-200 leading-none">{s.value}</div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">{s.label}</div>
+          <div key={s.label} className="rounded-lg border border-noir-800/60 bg-noir-900/40 px-3 py-2.5">
+            <div className="text-base font-semibold text-noir-200 leading-none">{s.value}</div>
+            <div className="text-[10px] text-noir-500 uppercase tracking-wider mt-1">{s.label}</div>
           </div>
         ))}
       </div>
@@ -183,24 +183,24 @@ function PackDetail({ packId, onBack }: { packId: string; onBack: () => void }) 
 
       {pack.description && (
         <section className="mb-6">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('patchHubPage.descriptionLabel')}</h2>
-          <p className="text-sm text-slate-300 whitespace-pre-line leading-relaxed">{pack.description}</p>
+          <h2 className="text-xs font-semibold text-noir-400 uppercase tracking-wider mb-2">{t('patchHubPage.descriptionLabel')}</h2>
+          <p className="text-sm text-noir-300 whitespace-pre-line leading-relaxed">{pack.description}</p>
         </section>
       )}
 
       {/* Files */}
       {pack.files?.length > 0 && (
         <section className="mb-6">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('patchHubPage.filesLabel')} ({pack.files.length})</h2>
+          <h2 className="text-xs font-semibold text-noir-400 uppercase tracking-wider mb-2">{t('patchHubPage.filesLabel')} ({pack.files.length})</h2>
           <div className="space-y-1.5">
             {pack.files.map((f) => (
-              <div key={f.path} className="flex items-center justify-between rounded-lg border border-slate-800/60 bg-slate-900/40 px-3 py-2 text-xs">
-                <span className="flex items-center gap-2 text-slate-300 min-w-0">
+              <div key={f.path} className="flex items-center justify-between rounded-lg border border-noir-800/60 bg-noir-900/40 px-3 py-2 text-xs">
+                <span className="flex items-center gap-2 text-noir-300 min-w-0">
                   <FileText className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
                   <span className="truncate">{f.name}</span>
-                  <span className="text-slate-600 uppercase">{f.type}</span>
+                  <span className="text-noir-600 uppercase">{f.type}</span>
                 </span>
-                <span className="text-slate-500 flex-shrink-0">{formatBytes(f.size)}</span>
+                <span className="text-noir-500 flex-shrink-0">{formatBytes(f.size)}</span>
               </div>
             ))}
           </div>
@@ -210,12 +210,12 @@ function PackDetail({ packId, onBack }: { packId: string; onBack: () => void }) 
       {/* Changelog */}
       {pack.changelog?.length > 0 && (
         <section>
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('patchHubPage.changelogLabel')}</h2>
+          <h2 className="text-xs font-semibold text-noir-400 uppercase tracking-wider mb-2">{t('patchHubPage.changelogLabel')}</h2>
           <div className="space-y-3">
             {pack.changelog.map((c) => (
               <div key={c.version} className="text-xs">
-                <div className="text-slate-300 font-medium">v{c.version} <span className="text-slate-600 font-normal">· {new Date(c.date).toLocaleDateString()}</span></div>
-                <ul className="mt-1 ml-4 list-disc text-slate-400 space-y-0.5">
+                <div className="text-noir-300 font-medium">v{c.version} <span className="text-noir-600 font-normal">· {new Date(c.date).toLocaleDateString()}</span></div>
+                <ul className="mt-1 ml-4 list-disc text-noir-400 space-y-0.5">
                   {c.changes.map((ch, i) => <li key={i}>{ch}</li>)}
                 </ul>
               </div>
@@ -362,9 +362,9 @@ function PublishDialog({ open, onOpenChange, onPublished }: {
           </div>
           <div>
             <Label className="text-xs">{t('patchHubPage.fieldFiles')}</Label>
-            <label className="mt-1 flex items-center gap-2 px-3 py-2 rounded-md border border-dashed border-slate-700 bg-slate-900/40 cursor-pointer hover:border-amber-500/40 transition-colors">
+            <label className="mt-1 flex items-center gap-2 px-3 py-2 rounded-md border border-dashed border-noir-700 bg-noir-900/40 cursor-pointer hover:border-amber-500/40 transition-colors">
               <Upload className="h-4 w-4 text-amber-400" />
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-noir-400">
                 {files.length > 0 ? `${files.length} ${t('patchHubPage.filesSelected')}` : t('patchHubPage.filesPlaceholder')}
               </span>
               <input
@@ -450,8 +450,8 @@ export default function PatchHubPage() {
             <Package className="h-5 w-5 text-amber-400" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-slate-200">{t('patchHubPage.title')}</h1>
-            <p className="text-slate-500 text-xs mt-0.5">{t('patchHubPage.subtitle')}</p>
+            <h1 className="text-xl font-semibold text-noir-200">{t('patchHubPage.title')}</h1>
+            <p className="text-noir-500 text-xs mt-0.5">{t('patchHubPage.subtitle')}</p>
           </div>
         </div>
         <Button
@@ -477,7 +477,7 @@ export default function PatchHubPage() {
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
               scope === s
                 ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
-                : 'bg-slate-900/40 border-slate-700 text-slate-400 hover:border-slate-600'
+                : 'bg-noir-900/40 border-noir-700 text-noir-400 hover:border-noir-600'
             }`}
           >
             {s === 'explore' ? t('patchHubPage.scopeExplore') : t('patchHubPage.scopeMine')}
@@ -488,7 +488,7 @@ export default function PatchHubPage() {
       {/* Toolbar: search + sort */}
       <div className="flex items-center gap-2 mb-5">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-noir-500" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -499,7 +499,7 @@ export default function PatchHubPage() {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-          className="h-9 rounded-md bg-slate-900 border border-slate-700 text-xs text-slate-300 px-2"
+          className="h-9 rounded-md bg-noir-900 border border-noir-700 text-xs text-noir-300 px-2"
         >
           <option value="downloads">{t('patchHubPage.sortDownloads')}</option>
           <option value="rating">{t('patchHubPage.sortRating')}</option>
@@ -514,10 +514,10 @@ export default function PatchHubPage() {
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
       ) : visiblePacks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 text-slate-500 gap-2">
+        <div className="flex flex-col items-center justify-center h-64 text-noir-500 gap-2">
           <Package className="h-8 w-8 opacity-30" />
           <p className="text-sm">{scope === 'mine' ? t('patchHubPage.emptyMineTitle') : t('patchHubPage.emptyTitle')}</p>
-          <p className="text-xs text-slate-600">{scope === 'mine' ? t('patchHubPage.emptyMineHint') : t('patchHubPage.emptyHint')}</p>
+          <p className="text-xs text-noir-600">{scope === 'mine' ? t('patchHubPage.emptyMineHint') : t('patchHubPage.emptyHint')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

@@ -51,6 +51,19 @@ const STEPS = [
   { num: 4, label: 'Esporta' },
 ] as const;
 
+/**
+ * Serializer che ricostruiscono un file di testo CRI nel suo formato originale
+ * (header, tabelle di puntatori, terminatori, codici di controllo, encoding).
+ * Il «CPK patchato» si costruisce solo se OGNI file estratto ne ha uno.
+ *
+ * Oggi non ce n'è nessuno. Fino a ottobre 2026 il CPK patchato riscriveva ogni
+ * file come testo UTF-8 unito da '\n': MSG/BMD/FTD perdevano header e puntatori,
+ * JSON/XML la struttura, il testo generico righe corte ed encoding Shift-JIS, e
+ * il gioco si rompeva. Finché un formato non ha qui il suo serializer restano
+ * l'export CSV/PO.
+ */
+const CPK_SERIALIZERS: Partial<Record<string, (file: CriTextFile, entries: CriStringEntry[]) => number[]>> = {};
+
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -89,6 +102,8 @@ export default function CriPatcherPage() {
   // Extracted text files reference for patching
   const { t } = useTranslation();
   const extractedFilesRef = useRef<CriTextFile[]>([]);
+  // entry.index → internal_path del file da cui viene (match esatto, non per prefisso)
+  const entryFileRef = useRef<Map<number, string>>(new Map());
   const entriesRef = useRef<CriStringEntry[]>([]);
   entriesRef.current = entries;
 
@@ -133,13 +148,15 @@ export default function CriPatcherPage() {
     }
   };
 
-  const handleAnalyze = async () => {
-    if (!gamePath) return;
+  const handleAnalyze = () => analyzeGame(gamePath);
+
+  const analyzeGame = async (path: string) => {
+    if (!path) return;
     setAnalyzing(true);
     setError('');
 
     try {
-      const info = await detectCriGame(gamePath);
+      const info = await detectCriGame(path);
       setGameInfo(info);
 
       // Auto-detect source language from game profile
@@ -159,6 +176,19 @@ export default function CriPatcherPage() {
       setAnalyzing(false);
     }
   };
+
+  // Ponte da String it! nel game-detail: ?gamePath=… analizza subito la cartella,
+  // senza ripassare dal folder picker (route con query params, convenzione del progetto).
+  useEffect(() => {
+    try {
+      const gp = new URLSearchParams(window.location.search).get('gamePath');
+      if (gp) {
+        setGamePath(gp);
+        analyzeGame(gp);
+      }
+    } catch { /* niente query params */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // -----------------------------------------------------------------------
   // Step 2: CPK contents browsing
@@ -200,11 +230,13 @@ export default function CriPatcherPage() {
 
       // Parse all text files into entries
       const allEntries: CriStringEntry[] = [];
+      const entryFile = new Map<number, string>();
       let globalIdx = 0;
       for (const tf of textFiles) {
         try {
           const parsed = await parseCriTextFile(tf.data, tf.format_hint);
           for (const entry of parsed) {
+            entryFile.set(globalIdx, tf.internal_path);
             allEntries.push({
               ...entry,
               index: globalIdx++,
@@ -217,6 +249,7 @@ export default function CriPatcherPage() {
       }
 
       if (allEntries.length > 0) {
+        entryFileRef.current = entryFile;
         setEntries(allEntries);
         setStep(3);
       } else {
@@ -334,6 +367,13 @@ export default function CriPatcherPage() {
     return filtered;
   }, [entries, activeTab, speakerFilter, searchFilter]);
 
+  // Formati estratti senza serializer: con anche uno solo il CPK patchato non si costruisce
+  const cpkBlockedFormats = Array.from(new Set(
+    extractedFilesRef.current
+      .filter((tf) => !CPK_SERIALIZERS[tf.format_hint])
+      .map((tf) => tf.format_hint.toUpperCase()),
+  ));
+
   // -----------------------------------------------------------------------
   // Step 4: Export & patch
   // -----------------------------------------------------------------------
@@ -348,17 +388,17 @@ export default function CriPatcherPage() {
       // Group entries back by source file and rebuild
       const patches: CriFilePatch[] = [];
       for (const tf of extractedFilesRef.current) {
-        // For simplicity, use the translated text to patch
-        // In production, would need to rebuild format-specific binary
-        const relevantEntries = entries.filter((e) => e.context.startsWith(tf.internal_path));
+        const serialize = CPK_SERIALIZERS[tf.format_hint];
+        if (!serialize) {
+          // Nessun file viene riscritto se non si sa ricostruirlo: si ferma tutto.
+          setError(t('criPatcher.cpkBuildUnavailableReason').replace('{formats}', tf.format_hint.toUpperCase()));
+          return;
+        }
+        const relevantEntries = entries.filter((e) => entryFileRef.current.get(e.index) === tf.internal_path);
         const hasTranslations = relevantEntries.some((e) => e.translated);
         if (!hasTranslations) continue;
 
-        // Rebuild as newline-separated text
-        const textContent = relevantEntries.map((e) => e.translated || e.value).join('\n');
-        const encoder = new TextEncoder();
-        const bytes = Array.from(encoder.encode(textContent));
-        patches.push({ internal_path: tf.internal_path, data: bytes });
+        patches.push({ internal_path: tf.internal_path, data: serialize(tf, relevantEntries) });
       }
 
       if (patches.length === 0) {
@@ -450,7 +490,7 @@ export default function CriPatcherPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-4 overflow-y-auto">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-700 via-violet-600 to-fuchsia-700 p-4 shrink-0">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-rouge-700 via-rouge-600 to-rouge-700 p-4 shrink-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
 
@@ -499,11 +539,11 @@ export default function CriPatcherPage() {
         {STEPS.map((s, idx) => (
           <div key={s.num} className="flex items-center">
             <button
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all focus:outline-none focus:ring-2 focus:ring-violet-400/50 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all focus:outline-none focus:ring-2 focus:ring-rouge-400/50 ${
                 step >= s.num
-                  ? 'bg-violet-600 text-white'
-                  : 'bg-slate-800/50 text-slate-500 border border-slate-700/50'
-              } ${s.num < step ? 'cursor-pointer hover:bg-violet-500' : s.num > step ? 'cursor-default' : ''}`}
+                  ? 'bg-rouge-600 text-white'
+                  : 'bg-noir-800/50 text-noir-500 border border-noir-700/50'
+              } ${s.num < step ? 'cursor-pointer hover:bg-rouge-500' : s.num > step ? 'cursor-default' : ''}`}
               onClick={() => { if (s.num < step) setStep(s.num); }}
               tabIndex={s.num < step ? 0 : -1}
               aria-label={`Passo ${s.num}: ${s.label}`}
@@ -511,7 +551,7 @@ export default function CriPatcherPage() {
               <span className="font-bold">{s.num}</span>
               <span>{s.label}</span>
             </button>
-            {idx < STEPS.length - 1 && <ArrowRight className="h-3 w-3 mx-1 text-slate-600" />}
+            {idx < STEPS.length - 1 && <ArrowRight className="h-3 w-3 mx-1 text-noir-600" />}
           </div>
         ))}
       </div>
@@ -543,12 +583,12 @@ export default function CriPatcherPage() {
               <Card key={card.title} variant="muted">
                 <CardHeader padding="compact">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <card.icon className="h-4 w-4 text-violet-400" />
+                    <card.icon className="h-4 w-4 text-rouge-400" />
                     {card.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent padding="compact">
-                  <p className="text-xs text-slate-400 leading-relaxed">{card.desc}</p>
+                  <p className="text-xs text-noir-400 leading-relaxed">{card.desc}</p>
                 </CardContent>
               </Card>
             ))}
@@ -558,7 +598,7 @@ export default function CriPatcherPage() {
           <Card variant="muted">
             <CardHeader padding="compact">
               <CardTitle className="text-sm flex items-center gap-2">
-                <FolderOpen className="h-4 w-4 text-violet-400" />
+                <FolderOpen className="h-4 w-4 text-rouge-400" />
                 {t('criPatcher.selectGameFolder')}</CardTitle>
               <CardDescription className="text-xs">
                 {t('criPatcher.selectFolderDesc')}</CardDescription>
@@ -572,7 +612,7 @@ export default function CriPatcherPage() {
                   onClick={handleAnalyze}
                   disabled={!gamePath || analyzing}
                   size="sm"
-                  className="h-9 bg-violet-600 hover:bg-violet-500 text-xs"
+                  className="h-9 bg-rouge-600 hover:bg-rouge-500 text-xs"
                   aria-label={t('common.analizzaCartella')}
                 >
                   {analyzing ? (
@@ -585,7 +625,7 @@ export default function CriPatcherPage() {
 
               {gamePath && (
                 <p
-                  className="text-xs text-slate-400 font-mono bg-slate-950/50 p-2 rounded truncate border border-slate-800/50"
+                  className="text-xs text-noir-400 font-mono bg-noir-950/50 p-2 rounded truncate border border-noir-800/50"
                   title={gamePath}
                 >
                   {gamePath}
@@ -599,17 +639,17 @@ export default function CriPatcherPage() {
             <Card variant="muted">
               <CardHeader padding="compact">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <HardDrive className="h-4 w-4 text-violet-400" />
+                  <HardDrive className="h-4 w-4 text-rouge-400" />
                   {t('criPatcher.gameDetected')}</CardTitle>
               </CardHeader>
               <CardContent padding="compact">
                 <div className="flex items-center gap-3 mb-2">
-                  <Badge className="text-xs bg-violet-500/20 text-violet-400 border-violet-500/30">
+                  <Badge className="text-xs bg-rouge-500/20 text-rouge-400 border-rouge-500/30">
                     {gameInfo.game_type}
                   </Badge>
-                  <span className="text-sm font-medium text-slate-200">{gameInfo.game_name}</span>
+                  <span className="text-sm font-medium text-noir-200">{gameInfo.game_name}</span>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-noir-500">
                   {gameInfo.cpk_files.length} {t('criPatcher.cpkArchivesFound')}</p>
               </CardContent>
             </Card>
@@ -627,10 +667,10 @@ export default function CriPatcherPage() {
             <CardHeader padding="compact">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Archive className="h-4 w-4 text-violet-400" />
+                  <Archive className="h-4 w-4 text-rouge-400" />
                   {t('criPatcher.cpkArchives')} ({gameInfo.cpk_files.length})
                 </CardTitle>
-                <Badge className="text-xs bg-violet-500/20 text-violet-400 border-violet-500/30">
+                <Badge className="text-xs bg-rouge-500/20 text-rouge-400 border-rouge-500/30">
                   {gameInfo.game_name}
                 </Badge>
               </div>
@@ -641,17 +681,17 @@ export default function CriPatcherPage() {
                   <button
                     key={idx}
                     onClick={() => handleSelectCpk(cpk)}
-                    className={`group w-full text-left p-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-violet-400/50 ${
+                    className={`group w-full text-left p-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-rouge-400/50 ${
                       selectedCpk?.path === cpk.path
-                        ? 'bg-violet-500/10 border-violet-500/30'
-                        : 'hover:bg-slate-800/50 border-slate-800/30 hover:border-slate-700/50'
+                        ? 'bg-rouge-500/10 border-rouge-500/30'
+                        : 'hover:bg-noir-800/50 border-noir-800/30 hover:border-noir-700/50'
                     }`}
                     aria-label={`Seleziona archivio ${cpk.path.split(/[\\/]/).pop()}`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 min-w-0">
-                        <Package className="h-4 w-4 text-violet-400 shrink-0" />
-                        <span className="text-sm font-medium text-slate-200 truncate">
+                        <Package className="h-4 w-4 text-rouge-400 shrink-0" />
+                        <span className="text-sm font-medium text-noir-200 truncate">
                           {cpk.path.split(/[\\/]/).pop()}
                         </span>
                       </div>
@@ -663,7 +703,7 @@ export default function CriPatcherPage() {
                           <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                             {cpk.file_count} {t('criPatcher.files')}</Badge>
                         )}
-                        <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-slate-400" />
+                        <ChevronRight className="h-4 w-4 text-noir-600 group-hover:text-noir-400" />
                       </div>
                     </div>
                   </button>
@@ -678,7 +718,7 @@ export default function CriPatcherPage() {
               <CardHeader padding="compact">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-violet-400" />
+                    <FileText className="h-4 w-4 text-rouge-400" />
                     {t('criPatcher.cpkContents')}{cpkContents.length > 0 && (
                       <Badge variant="outline" className="text-xs ml-1">
                         {cpkContents.length} {t('criPatcher.files')}</Badge>
@@ -693,7 +733,7 @@ export default function CriPatcherPage() {
                       onClick={handleExtractAndParse}
                       disabled={extracting || selectedTextFiles.size === 0}
                       size="xs"
-                      className="bg-violet-600 hover:bg-violet-500 text-xs"
+                      className="bg-rouge-600 hover:bg-rouge-500 text-xs"
                       aria-label={t('common.estraiFileSelezionati')}
                     >
                       {extracting ? (
@@ -708,8 +748,8 @@ export default function CriPatcherPage() {
               <CardContent padding="compact">
                 {loadingContents ? (
                   <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-5 w-5 animate-spin text-violet-400" />
-                    <span className="ml-2 text-sm text-slate-400">{t('criPatcher.loadingContents')}</span>
+                    <Loader2 className="h-5 w-5 animate-spin text-rouge-400" />
+                    <span className="ml-2 text-sm text-noir-400">{t('criPatcher.loadingContents')}</span>
                   </div>
                 ) : (
                   <div className="space-y-1 max-h-[300px] overflow-y-auto pr-1">
@@ -723,19 +763,19 @@ export default function CriPatcherPage() {
                           onClick={() => isText && toggleFileSelection(entry.path)}
                           className={`w-full text-left px-3 py-1.5 rounded text-xs transition-all flex items-center gap-2 ${
                             isSelected
-                              ? 'bg-violet-500/15 border border-violet-500/30'
+                              ? 'bg-rouge-500/15 border border-rouge-500/30'
                               : isText
-                              ? 'hover:bg-slate-800/50 border border-transparent cursor-pointer'
-                              : 'text-slate-600 border border-transparent cursor-default'
+                              ? 'hover:bg-noir-800/50 border border-transparent cursor-pointer'
+                              : 'text-noir-600 border border-transparent cursor-default'
                           }`}
                           disabled={!isText}
                           aria-label={`${isSelected ? 'Deseleziona' : 'Seleziona'} ${entry.path}`}
                         >
-                          {isSelected && <CheckCircle2 className="h-3 w-3 text-violet-400 shrink-0" />}
-                          <span className={`font-mono truncate ${isText ? 'text-slate-300' : 'text-slate-600'}`}>
+                          {isSelected && <CheckCircle2 className="h-3 w-3 text-rouge-400 shrink-0" />}
+                          <span className={`font-mono truncate ${isText ? 'text-noir-300' : 'text-noir-600'}`}>
                             {entry.path}
                           </span>
-                          <span className="ml-auto shrink-0 text-slate-500">
+                          <span className="ml-auto shrink-0 text-noir-500">
                             {formatFileSize(entry.size)}
                           </span>
                           {entry.compressed && (
@@ -748,7 +788,7 @@ export default function CriPatcherPage() {
                     })}
 
                     {cpkContents.length === 0 && !loadingContents && (
-                      <p className="text-sm text-slate-500 text-center py-8">
+                      <p className="text-sm text-noir-500 text-center py-8">
                         {t('criPatcher.selectArchivePrompt')}</p>
                     )}
                   </div>
@@ -769,15 +809,15 @@ export default function CriPatcherPage() {
             <CardContent padding="compact">
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-violet-400" />
-                  <span className="text-sm font-semibold text-slate-200">
+                  <FileText className="h-4 w-4 text-rouge-400" />
+                  <span className="text-sm font-semibold text-noir-200">
                     {gameInfo?.game_name ?? 'CRI'}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-1.5">
                   <Select value={sourceLang} onValueChange={setSourceLang}>
-                    <SelectTrigger className="h-7 text-xs bg-slate-950/50 border-slate-700/50 w-20">
+                    <SelectTrigger className="h-7 text-xs bg-noir-950/50 border-noir-700/50 w-20">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -786,9 +826,9 @@ export default function CriPatcherPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <ArrowRight className="h-3 w-3 text-slate-500" />
+                  <ArrowRight className="h-3 w-3 text-noir-500" />
                   <Select value={targetLang} onValueChange={setTargetLang}>
-                    <SelectTrigger className="h-7 text-xs bg-slate-950/50 border-slate-700/50 w-20">
+                    <SelectTrigger className="h-7 text-xs bg-noir-950/50 border-noir-700/50 w-20">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -801,7 +841,7 @@ export default function CriPatcherPage() {
 
                 {speakers.length > 0 && (
                   <Select value={speakerFilter} onValueChange={setSpeakerFilter}>
-                    <SelectTrigger className="h-7 text-xs bg-slate-950/50 border-slate-700/50 w-36">
+                    <SelectTrigger className="h-7 text-xs bg-noir-950/50 border-noir-700/50 w-36">
                       <Filter className="h-3 w-3 mr-1" />
                       <SelectValue placeholder={t('criPatcher.speakerPh')} />
                     </SelectTrigger>
@@ -815,13 +855,13 @@ export default function CriPatcherPage() {
                 )}
 
                 <div className="relative ml-auto flex-1 max-w-xs">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-noir-500" />
                   <Input
                     value={searchFilter}
                     onChange={(e) => setSearchFilter(e.target.value)}
                     aria-label={t('common.cercaStringhe')}
                     placeholder={t('criPatcher.searchPh')}
-                    className="h-8 text-xs pl-8 bg-slate-950/50 border-slate-700/50"
+                    className="h-8 text-xs pl-8 bg-noir-950/50 border-noir-700/50"
                   />
                 </div>
 
@@ -843,7 +883,7 @@ export default function CriPatcherPage() {
               {translating && (
                 <div className="mt-2 space-y-1">
                   <Progress value={progress} className="h-1.5" />
-                  <p className="text-xs text-center text-slate-400">{progress}%</p>
+                  <p className="text-xs text-center text-noir-400">{progress}%</p>
                 </div>
               )}
             </CardContent>
@@ -851,7 +891,7 @@ export default function CriPatcherPage() {
 
           {/* Tabs + Virtualized list */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-            <TabsList className="bg-slate-900/50 border border-slate-800/50 shrink-0">
+            <TabsList className="bg-noir-900/50 border border-noir-800/50 shrink-0">
               <TabsTrigger value="all" className="text-xs">
                 {t('criPatcher.all')} ({tabCounts.all})
               </TabsTrigger>
@@ -865,7 +905,7 @@ export default function CriPatcherPage() {
             </TabsList>
 
             <TabsContent value={activeTab} className="flex-1 min-h-0 mt-2">
-              <div className="h-[calc(100vh-460px)] rounded-lg border border-slate-800/50 bg-slate-950/30 overflow-hidden">
+              <div className="h-[calc(100vh-460px)] rounded-lg border border-noir-800/50 bg-noir-950/30 overflow-hidden">
                 {filteredEntries.length > 0 ? (
                   <Virtuoso
                     data={filteredEntries}
@@ -879,7 +919,7 @@ export default function CriPatcherPage() {
                     )}
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-sm text-slate-500">
+                  <div className="flex items-center justify-center h-full text-sm text-noir-500">
                     {t('criPatcher.noResults')}</div>
                 )}
               </div>
@@ -890,7 +930,7 @@ export default function CriPatcherPage() {
           <Card variant="muted" className="shrink-0">
             <CardContent padding="compact">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-xs text-slate-400">
+                <div className="flex items-center gap-4 text-xs text-noir-400">
                   <span>
                     <span className="text-emerald-400 font-semibold">{stats.translated}</span>
                     /{entries.length} {t('criPatcher.translatedLower')}</span>
@@ -920,7 +960,7 @@ export default function CriPatcherPage() {
                     {t('criPatcher.importPo')}</Button>
                   <Button
                     size="sm"
-                    className="h-8 text-xs bg-violet-600 hover:bg-violet-500"
+                    className="h-8 text-xs bg-rouge-600 hover:bg-rouge-500"
                     onClick={() => setStep(4)}
                     disabled={stats.translated === 0}
                     aria-label={t('criPatcher.goToExportAria')}
@@ -950,15 +990,15 @@ export default function CriPatcherPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
                   <p className="text-2xl font-bold text-emerald-400">{stats.translated}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t('criPatcher.translatedCap')}</p>
+                  <p className="text-xs text-noir-400 mt-0.5">{t('criPatcher.translatedCap')}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-violet-500/10 border border-violet-500/20 text-center">
-                  <p className="text-2xl font-bold text-violet-400">{entries.length}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t('common.totale')}</p>
+                <div className="p-3 rounded-lg bg-rouge-500/10 border border-rouge-500/20 text-center">
+                  <p className="text-2xl font-bold text-rouge-400">{entries.length}</p>
+                  <p className="text-xs text-noir-400 mt-0.5">{t('common.totale')}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-center">
                   <p className="text-2xl font-bold text-yellow-400">{stats.errors}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t('criPatcher.errorsCap')}</p>
+                  <p className="text-xs text-noir-400 mt-0.5">{t('criPatcher.errorsCap')}</p>
                 </div>
               </div>
             </CardContent>
@@ -968,7 +1008,7 @@ export default function CriPatcherPage() {
           <Card variant="muted">
             <CardHeader padding="compact">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Download className="h-4 w-4 text-violet-400" />
+                <Download className="h-4 w-4 text-rouge-400" />
                 {t('criPatcher.exportOptions')}</CardTitle>
               {gameInfo && (
                 <CardDescription className="text-xs">
@@ -980,13 +1020,15 @@ export default function CriPatcherPage() {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                 <Button
                   onClick={handleBuildPatchedCpk}
-                  disabled={exporting || !selectedCpk}
-                  className="h-auto py-3 flex flex-col items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-xs"
+                  disabled={exporting || !selectedCpk || cpkBlockedFormats.length > 0}
+                  className="h-auto py-3 flex flex-col items-center gap-1.5 bg-rouge-600 hover:bg-rouge-500 text-xs"
                   aria-label={t('common.creaCpkPatchato')}
                 >
                   {exporting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Package className="h-5 w-5" />}
                   <span className="font-medium">{t('common.cpkPatchato')}</span>
-                  <span className="text-2xs text-violet-200/70">{t('common.prontoPerIlGioco')}</span>
+                  <span className="text-2xs text-rouge-200/70">
+                    {cpkBlockedFormats.length > 0 ? t('criPatcher.cpkBuildUnavailable') : t('common.prontoPerIlGioco')}
+                  </span>
                 </Button>
 
                 <Button
@@ -997,7 +1039,7 @@ export default function CriPatcherPage() {
                 >
                   <FileText className="h-5 w-5" />
                   <span className="font-medium">{t('common.esportaCsv')}</span>
-                  <span className="text-2xs text-slate-400">{t('criPatcher.spreadsheet')}</span>
+                  <span className="text-2xs text-noir-400">{t('criPatcher.spreadsheet')}</span>
                 </Button>
 
                 <Button
@@ -1008,7 +1050,7 @@ export default function CriPatcherPage() {
                 >
                   <Languages className="h-5 w-5" />
                   <span className="font-medium">{t('common.esportaPo')}</span>
-                  <span className="text-2xs text-slate-400">Gettext</span>
+                  <span className="text-2xs text-noir-400">Gettext</span>
                 </Button>
 
                 <Button
@@ -1019,7 +1061,7 @@ export default function CriPatcherPage() {
                 >
                   <RefreshCw className="h-5 w-5" />
                   <span className="font-medium">{t('common.importaCsv')}</span>
-                  <span className="text-2xs text-slate-400">{t('common.daFileEsterno')}</span>
+                  <span className="text-2xs text-noir-400">{t('common.daFileEsterno')}</span>
                 </Button>
 
                 <Button
@@ -1030,9 +1072,15 @@ export default function CriPatcherPage() {
                 >
                   {copiedFeedback ? <CheckCircle2 className="h-5 w-5 text-emerald-400" /> : <Copy className="h-5 w-5" />}
                   <span className="font-medium">{copiedFeedback ? 'Copiato!' : 'Copia Tutto'}</span>
-                  <span className="text-2xs text-slate-400">{t('criPatcher.toClipboard')}</span>
+                  <span className="text-2xs text-noir-400">{t('criPatcher.toClipboard')}</span>
                 </Button>
               </div>
+              {cpkBlockedFormats.length > 0 && (
+                <p className="mt-3 text-xs text-yellow-400 flex items-start gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  <span>{t('criPatcher.cpkBuildUnavailableReason').replace('{formats}', cpkBlockedFormats.join(', '))}</span>
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -1044,7 +1092,7 @@ export default function CriPatcherPage() {
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-emerald-400">{t('common.esportazioneCompletata')}</p>
-                    <p className="text-xs text-slate-400 font-mono truncate mt-0.5" title={exportResult}>
+                    <p className="text-xs text-noir-400 font-mono truncate mt-0.5" title={exportResult}>
                       {exportResult}
                     </p>
                   </div>
@@ -1080,14 +1128,14 @@ const CriEntryRow = React.memo(function CriEntryRow({
   const isLong = entry.value.length > 80;
 
   return (
-    <div className="flex flex-col gap-1.5 px-4 py-3 border-b border-slate-800/40 hover:bg-slate-800/20 transition-colors">
+    <div className="flex flex-col gap-1.5 px-4 py-3 border-b border-noir-800/40 hover:bg-noir-800/20 transition-colors">
       {/* Key + speaker + status */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-500 font-mono truncate max-w-[200px]" title={entry.key}>
+        <span className="text-xs text-noir-500 font-mono truncate max-w-[200px]" title={entry.key}>
           {entry.key}
         </span>
         {entry.speaker && (
-          <Badge className="text-2xs px-1.5 py-0 bg-violet-500/20 text-violet-400 border-violet-500/30">
+          <Badge className="text-2xs px-1.5 py-0 bg-rouge-500/20 text-rouge-400 border-rouge-500/30">
             <User className="h-2.5 w-2.5 mr-0.5" />
             {entry.speaker}
           </Badge>
@@ -1110,7 +1158,7 @@ const CriEntryRow = React.memo(function CriEntryRow({
       {/* Content */}
       <div className={isLong ? 'flex flex-col gap-1.5' : 'flex items-start gap-3'}>
         <div className={`${isLong ? 'w-full' : 'flex-1'} min-w-0`}>
-          <p className="text-xs text-slate-300 leading-relaxed break-words">
+          <p className="text-xs text-noir-300 leading-relaxed break-words">
             {entry.value}
           </p>
         </div>
@@ -1120,7 +1168,7 @@ const CriEntryRow = React.memo(function CriEntryRow({
             value={entry.translated ?? ''}
             onChange={(e) => onChange(entry.index, e.target.value)}
             placeholder={t('criPatcher.translationPh')}
-            className="h-8 text-xs bg-slate-950/50 border-slate-700/50 w-full"
+            className="h-8 text-xs bg-noir-950/50 border-noir-700/50 w-full"
             aria-label={`Traduzione per ${entry.key}`}
           />
         </div>
@@ -1139,7 +1187,7 @@ const CriEntryRow = React.memo(function CriEntryRow({
 
       {/* Context (micro text) */}
       {entry.context && (
-        <p className="text-micro text-slate-600 truncate" title={entry.context}>
+        <p className="text-micro text-noir-600 truncate" title={entry.context}>
           {entry.context}
         </p>
       )}

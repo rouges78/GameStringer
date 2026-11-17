@@ -25,7 +25,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/lib/i18n';
-import { translateSingleWithFallback, getApiKeys } from '@/lib/ai/ai-translate-direct';
+import { translateWithFallback, getApiKeys } from '@/lib/ai/ai-translate-direct';
 import { clientLogger } from '@/lib/client-logger';
 
 interface TranscriptionSegment {
@@ -239,8 +239,11 @@ export function VoiceTranslator() {
     }));
   };
 
-  const transcribeAudio = async () => {
-    if (!state.audioBlob) return;
+  // Ogni passo ritorna il suo risultato (null = fallito, errore già in state.error)
+  // così runFullPipeline può passarlo al successivo senza leggere uno `state`
+  // ancora vecchio nella closure, e fermarsi al primo errore.
+  const transcribeAudio = async (): Promise<string | null> => {
+    if (!state.audioBlob) return null;
 
     setState(prev => ({ ...prev, isTranscribing: true, step: 'transcribing', error: null }));
 
@@ -274,10 +277,11 @@ export function VoiceTranslator() {
       }
 
       const data = await response.json();
-      
+      const text: string = data.text || '';
+
       setState(prev => ({
         ...prev,
-        transcription: data.text || '',
+        transcription: text,
         transcriptionSegments: (data.segments || []).map((s: Record<string, unknown>) => ({
           start: s.start as number, end: s.end as number, text: s.text as string
         })),
@@ -285,6 +289,7 @@ export function VoiceTranslator() {
         isTranscribing: false,
         step: 'idle'
       }));
+      return text;
 
     } catch (error: unknown) {
       setState(prev => ({
@@ -293,28 +298,36 @@ export function VoiceTranslator() {
         step: 'idle',
         error: error instanceof Error ? error.message : 'Transcription error. Check your OpenAI API key.'
       }));
+      return null;
     }
   };
 
-  const translateText = async () => {
-    if (!state.transcription) return;
+  const translateText = async (text: string = state.transcription): Promise<string | null> => {
+    if (!text) return null;
 
     setState(prev => ({ ...prev, isTranslating: true, step: 'translating', error: null }));
 
     try {
-      const { translated } = await translateSingleWithFallback(
-        state.transcription,
-        state.targetLanguage,
-        state.sourceLanguage === 'auto' ? undefined : state.sourceLanguage,
-        'voice translation'
-      );
-      
+      // translateSingleWithFallback ripiega sul testo originale quando nessun
+      // provider risponde: qui serve sapere se la traduzione c'è davvero.
+      const result = await translateWithFallback({
+        texts: [text],
+        targetLanguage: state.targetLanguage,
+        sourceLanguage: state.sourceLanguage === 'auto' ? undefined : state.sourceLanguage,
+        context: 'voice translation',
+      });
+      const translated = result.translations[0];
+      if (!result.success || !translated) {
+        throw new Error(t('voiceTranslator.translationError'));
+      }
+
       setState(prev => ({
         ...prev,
         translation: translated,
         isTranslating: false,
         step: 'idle'
       }));
+      return translated;
 
     } catch (error: unknown) {
       setState(prev => ({
@@ -323,11 +336,12 @@ export function VoiceTranslator() {
         step: 'idle',
         error: error instanceof Error ? error.message : 'Translation error.'
       }));
+      return null;
     }
   };
 
-  const synthesizeSpeech = async () => {
-    if (!state.translation) return;
+  const synthesizeSpeech = async (text: string = state.translation): Promise<boolean> => {
+    if (!text) return false;
 
     setState(prev => ({ ...prev, isSynthesizing: true, step: 'synthesizing', error: null }));
 
@@ -340,7 +354,7 @@ export function VoiceTranslator() {
 
       let requestBody: Record<string, unknown> = {
         model: 'tts-1',
-        input: state.translation,
+        input: text,
         voice: state.selectedVoice,
         speed: effectiveSpeed,
         response_format: 'mp3',
@@ -368,7 +382,7 @@ export function VoiceTranslator() {
         
         requestBody = {
           model: 'xtts',
-          input: state.translation,
+          input: text,
           voice: 'clone',
           language: state.targetLanguage,
           speed: state.speechSpeed,
@@ -426,6 +440,10 @@ export function VoiceTranslator() {
           if (response2.ok) {
             audioBlob = await response2.blob();
             synthDuration = await measureDuration(audioBlob);
+          } else {
+            // Si tiene il primo audio: il badge non deve mostrare una velocità mai applicata.
+            effectiveSpeed = state.speechSpeed;
+            clientLogger.warn(`[DurationMatch] Re-synthesis failed: ${response2.status}`);
           }
         }
       }
@@ -440,6 +458,7 @@ export function VoiceTranslator() {
         isSynthesizing: false,
         step: 'done'
       }));
+      return true;
 
     } catch (error: unknown) {
       setState(prev => ({
@@ -448,12 +467,21 @@ export function VoiceTranslator() {
         step: 'idle',
         error: error instanceof Error ? error.message : 'Speech synthesis error.'
       }));
+      return false;
     }
   };
 
+  // Trascrivi → Traduci → Genera audio, fermandosi al primo passo che fallisce.
   const runFullPipeline = async () => {
-    await transcribeAudio();
-    // The subsequent steps will be triggered by useEffect or manually
+    const transcription = await transcribeAudio();
+    if (transcription === null) return;
+    if (!transcription.trim()) {
+      setState(prev => ({ ...prev, error: t('voiceTranslator.noSpeechDetected') }));
+      return;
+    }
+    const translation = await translateText(transcription);
+    if (translation === null) return;
+    await synthesizeSpeech(translation);
   };
 
   const formatDuration = (seconds: number) => {
@@ -476,7 +504,7 @@ export function VoiceTranslator() {
   return (
     <div className="space-y-3">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -519,7 +547,7 @@ export function VoiceTranslator() {
           <Card>
             <CardHeader className="py-3 border-b border-border/50">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Mic className="h-4 w-4 text-blue-400" />
+                <Mic className="h-4 w-4 text-noir-400" />
                 {t('voiceTranslator.recordOrUpload')}
               </CardTitle>
             </CardHeader>
@@ -529,7 +557,7 @@ export function VoiceTranslator() {
                 <Button
                   size="lg"
                   variant={state.isRecording ? 'destructive' : 'default'}
-                  className={state.isRecording ? '' : 'bg-blue-500 hover:bg-blue-600'}
+                  className={state.isRecording ? '' : 'bg-rouge-500 hover:bg-rouge-600'}
                   onClick={state.isRecording ? stopRecording : startRecording}
                 >
                   {state.isRecording ? (
@@ -604,9 +632,9 @@ export function VoiceTranslator() {
 
               {/* Transcribe Button */}
               <Button
-                onClick={transcribeAudio}
+                onClick={() => void transcribeAudio()}
                 disabled={!state.audioBlob || state.isTranscribing}
-                className="w-full bg-blue-600 hover:bg-blue-500"
+                className="w-full bg-rouge-600 hover:bg-rouge-500"
               >
                 {state.isTranscribing ? (
                   <>
@@ -627,7 +655,7 @@ export function VoiceTranslator() {
           <Card>
             <CardHeader className="py-3 border-b border-border/50">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <FileAudio className="h-4 w-4 text-cyan-400" />
+                <FileAudio className="h-4 w-4 text-noir-400" />
                 {t('voiceTranslator.transcription')}
               </CardTitle>
             </CardHeader>
@@ -648,7 +676,7 @@ export function VoiceTranslator() {
           <Card>
             <CardHeader className="py-3 border-b border-border/50">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Languages className="h-4 w-4 text-blue-400" />
+                <Languages className="h-4 w-4 text-noir-400" />
                 {t('voiceTranslator.translation')}
               </CardTitle>
             </CardHeader>
@@ -671,10 +699,10 @@ export function VoiceTranslator() {
                 </Select>
 
                 <Button
-                  onClick={translateText}
+                  onClick={() => void translateText()}
                   disabled={!state.transcription || state.isTranslating}
                   size="sm"
-                  className="bg-blue-500 hover:bg-blue-600"
+                  className="bg-rouge-500 hover:bg-rouge-600"
                 >
                   {state.isTranslating ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -700,7 +728,7 @@ export function VoiceTranslator() {
           <Card>
             <CardHeader className="py-3 border-b border-border/50">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Volume2 className="h-4 w-4 text-cyan-400" />
+                <Volume2 className="h-4 w-4 text-noir-400" />
                 {t('voiceTranslator.textToSpeech')}
               </CardTitle>
             </CardHeader>
@@ -713,7 +741,7 @@ export function VoiceTranslator() {
                     variant="outline"
                     size="sm"
                     onClick={() => setState(prev => ({ ...prev, selectedVoice: voice.id }))}
-                    className={`text-xs ${state.selectedVoice === voice.id ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' : ''}`}
+                    className={`text-xs ${state.selectedVoice === voice.id ? 'bg-noir-500/20 border-noir-500/50 text-noir-400' : ''}`}
                   >
                     {voice.name}
                   </Button>
@@ -736,12 +764,12 @@ export function VoiceTranslator() {
               </div>
 
               {/* Duration Matching Toggle */}
-              <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/30 border border-slate-700/50">
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-noir-800/30 border border-noir-700/50">
                 <div className="flex items-center gap-2">
                   <Timer className="h-4 w-4 text-amber-400" />
                   <div>
-                    <Label htmlFor="duration-match" className="text-sm text-slate-300">Duration Matching</Label>
-                    <p className="text-[10px] text-slate-500">{t('common.adattaLaVelocitàPerMantenereLaDurataOriginale')}</p>
+                    <Label htmlFor="duration-match" className="text-sm text-noir-300">Duration Matching</Label>
+                    <p className="text-[10px] text-noir-500">{t('common.adattaLaVelocitàPerMantenereLaDurataOriginale')}</p>
                   </div>
                 </div>
                 <Switch
@@ -752,7 +780,7 @@ export function VoiceTranslator() {
                 />
               </div>
               {state.durationMatchEnabled && state.originalDuration > 0 && (
-                <div className="flex items-center gap-3 text-xs text-slate-400 px-1">
+                <div className="flex items-center gap-3 text-xs text-noir-400 px-1">
                   <span>Durata originale: <strong className="text-white">{state.originalDuration.toFixed(1)}s</strong></span>
                   {state.synthesizedDuration > 0 && (
                     <>
@@ -769,9 +797,9 @@ export function VoiceTranslator() {
 
               {/* Synthesize Button */}
               <Button
-                onClick={synthesizeSpeech}
+                onClick={() => void synthesizeSpeech()}
                 disabled={!state.translation || state.isSynthesizing}
-                className="w-full bg-blue-600 hover:bg-blue-500"
+                className="w-full bg-rouge-600 hover:bg-rouge-500"
               >
                 {state.isSynthesizing ? (
                   <>
@@ -822,7 +850,7 @@ export function VoiceTranslator() {
           onClick={runFullPipeline}
           disabled={state.isTranscribing || state.isTranslating || state.isSynthesizing}
           size="lg"
-          className="w-full bg-blue-600 hover:bg-blue-500"
+          className="w-full bg-rouge-600 hover:bg-rouge-500"
         >
           <Wand2 className="h-5 w-5 mr-2" />
           {t('voiceTranslator.runFullPipeline')}

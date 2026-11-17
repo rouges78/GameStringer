@@ -67,8 +67,8 @@ export const PUBLIC_ROUTES: readonly { path: string; perche: string }[] = [
 /**
  * NB: `/overlay` e `/vr-overlay` NON sono in questo elenco di proposito.
  * Nonostante il nome sono pagine normali della finestra principale, raggiungibili
- * dal menu (`main-layout.tsx:195`) e dal registro strumenti: vanno protette come
- * tutte le altre. Le finestre trasparenti vere sono solo le tre qui sopra.
+ * dal registro strumenti (Guida) anche ora che `/overlay` è fuori dal menu: vanno
+ * protette come tutte le altre. Le finestre trasparenti vere sono solo le tre qui sopra.
  */
 
 const PUBLIC_PATHS = PUBLIC_ROUTES.map((r) => r.path);
@@ -86,7 +86,7 @@ export const isPublicRoute = (path: string): boolean =>
  * (`overlay_ipc.rs:117`, creata `transparent(true)` + `always_on_top` a
  * 1920x1080 sopra la partita) e `/region-select` (`ocr_translator/mod.rs:751`,
  * `fullscreen(true)`) renderizzavano dentro `MainLayout`, cioè disegnavano la
- * sidebar dell'app (`bg-slate-950/95`) e la barra di navigazione **sopra il
+ * sidebar dell'app (`bg-noir-950/95`) e la barra di navigazione **sopra il
  * gioco**. L'elenco sta qui, accanto a quello delle rotte pubbliche, ed è
  * coperto dal test: è la stessa dimenticanza che non deve ripetersi alla
  * prossima finestra.

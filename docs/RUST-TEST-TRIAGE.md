@@ -151,3 +151,55 @@ messaggio è cambiato. Allineare la stringa attesa. Banale.
 
 Finché non bonificati, i test possono essere marcati `#[ignore = "tracking: <issue>"]`
 così la suite locale è verde e il debito è esplicito.
+
+## Il binario dei test muore su Windows in CI (15/11/2026)
+
+**Il fatto.** Dal 13/11/2026 il passo `Cargo test` di `check-windows` finisce con
+`exit code: 0xc0000005, STATUS_ACCESS_VIOLATION` pochi millisecondi dopo
+`running N tests`. Nessun test fallisce: muore il processo.
+
+**La causa: il compilatore, non il codice.** Il job usava
+`dtolnay/rust-toolchain@stable`, quindi ha preso da solo la versione nuova.
+
+| Ramo (zero modifiche Rust rispetto a `main` `49731a56`) | Data | rustc | Esito |
+|---|---|---|---|
+| `fix/sidebar-toggle-focus` | 05/11 | 1.99.1 (58cf8f9c3) | verde |
+| `fix/npm-audit` | 13/11 | 1.100.0 (0ef1bc386, uscito il 09/11) | access violation |
+| `main` `4eb567a5` | 15/11 | 1.100.0 | access violation |
+
+In locale c'è ancora la 1.99.1 e cinque corse complete di `cargo test --lib`
+sono verdi. Su Linux la 1.100.0 passa.
+
+**Come si legge la versione.** Nel log del job: il passo `Install Rust` stampa
+`stable-x86_64-pc-windows-msvc updated - rustc 1.100.0 (...) (from rustc 1.99.1)`.
+Nel binario: il percorso `/rustc/<commit>/` nei dati di sola lettura dà il commit
+del compilatore (`58cf8f9c…` nel binario locale = 1.99.1).
+
+**Rimedio applicato.** `check-windows` fissato a `dtolnay/rust-toolchain@1.99.1`.
+Linux resta su `@stable`.
+
+**Cosa NON è provato.**
+
+- Che cosa, con la 1.100.0, fa cadere il processo: un difetto del compilatore o
+  un comportamento indefinito nel nostro codice `unsafe` che prima passava per
+  caso. Non c'è ancora una riproduzione locale con la 1.100.0.
+- ~~Che il rimedio basti~~ — **dimostrato il 15/11/2026**: con la 1.99.1
+  `check-windows` è verde sia sulla PR 210 (`a9a6cbcd`) sia sulla PR 208
+  (`2b10f9dd`), stesso codice che con la 1.100.0 cadeva.
+- Se la caduta riguarda solo il binario dei test o anche l'app distribuita. Per
+  questo dal 15/11/2026 anche `build-windows` in `release.yml` è fissato alla
+  1.99.1 (Linux e macOS restano su `@stable`). Il blocco in `release.yml` non
+  è stato provato: quel workflow gira solo al rilascio. I due blocchi vanno
+  tolti insieme.
+
+**Strade da non rifare.**
+
+1. Dare la colpa all'immagine del runner. È cambiata negli stessi giorni
+   (Provisioner `20261021.618` → `20261103.629`), ma è una coincidenza: la riga
+   che conta è quella della versione di rustc.
+2. `-- --test-threads=1` per trovare «il test colpevole». Dà un nome, ma è
+   quello del test che stava girando: con un thread solo è caduto durante un
+   test che in parallelo era passato, e che riempie solo una `HashMap`.
+3. Cercare una DLL esterna: il binario dei test importa solo DLL di sistema.
+4. Analizzare l'intero binario di debug (39 MB) con Ghidra: non finisce entro
+   330 secondi. Per l'identità del compilatore basta leggere i dati del binario.

@@ -552,14 +552,17 @@ export function extractTexts(file: SubtitleFile): string[] {
 }
 
 /**
- * Applica traduzioni al file
+ * Applica traduzioni al file.
+ * Una traduzione vuota ('' = riga fallita) non diventa il sorgente spacciato
+ * per tradotto: la riga resta com'era (non tradotta, o con la modifica
+ * manuale/traduzione precedente).
  */
 export function applyTranslations(file: SubtitleFile, translations: string[]): SubtitleFile {
   return {
     ...file,
     entries: file.entries.map((entry, idx) => ({
       ...entry,
-      translatedText: translations[idx] || entry.text
+      translatedText: translations[idx] || entry.translatedText
     }))
   };
 }

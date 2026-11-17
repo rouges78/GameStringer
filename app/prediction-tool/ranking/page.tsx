@@ -127,34 +127,34 @@ export default function PredictionRankingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-noir-950 via-noir-900 to-rouge-950 text-white">
       <div className="max-w-[1400px] mx-auto px-6 py-6">
 
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => window.location.href = '/library'}
-            className="text-slate-400 hover:text-white transition-colors text-sm flex items-center gap-1"
+            className="text-noir-400 hover:text-white transition-colors text-sm flex items-center gap-1"
           >
             <ChevronLeft className="h-4 w-4" /> {t('predictionRankingPage.backToLibrary')}</button>
         </div>
 
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-600/30 rounded-2xl border border-purple-500/30">
-              <Trophy className="h-8 w-8 text-purple-400" />
+            <div className="p-3 bg-rouge-600/30 rounded-2xl border border-rouge-500/30">
+              <Trophy className="h-8 w-8 text-rouge-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-300 to-fuchsia-300 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-rouge-300 to-rouge-300 bg-clip-text text-transparent">
                 {t('predictionRankingPage.title')}</h1>
-              <p className="text-slate-400 text-sm">{t('predictionRankingPage.subtitle')}</p>
+              <p className="text-noir-400 text-sm">{t('predictionRankingPage.subtitle')}</p>
             </div>
           </div>
 
           <button
             onClick={startScan}
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 disabled:opacity-50 rounded-xl font-semibold transition-all shadow-lg shadow-purple-500/25"
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-rouge-600 to-rouge-600 hover:from-rouge-500 hover:to-rouge-500 disabled:opacity-50 rounded-xl font-semibold transition-all shadow-lg shadow-rouge-500/25"
           >
             {loading ? (
               <><Loader2 className="h-5 w-5 animate-spin" /> {t('predictionRankingPage.scanning')}</>
@@ -166,18 +166,18 @@ export default function PredictionRankingPage() {
 
         {/* Loading */}
         {loading && (
-          <div className="bg-slate-800/60 rounded-2xl border border-purple-500/20 p-8 mb-8">
+          <div className="bg-noir-800/60 rounded-2xl border border-rouge-500/20 p-8 mb-8">
             <div className="flex items-center gap-4 mb-4">
-              <Brain className="h-6 w-6 text-purple-400 animate-pulse" />
+              <Brain className="h-6 w-6 text-rouge-400 animate-pulse" />
               <span className="text-lg font-semibold">{t('predictionRankingPage.analyzing')}</span>
             </div>
-            <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
+            <div className="w-full h-3 bg-noir-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-full transition-all duration-300"
+                className="h-full bg-gradient-to-r from-rouge-500 to-rouge-500 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <p className="text-slate-400 text-sm mt-2">
+            <p className="text-noir-400 text-sm mt-2">
               {t('predictionRankingPage.scanningDetail')}</p>
           </div>
         )}
@@ -194,9 +194,9 @@ export default function PredictionRankingPage() {
         {scanned && !loading && (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
-              <div className="bg-slate-800/60 rounded-xl p-3 border border-slate-700/50 text-center">
+              <div className="bg-noir-800/60 rounded-xl p-3 border border-noir-700/50 text-center">
                 <div className="text-2xl font-bold text-white">{stats.total}</div>
-                <div className="text-2xs text-slate-400 uppercase tracking-wider">{t('common.giochi')}</div>
+                <div className="text-2xs text-noir-400 uppercase tracking-wider">{t('common.giochi')}</div>
               </div>
               <div className="bg-green-500/10 rounded-xl p-3 border border-green-500/20 text-center">
                 <div className="text-2xl font-bold text-green-400">{stats.easy}</div>
@@ -210,27 +210,27 @@ export default function PredictionRankingPage() {
                 <div className="text-2xl font-bold text-red-400">{stats.hard}</div>
                 <div className="text-2xs text-red-400/70 uppercase tracking-wider">{t('predictionRankingPage.hard')}</div>
               </div>
-              <div className="bg-blue-500/10 rounded-xl p-3 border border-blue-500/20 text-center">
-                <div className="text-2xl font-bold text-blue-400">{stats.withItalian}</div>
-                <div className="text-2xs text-blue-400/70 uppercase tracking-wider">{t('predictionRankingPage.withIt')}</div>
+              <div className="bg-noir-500/10 rounded-xl p-3 border border-noir-500/20 text-center">
+                <div className="text-2xl font-bold text-noir-400">{stats.withItalian}</div>
+                <div className="text-2xs text-noir-400/70 uppercase tracking-wider">{t('predictionRankingPage.withIt')}</div>
               </div>
-              <div className="bg-purple-500/10 rounded-xl p-3 border border-purple-500/20 text-center">
-                <div className="text-2xl font-bold text-purple-400">{stats.gsSupported}</div>
-                <div className="text-2xs text-purple-400/70 uppercase tracking-wider">{t('predictionRankingPage.gsOk')}</div>
+              <div className="bg-rouge-500/10 rounded-xl p-3 border border-rouge-500/20 text-center">
+                <div className="text-2xl font-bold text-rouge-400">{stats.gsSupported}</div>
+                <div className="text-2xs text-rouge-400/70 uppercase tracking-wider">{t('predictionRankingPage.gsOk')}</div>
               </div>
-              <div className="bg-slate-800/60 rounded-xl p-3 border border-slate-700/50 text-center">
-                <div className="text-2xl font-bold text-cyan-400">{formatStrings(stats.totalStrings)}</div>
-                <div className="text-2xs text-slate-400 uppercase tracking-wider">{t('predictionRankingPage.totalStrings')}</div>
+              <div className="bg-noir-800/60 rounded-xl p-3 border border-noir-700/50 text-center">
+                <div className="text-2xl font-bold text-noir-400">{formatStrings(stats.totalStrings)}</div>
+                <div className="text-2xs text-noir-400 uppercase tracking-wider">{t('predictionRankingPage.totalStrings')}</div>
               </div>
-              <div className="bg-slate-800/60 rounded-xl p-3 border border-slate-700/50 text-center">
+              <div className="bg-noir-800/60 rounded-xl p-3 border border-noir-700/50 text-center">
                 <div className="text-2xl font-bold text-emerald-400">${stats.totalCost.toFixed(0)}</div>
-                <div className="text-2xs text-slate-400 uppercase tracking-wider">{t('predictionRankingPage.totalCloudCost')}</div>
+                <div className="text-2xs text-noir-400 uppercase tracking-wider">{t('predictionRankingPage.totalCloudCost')}</div>
               </div>
             </div>
 
             {/* Table Header */}
-            <div className="bg-slate-800/80 rounded-t-xl border border-slate-700/50 border-b-0">
-              <div className="grid grid-cols-[minmax(200px,2fr)_100px_80px_100px_90px_90px_80px_70px_70px] gap-2 px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="bg-noir-800/80 rounded-t-xl border border-noir-700/50 border-b-0">
+              <div className="grid grid-cols-[minmax(200px,2fr)_100px_80px_100px_90px_90px_80px_70px_70px] gap-2 px-4 py-3 text-[11px] font-semibold text-noir-400 uppercase tracking-wider">
                 <button onClick={() => toggleSort('name')} className="flex items-center gap-1 hover:text-white transition-colors text-left">
                   {t('predictionRankingPage.game')}{sortKey === 'name' && <ArrowUpDown className="h-3 w-3" />}
                 </button>
@@ -256,18 +256,18 @@ export default function PredictionRankingPage() {
             </div>
 
             {/* Table Rows */}
-            <div className="border border-slate-700/50 rounded-b-xl overflow-hidden divide-y divide-slate-700/30">
+            <div className="border border-noir-700/50 rounded-b-xl overflow-hidden divide-y divide-noir-700/30">
               {sorted.map((game, idx) => (
                 <button
                   key={idx}
                   onClick={() => {
                     window.location.href = `/prediction-tool?name=${encodeURIComponent(game.gameTitle)}&installDir=${encodeURIComponent(game.installPath)}&engine=${encodeURIComponent(game.engine)}&headerImage=${encodeURIComponent(game.headerImage)}`;
                   }}
-                  className="w-full grid grid-cols-[minmax(200px,2fr)_100px_80px_100px_90px_90px_80px_70px_70px] gap-2 px-4 py-3 items-center hover:bg-slate-800/60 transition-colors text-left group"
+                  className="w-full grid grid-cols-[minmax(200px,2fr)_100px_80px_100px_90px_90px_80px_70px_70px] gap-2 px-4 py-3 items-center hover:bg-noir-800/60 transition-colors text-left group"
                 >
                   {/* Game Title + Image */}
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="relative rounded-md overflow-hidden flex-shrink-0 bg-slate-700/80 border border-slate-600/30" style={{ width: '120px', height: '45px' }}>
+                    <div className="relative rounded-md overflow-hidden flex-shrink-0 bg-noir-700/80 border border-noir-600/30" style={{ width: '120px', height: '45px' }}>
                       {game.headerImage ? (
                         <img
                           src={game.headerImage}
@@ -279,19 +279,19 @@ export default function PredictionRankingPage() {
                             el.style.display = 'none';
                             el.parentElement!.classList.add('flex', 'items-center', 'justify-center');
                             const span = document.createElement('span');
-                            span.className = 'text-micro text-slate-500 text-center px-1';
+                            span.className = 'text-micro text-noir-500 text-center px-1';
                             span.textContent = game.gameTitle.slice(0, 15);
                             el.parentElement!.appendChild(span);
                           }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-micro text-slate-500 text-center px-1">{game.gameTitle.slice(0, 15)}</span>
+                          <span className="text-micro text-noir-500 text-center px-1">{game.gameTitle.slice(0, 15)}</span>
                         </div>
                       )}
                     </div>
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="truncate text-sm font-medium text-slate-200 group-hover:text-white transition-colors">
+                      <span className="truncate text-sm font-medium text-noir-200 group-hover:text-white transition-colors">
                         {game.gameTitle}
                       </span>
                       {game.isDemo && (
@@ -299,34 +299,34 @@ export default function PredictionRankingPage() {
                           {t('predictionRankingPage.demo')}</span>
                       )}
                     </div>
-                    <span className="text-2xs text-slate-500">{game.sizeGb > 0 ? `${game.sizeGb.toFixed(1)} GB` : ''}</span>
+                    <span className="text-2xs text-noir-500">{game.sizeGb > 0 ? `${game.sizeGb.toFixed(1)} GB` : ''}</span>
                   </div>
 
                   {/* Engine */}
-                  <span className="text-xs text-slate-400 truncate">{game.engine}</span>
+                  <span className="text-xs text-noir-400 truncate">{game.engine}</span>
 
                   {/* Difficulty */}
                   <div className="flex items-center gap-2">
                     <div className={`px-2 py-0.5 rounded-full text-xs font-bold border ${getDifficultyColor(game.difficultyScore)}`}>
                       {game.difficultyScore}
                     </div>
-                    <div className="w-12 h-1.5 bg-slate-700 rounded-full overflow-hidden hidden lg:block">
+                    <div className="w-12 h-1.5 bg-noir-700 rounded-full overflow-hidden hidden lg:block">
                       <div className={`h-full rounded-full ${getDifficultyBg(game.difficultyScore)}`} style={{ width: `${game.difficultyScore}%` }} />
                     </div>
                   </div>
 
                   {/* Strings */}
-                  <span className="text-xs text-slate-300 font-mono">{formatStrings(game.estimatedStrings)}</span>
+                  <span className="text-xs text-noir-300 font-mono">{formatStrings(game.estimatedStrings)}</span>
 
                   {/* Time Local */}
-                  <span className="text-xs text-slate-300 font-mono">
-                    <Clock className="h-3 w-3 inline mr-1 text-slate-500" />
+                  <span className="text-xs text-noir-300 font-mono">
+                    <Clock className="h-3 w-3 inline mr-1 text-noir-500" />
                     {formatTime(game.estimatedHoursLocal)}
                   </span>
 
                   {/* Time Cloud */}
-                  <span className="text-xs text-cyan-300 font-mono">
-                    <Zap className="h-3 w-3 inline mr-1 text-cyan-500" />
+                  <span className="text-xs text-noir-300 font-mono">
+                    <Zap className="h-3 w-3 inline mr-1 text-noir-500" />
                     {formatTime(game.estimatedHoursCloud)}
                   </span>
 
@@ -337,8 +337,8 @@ export default function PredictionRankingPage() {
 
                   {/* Languages */}
                   <div className="flex items-center justify-center gap-1">
-                    <Globe className="h-3 w-3 text-slate-500" />
-                    <span className="text-xs text-slate-300">{game.langCount}</span>
+                    <Globe className="h-3 w-3 text-noir-500" />
+                    <span className="text-xs text-noir-300">{game.langCount}</span>
                     {game.hasItalian && <span className="text-micro text-green-400">🇮🇹</span>}
                   </div>
 
@@ -347,7 +347,7 @@ export default function PredictionRankingPage() {
                     {game.gsSupported ? (
                       <CheckCircle className="h-4 w-4 text-green-400" />
                     ) : (
-                      <ShieldOff className="h-4 w-4 text-slate-600" />
+                      <ShieldOff className="h-4 w-4 text-noir-600" />
                     )}
                   </div>
                 </button>
@@ -355,7 +355,7 @@ export default function PredictionRankingPage() {
             </div>
 
             {sorted.length === 0 && (
-              <div className="text-center py-12 text-slate-500">
+              <div className="text-center py-12 text-noir-500">
                 <Brain className="h-12 w-12 mx-auto mb-4 opacity-30" />
                 <p>{t('predictionRankingPage.noGamesFound')}</p>
               </div>
@@ -366,11 +366,11 @@ export default function PredictionRankingPage() {
         {/* Initial state */}
         {!scanned && !loading && (
           <div className="text-center py-24">
-            <Brain className="h-20 w-20 mx-auto mb-6 text-purple-500/30" />
-            <h2 className="text-xl font-semibold text-slate-300 mb-2">{t('common.classificaDifficoltàTraduzione')}</h2>
-            <p className="text-slate-500 max-w-md mx-auto mb-8">
+            <Brain className="h-20 w-20 mx-auto mb-6 text-rouge-500/30" />
+            <h2 className="text-xl font-semibold text-noir-300 mb-2">{t('common.classificaDifficoltàTraduzione')}</h2>
+            <p className="text-noir-500 max-w-md mx-auto mb-8">
               {t('predictionRankingPage.clickScanPrompt')}</p>
-            <div className="flex items-center justify-center gap-6 text-sm text-slate-500">
+            <div className="flex items-center justify-center gap-6 text-sm text-noir-500">
               <div className="flex items-center gap-2"><BarChart3 className="h-4 w-4" /> {t('predictionRankingPage.difficulty')}</div>
               <div className="flex items-center gap-2"><Clock className="h-4 w-4" /> {t('predictionRankingPage.times')}</div>
               <div className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> {t('predictionRankingPage.costs')}</div>

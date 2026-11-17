@@ -229,8 +229,8 @@ export function OllamaManager({ ollamaUrl, onOllamaUrlChange }: OllamaManagerPro
                 {t('ocrTranslator.active')}
               </Badge>
             ) : (
-              <Badge variant="outline" className="bg-zinc-500/10 text-zinc-400 border-zinc-500/30 text-xs">
-                <div className="h-2 w-2 rounded-full bg-zinc-500 mr-1" />
+              <Badge variant="outline" className="bg-noir-500/10 text-noir-400 border-noir-500/30 text-xs">
+                <div className="h-2 w-2 rounded-full bg-noir-500 mr-1" />
                 {t('ollamaManagerComp.spento')}
               </Badge>
             )}
