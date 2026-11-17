@@ -105,13 +105,14 @@ pub fn recognize_text(image: &ImageData, language: &str) -> Result<Vec<DetectedT
     // Converti BGRA a SoftwareBitmap
     let bitmap = create_software_bitmap(image)?;
     
-    // Esegui OCR. `get()` aspetta in modo sincrono. Prima si costruiva un
+    // Esegui OCR. `join()` aspetta in modo sincrono (in windows-future 0.2 si
+    // chiamava `get()`). Prima si costruiva un
     // runtime tokio e si chiamava `block_on`: dentro i comandi async
     // `ocr_recognize`/`ocr_recognize_png` Tokio va in panico («Cannot start a
     // runtime from within a runtime») e /live-ocr non riceveva mai risposta.
     let result = engine.RecognizeAsync(&bitmap)
         .map_err(|e| format!("OCR failed: {:?}", e))?
-        .get()
+        .join()
         .map_err(|e| format!("OCR await failed: {:?}", e))?;
     
     // Estrai testi rilevati
