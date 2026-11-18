@@ -50,6 +50,7 @@ const EMULATOR_PROFILES: EmulatorProfile[] = [
   { id: 'desmume', name: 'DeSmuME', icon: '📱', windowPatterns: ['DeSmuME', 'desmume'], platform: 'nds', ocrHints: 'NDS dual screen, small text' },
   { id: 'melonds', name: 'melonDS', icon: '📱', windowPatterns: ['melonDS', 'melonds'], platform: 'nds', ocrHints: 'NDS dual screen' },
   { id: 'citra', name: 'Citra / Lime3DS', icon: '📱', windowPatterns: ['Citra', 'citra', 'Lime3DS'], platform: '3ds', ocrHints: '3DS dual screen, higher resolution' },
+  { id: 'duckstation', name: 'DuckStation', icon: '🎮', windowPatterns: ['DuckStation', 'duckstation'], platform: 'ps1', ocrHints: 'PS1 text, low resolution' },
   { id: 'pcsx2', name: 'PCSX2', icon: '🎮', windowPatterns: ['PCSX2', 'pcsx2'], platform: 'ps2', ocrHints: 'PS2 text, variable quality' },
   { id: 'ppsspp', name: 'PPSSPP', icon: '🎮', windowPatterns: ['PPSSPP', 'ppsspp'], platform: 'psp', ocrHints: 'PSP text, medium resolution' },
   { id: 'project64', name: 'Project64', icon: '🎮', windowPatterns: ['Project64', 'project64'], platform: 'n64', ocrHints: 'N64 3D text, low resolution' },
