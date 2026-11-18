@@ -2991,6 +2991,28 @@ macchina. `TextDecoder` le rende U+FFFD (3 byte) e toglie un BOM iniziale:
 `isTranslated` anche senza alcuna traduzione, `applyPatch` la scrive. Non
 provato: se l'eseguibile così patchato parte.
 
+### Una cartella residua omonima batteva l'installazione vera (18/11/2026)
+
+**Il fatto.** Danganronpa aperto dalla scheda gioco dava «1 file, 52 stringhe»
+(`prova-wad\Dr1\data\us\flash\system_dialogue.pak`) e poi «Nessuna stringa
+tradotta». Il gioco è installato in `E:\SteamLibrary` (c'è
+`appmanifest_413410.acf`), ma in `C:\Program Files (x86)\Steam\steamapps\common`
+era rimasta una cartella con lo stesso nome: niente exe, niente WAD, solo due
+`.gsbackup`, `GameStringer_Translation/`, `GameStringer_FontBackup/` e
+`prova-wad/` (3.075 file). Steam, disinstallando, lascia i file che non sono
+suoi.
+
+**Dove vive nel codice.** `find_game_install_path` in
+`src-tauri/src/commands/steam_enhanced.rs` restituiva la prima cartella
+esistente, partendo dalla libreria principale. Ora viene prima
+`manifest_backed_install_path`: la libreria che ha l'appmanifest con quel
+`installdir`. Test: `appmanifest_batte_la_cartella_residua`.
+
+**Cosa NON è provato.** Il giro a schermo dopo la correzione: l'app era aperta e
+teneva bloccato `gamestringer.exe`, quindi è girato solo il test. Non è
+accertato nemmeno perché quelle 52 stringhe del `.pak` non si traducano: sulla
+cartella sbagliata la domanda non aveva senso.
+
 ## Come si aggiunge una voce
 
 Quando trovi un modo nuovo di estrarre o reiniettare testo, o capisci perché un
