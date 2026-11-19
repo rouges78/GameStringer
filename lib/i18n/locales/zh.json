@@ -3969,7 +3969,7 @@
     "detected": "已检测",
     "translated": "已翻译",
     "waitingForText": "等待文本...",
-    "footerInfo": "OCR适用于任何游戏 • 使用Gemini AI翻译",
+    "footerInfo": "OCR适用于任何游戏",
     "aiProvider": "AI 服务商",
     "languagePackMissing": "Windows 无法读取该语言 ({lang}) 的文本：未安装包含光学字符识别 (OCR) 的语言包。请在 设置 > 时间和语言 > 语言和区域 中添加，然后重新开始。"
   },

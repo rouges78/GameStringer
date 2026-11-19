@@ -4144,7 +4144,7 @@
     "detected": "감지됨",
     "translated": "번역됨",
     "waitingForText": "텍스트 대기 중...",
-    "footerInfo": "OCR은 모든 게임과 작동 • Gemini AI 번역",
+    "footerInfo": "OCR은 모든 게임과 작동",
     "aiProvider": "AI 제공자",
     "languagePackMissing": "Windows에서 이 언어({lang})의 텍스트를 읽을 수 없습니다. 광학 문자 인식(OCR)이 포함된 언어 팩이 설치되어 있지 않습니다. 설정 > 시간 및 언어 > 언어 및 지역에서 추가한 후 다시 시작하세요."
   },

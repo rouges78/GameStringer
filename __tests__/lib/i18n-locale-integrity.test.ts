@@ -192,3 +192,19 @@ describe('integrità dei locale i18n', () => {
     });
   }
 });
+
+/**
+ * Il piè di pagina del Traduttore OCR diceva fisso «Traduzioni con Gemini AI»
+ * anche quando il traduttore scelto era quello gratuito (visto a schermo il
+ * 19/11/2026: 3 testi su 58 tradotti, da MyMemory). Ora il nome del traduttore
+ * lo aggiunge la pagina in base alla scelta: la stringa non deve nominarne uno.
+ */
+describe('ocrTranslator.footerInfo non nomina un traduttore', () => {
+  const locales = { it: itJson, en: enJson, es: esJson, fr: frJson, de: deJson, ja: jaJson, zh: zhJson, ko: koJson, pt: ptJson, ru: ruJson, pl: plJson };
+  for (const [name, json] of Object.entries(locales)) {
+    test(name, () => {
+      const footer = flatten(json as Json).get('ocrTranslator.footerInfo') ?? '';
+      expect(footer).not.toMatch(/gemini|ollama|lingva|mymemory/i);
+    });
+  }
+});
