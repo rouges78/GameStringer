@@ -4144,7 +4144,7 @@
     "detected": "wykryte",
     "translated": "przetłumaczone",
     "waitingForText": "Oczekiwanie na tekst...",
-    "footerInfo": "OCR działa z każdą grą • Tłumaczenia z Gemini AI",
+    "footerInfo": "OCR działa z każdą grą",
     "aiProvider": "Dostawca AI",
     "languagePackMissing": "Windows nie potrafi odczytać tekstu w tym języku ({lang}): brak pakietu językowego z optycznym rozpoznawaniem znaków (OCR). Dodaj go w Ustawienia > Czas i język > Język i region, a następnie uruchom ponownie."
   },
