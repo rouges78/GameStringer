@@ -89,7 +89,7 @@ export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unk
     } else if (errorMessage.includes('Credenziali corrotte') || errorMessage.includes('Riconnettiti a Steam')) {
       // Credenziali corrotte - messaggio già gestito, non loggare come errore
       clientLogger.info('ℹ️ Credenziali Steam rimosse. Riconnettiti nelle Impostazioni.');
-    } else if (cmd === 'load_renpy_translations' && errorMessage.includes('os error 2')) {
+    } else if ((cmd === 'load_renpy_translations' || cmd === 'load_hendrix_translations') && errorMessage.includes('os error 2')) {
       // Nessun checkpoint precedente: è la NORMA alla prima traduzione di un
       // gioco, e il chiamante ha già `catch { /* nessun checkpoint */ }`.
       // In rosso sembrava un guasto proprio nel momento in cui l'utente guarda

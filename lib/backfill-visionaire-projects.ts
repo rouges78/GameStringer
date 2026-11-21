@@ -11,12 +11,45 @@
  * Idempotente: usa projectService.createOrGetProject (dedup per gameId+lingua).
  */
 
-import { keys, get } from 'idb-keyval';
+import { keys, get, del } from 'idb-keyval';
 import { invoke } from '@/lib/tauri-api';
+import { cleanGamePath, gamePathKey } from '@/lib/game-path';
+import type { VisCheckpointRow } from '@/lib/visionaire-translate';
 import { projectService } from '@/lib/services/translation-projects';
 import { isProjectTombstoned } from '@/lib/projects-persistence';
 
 const PREFIX = 'gs_vis_ckpt_';
+
+/**
+ * Gioco reinstallato in un'altra libreria Steam: la cartella del checkpoint
+ * non ha più il .vis, ma Steam sa dove sta il gioco oggi. Se il checkpoint su
+ * disco porta il testo sorgente, lo si accoda a quello della cartella nuova:
+ * al prossimo avvio il job lo riaggancia per testo (reconcileVisCheckpoint).
+ * I checkpoint vecchi, solo indice → traduzione, NON si portano: sull'archivio
+ * nuovo l'indice indica un'altra frase. Il file nella cartella vecchia resta.
+ */
+async function carryCheckpointToMovedGame(oldPathKey: string, lang: string): Promise<boolean> {
+  const dir = oldPathKey.match(/\/steamapps\/common\/([^/]+)$/)?.[1];
+  if (!dir) return false;
+  try {
+    const newPath = await invoke<string>('find_game_install_path', { installDir: dir });
+    if (gamePathKey(newPath) === oldPathKey) return false;
+    await invoke('detect_visionaire', { gamePath: newPath });
+    const file = `gamestringer_ckpt_${lang}.json`;
+    const oldRows = (await invoke<VisCheckpointRow[]>(
+      'load_hendrix_translations', { inputPath: `${oldPathKey}/${file}` }
+    )).filter(r => r.original && r.translated);
+    if (oldRows.length === 0) return false;
+    const newFile = `${cleanGamePath(newPath)}/${file}`;
+    const newRows = await invoke<VisCheckpointRow[]>(
+      'load_hendrix_translations', { inputPath: newFile }
+    ).catch(() => []);
+    await invoke('save_hendrix_translations', { outputPath: newFile, strings: [...newRows, ...oldRows] });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export async function backfillVisionaireProjects(): Promise<number> {
   let allKeys: IDBValidKey[] = [];
@@ -59,7 +92,16 @@ export async function backfillVisionaireProjects(): Promise<number> {
     try {
       const info = await invoke<{ total_strings?: number }>('scan_vis_strings', { gamePath });
       if (info?.total_strings && info.total_strings > 0) total = info.total_strings;
-    } catch { /* gioco non disponibile: usa translated come totale */ }
+    } catch {
+      // Gioco spostato e checkpoint trasportabile: le traduzioni passano alla
+      // cartella nuova e questa chiave non serve più (senza toglierla, il
+      // file verrebbe accodato di nuovo a ogni apertura di "Progetti").
+      if (await carryCheckpointToMovedGame(gamePath, lang)) {
+        await del(k).catch(() => {});
+        continue;
+      }
+      // Altrimenti gioco non disponibile: usa translated come totale.
+    }
 
     try {
       const proj = await projectService.createOrGetProject({

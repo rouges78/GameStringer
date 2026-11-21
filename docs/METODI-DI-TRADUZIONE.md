@@ -3043,6 +3043,41 @@ l'incompatibilità è dedotta dai due totali diversi, e la misura non si può pi
 fare perché la cartella residua su C: è stata eliminata il 19/11/2026. Non c'è
 ancora un modo di riagganciare un checkpoint a un gioco spostato.
 
+### Visionaire: il checkpoint ora porta il testo sorgente e si riaggancia per testo (21/11/2026)
+
+**Cosa cambia.** Il file `gamestringer_ckpt_<lang>.json` aveva già il campo
+`original`, lasciato vuoto di proposito. Ora contiene il testo sorgente di ogni
+stringa tradotta. All'avvio del job `reconcileVisCheckpoint`
+(`lib/visionaire-translate.ts`) confronta ogni riga con l'archivio di oggi: la
+traduzione resta all'indice se lì c'è ancora il sorgente, oppure la traduzione
+già applicata (confronto con `trimEnd`, perché la patch riempie di spazi la coda
+della regione); altrimenti passa alla stringa che ha lo stesso testo; se il
+testo non esiste più, si scarta e la stringa viene ritradotta.
+
+**Gioco spostato.** Quando la cartella di un checkpoint non ha più il `.vis`,
+`lib/backfill-visionaire-projects.ts` chiede a `find_game_install_path` dove
+Steam considera installato il gioco. Se è un'altra cartella Visionaire, accoda
+le righe col sorgente al checkpoint di quella cartella e toglie la chiave
+IndexedDB vecchia. Il file nella cartella vecchia non viene toccato.
+
+**Per appid prima che per nome.** `find_game_path_by_appid` esisteva già ma i
+chiamanti la usavano come ripiego dopo la ricerca per nome. Ora è la prima
+scelta nel dettaglio gioco, nel wizard e in Translator Pro: è l'appmanifest a
+dire dove sta il gioco, il nome può combaciare con una cartella residua.
+
+**Limiti.** Le righe salvate prima di oggi non hanno il sorgente: restano legate
+all'indice e non si trasportano (vale anche per le 540 già fatte su Foolish
+Mortals in `E:`). Non si possono completare a posteriori leggendo l'archivio,
+perché se l'indice è già sbagliato si registrerebbe come sorgente la frase
+sbagliata. Due stringhe con lo stesso testo ricevono la stessa traduzione.
+
+**Cosa NON è provato.** Il riaggancio è coperto da test unitari
+(`__tests__/lib/visionaire-checkpoint-reconcile.test.ts`), non da un gioco
+vero: nessun job è stato rilanciato dopo la modifica e il trasporto fra due
+cartelle non è stato eseguito su un caso reale. Dopo un aggiornamento del gioco
+nella stessa cartella il `.gs_bak` resta quello della versione vecchia:
+«Ripristina» rimetterebbe l'archivio vecchio. Non è stato toccato.
+
 ## Come si aggiunge una voce
 
 Quando trovi un modo nuovo di estrarre o reiniettare testo, o capisci perché un
