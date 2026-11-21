@@ -19,7 +19,7 @@ export default function AITranslatorPage() {
   return (
     <div className="container mx-auto p-4 space-y-4">
       {/* Hero Header - Con immagine game fusa */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
+      <div className="relative overflow-hidden rounded-xl border bg-card p-3">
         {/* Immagine game fusa nello sfondo */}
         {gameImage && (
           <>
@@ -28,15 +28,13 @@ export default function AITranslatorPage() {
                 src={gameImage}
                 alt={gameName || 'Game'}
                 fill
-                className="object-cover opacity-30"
+                className="object-cover opacity-15"
                 unoptimized
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-br from-noir-600/80 via-noir-600/70 to-noir-600/80" />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-noir-600/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-card via-card/90 to-card/60" />
           </>
         )}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
