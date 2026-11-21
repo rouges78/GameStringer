@@ -174,6 +174,10 @@ fn get_filename_xor_key(filename: &str) -> Vec<u8> {
 }
 
 // ── Find .vis file in game directory ──
+/// Errore di una cartella senza archivio `.vis`. `lib/tauri-api.ts` lo riconosce
+/// dal testo "Nessun file .vis" per registrarlo come debug: se cambia qui, va
+/// cambiato anche lì (lo controlla `__tests__/lib/vis-missing-message.test.ts`).
+const NO_VIS_FILE: &str = "Nessun file .vis trovato";
 
 fn find_vis_file(game_path: &str) -> Option<PathBuf> {
     let dir = Path::new(game_path);
@@ -635,7 +639,7 @@ pub async fn detect_visionaire(game_path: String) -> Result<VisInfo, String> {
     log::info!("[VIS] detect_visionaire: {}", game_path);
     
     let vis_path = find_vis_file(&game_path)
-        .ok_or_else(|| "Nessun file .vis trovato".to_string())?;
+        .ok_or_else(|| NO_VIS_FILE.to_string())?;
     
     let mut file = File::open(&vis_path)
         .map_err(|e| format!("Errore apertura {}: {}", vis_path.display(), e))?;
@@ -660,7 +664,7 @@ pub async fn scan_vis_strings(game_path: String) -> Result<VisInfo, String> {
     log::info!("[VIS] scan_vis_strings: {}", game_path);
     
     let vis_path = find_vis_file(&game_path)
-        .ok_or_else(|| "Nessun file .vis trovato".to_string())?;
+        .ok_or_else(|| NO_VIS_FILE.to_string())?;
     let vis_path_str = vis_path.to_string_lossy().to_string();
     
     // Check cache first
@@ -720,7 +724,7 @@ pub async fn extract_vis_strings(
     limit: Option<usize>,
 ) -> Result<Vec<VisString>, String> {
     let vis_path = find_vis_file(&game_path)
-        .ok_or_else(|| "Nessun file .vis trovato".to_string())?;
+        .ok_or_else(|| NO_VIS_FILE.to_string())?;
     let vis_path_str = vis_path.to_string_lossy().to_string();
     
     // Use cached strings if available (populated by scan_vis_strings)
@@ -759,7 +763,7 @@ pub async fn patch_vis_strings(
     log::info!("[VIS] patch_vis_strings: {} traduzioni", translations.len());
     
     let vis_path = find_vis_file(&game_path)
-        .ok_or_else(|| "Nessun file .vis trovato".to_string())?;
+        .ok_or_else(|| NO_VIS_FILE.to_string())?;
     
     // Create backup
     let backup_path = PathBuf::from(format!("{}.gs_bak", vis_path.display()));
@@ -842,7 +846,7 @@ pub async fn patch_vis_strings(
 #[command]
 pub async fn restore_vis_backup(game_path: String) -> Result<serde_json::Value, String> {
     let vis_path = find_vis_file(&game_path)
-        .ok_or_else(|| "Nessun file .vis trovato".to_string())?;
+        .ok_or_else(|| NO_VIS_FILE.to_string())?;
     
     let backup_path = PathBuf::from(format!("{}.gs_bak", vis_path.display()));
     if !backup_path.exists() {

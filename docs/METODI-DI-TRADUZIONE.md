@@ -2991,6 +2991,93 @@ macchina. `TextDecoder` le rende U+FFFD (3 byte) e toglie un BOM iniziale:
 `isTranslated` anche senza alcuna traduzione, `applyPatch` la scrive. Non
 provato: se l'eseguibile così patchato parte.
 
+### Una cartella residua omonima batteva l'installazione vera (18/11/2026)
+
+**Il fatto.** Danganronpa aperto dalla scheda gioco dava «1 file, 52 stringhe»
+(`prova-wad\Dr1\data\us\flash\system_dialogue.pak`) e poi «Nessuna stringa
+tradotta». Il gioco è installato in `E:\SteamLibrary` (c'è
+`appmanifest_413410.acf`), ma in `C:\Program Files (x86)\Steam\steamapps\common`
+era rimasta una cartella con lo stesso nome: niente exe, niente WAD, solo due
+`.gsbackup`, `GameStringer_Translation/`, `GameStringer_FontBackup/` e
+`prova-wad/` (3.075 file). Steam, disinstallando, lascia i file che non sono
+suoi.
+
+**Dove vive nel codice.** `find_game_install_path` in
+`src-tauri/src/commands/steam_enhanced.rs` restituiva la prima cartella
+esistente, partendo dalla libreria principale. Ora viene prima
+`manifest_backed_install_path`: la libreria che ha l'appmanifest con quel
+`installdir`. Test: `appmanifest_batte_la_cartella_residua`.
+
+**Cosa NON è provato.** Il giro a schermo dopo la correzione: l'app era aperta e
+teneva bloccato `gamestringer.exe`, quindi è girato solo il test. Non è
+accertato nemmeno perché quelle 52 stringhe del `.pak` non si traducano: sulla
+cartella sbagliata la domanda non aveva senso.
+
+### Visionaire: il checkpoint resta nella cartella vecchia quando il gioco cambia libreria (19/11/2026)
+
+**Il fatto.** Aprendo «Progetti» la console dava in rosso «Nessun file .vis
+trovato» da `scan_vis_strings`. Foolish Mortals era stato tradotto in agosto in
+`C:\Program Files (x86)\Steam\steamapps\common\foolishmortals` e reinstallato il
+13/11 in `E:\SteamLibrary`. Nella cartella su C: Steam ha lasciato solo i file
+di GameStringer: `data.vis.gs_bak` (867.752.026 byte) e
+`gamestringer_ckpt_it.json` (5.771 traduzioni, indici 0–5.770). Il checkpoint in
+IndexedDB ha per chiave il percorso, quindi il backfill dei progetti continua a
+interrogare la cartella vuota e in «Progetti» restano due schede dello stesso
+gioco: «Foolish Mortals» (E:, 540/33.221) e «foolishmortals» (C:, 5.771/25.645).
+È lo stesso residuo della voce qui sopra, visto dal lato dei checkpoint.
+
+**Perché il checkpoint vecchio non si porta dietro.** È una mappa indice →
+traduzione, e l'indice è la posizione nell'elenco prodotto dall'euristica di
+`extract_strings_from_binary`: non è un identificativo del gioco. Il `data.vis`
+di oggi pesa 865.145.180 byte e dà 33.221 stringhe contro le 25.645 di allora.
+Copiare il file accanto al gioco nuovo metterebbe traduzioni su stringhe che non
+sono garantite essere le stesse.
+
+**Dove vive nel codice.** `lib/tauri-api.ts` registra quell'esito come debug (il
+chiamante ripiega già sul conteggio del checkpoint); `lib/backfill-visionaire-projects.ts`
+controlla la lapide prima dello scan, così una scheda eliminata non fa più
+interrogare la cartella.
+
+**Cosa NON è provato.** L'allineamento non è stato misurato stringa per stringa:
+l'incompatibilità è dedotta dai due totali diversi, e la misura non si può più
+fare perché la cartella residua su C: è stata eliminata il 19/11/2026. Non c'è
+ancora un modo di riagganciare un checkpoint a un gioco spostato.
+
+### Visionaire: il checkpoint ora porta il testo sorgente e si riaggancia per testo (21/11/2026)
+
+**Cosa cambia.** Il file `gamestringer_ckpt_<lang>.json` aveva già il campo
+`original`, lasciato vuoto di proposito. Ora contiene il testo sorgente di ogni
+stringa tradotta. All'avvio del job `reconcileVisCheckpoint`
+(`lib/visionaire-translate.ts`) confronta ogni riga con l'archivio di oggi: la
+traduzione resta all'indice se lì c'è ancora il sorgente, oppure la traduzione
+già applicata (confronto con `trimEnd`, perché la patch riempie di spazi la coda
+della regione); altrimenti passa alla stringa che ha lo stesso testo; se il
+testo non esiste più, si scarta e la stringa viene ritradotta.
+
+**Gioco spostato.** Quando la cartella di un checkpoint non ha più il `.vis`,
+`lib/backfill-visionaire-projects.ts` chiede a `find_game_install_path` dove
+Steam considera installato il gioco. Se è un'altra cartella Visionaire, accoda
+le righe col sorgente al checkpoint di quella cartella e toglie la chiave
+IndexedDB vecchia. Il file nella cartella vecchia non viene toccato.
+
+**Per appid prima che per nome.** `find_game_path_by_appid` esisteva già ma i
+chiamanti la usavano come ripiego dopo la ricerca per nome. Ora è la prima
+scelta nel dettaglio gioco, nel wizard e in Translator Pro: è l'appmanifest a
+dire dove sta il gioco, il nome può combaciare con una cartella residua.
+
+**Limiti.** Le righe salvate prima di oggi non hanno il sorgente: restano legate
+all'indice e non si trasportano (vale anche per le 540 già fatte su Foolish
+Mortals in `E:`). Non si possono completare a posteriori leggendo l'archivio,
+perché se l'indice è già sbagliato si registrerebbe come sorgente la frase
+sbagliata. Due stringhe con lo stesso testo ricevono la stessa traduzione.
+
+**Cosa NON è provato.** Il riaggancio è coperto da test unitari
+(`__tests__/lib/visionaire-checkpoint-reconcile.test.ts`), non da un gioco
+vero: nessun job è stato rilanciato dopo la modifica e il trasporto fra due
+cartelle non è stato eseguito su un caso reale. Dopo un aggiornamento del gioco
+nella stessa cartella il `.gs_bak` resta quello della versione vecchia:
+«Ripristina» rimetterebbe l'archivio vecchio. Non è stato toccato.
+
 ## Come si aggiunge una voce
 
 Quando trovi un modo nuovo di estrarre o reiniettare testo, o capisci perché un

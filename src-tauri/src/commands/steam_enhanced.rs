@@ -1191,6 +1191,44 @@ fn normalize_install_dir(s: &str) -> String {
         .collect()
 }
 
+/// Cartella di `install_dir` nella libreria Steam che ne ha l'appmanifest
+/// (cioè dove Steam lo considera installato). Il confronto è normalizzato,
+/// quindi vale anche quando arriva il nome del gioco al posto della cartella.
+fn manifest_backed_install_path(
+    library_roots: &[std::path::PathBuf],
+    install_dir: &str,
+) -> Option<std::path::PathBuf> {
+    let wanted = normalize_install_dir(install_dir);
+    if wanted.is_empty() {
+        return None;
+    }
+    for root in library_roots {
+        let steamapps = root.join("steamapps");
+        let Ok(entries) = std::fs::read_dir(&steamapps) else { continue };
+        for entry in entries.flatten() {
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            if !name.starts_with("appmanifest_") || !name.ends_with(".acf") {
+                continue;
+            }
+            let Ok(content) = std::fs::read_to_string(entry.path()) else { continue };
+            let manifest_dir = content
+                .lines()
+                .find(|l| l.trim_start().starts_with("\"installdir\""))
+                .and_then(|l| l.split('"').nth(3));
+            if let Some(dir) = manifest_dir {
+                if normalize_install_dir(dir) == wanted {
+                    let p = steamapps.join("common").join(dir);
+                    if p.is_dir() {
+                        return Some(p);
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
 /// 📁 Trova il percorso reale di un gioco cercando in tutte le librerie Steam
 #[tauri::command(rename_all = "camelCase")]
 pub fn find_game_install_path(install_dir: String) -> Result<String, String> {
@@ -1198,7 +1236,20 @@ pub fn find_game_install_path(install_dir: String) -> Result<String, String> {
     
     match SteamDir::locate() {
         Ok(steam_dir) => {
-            // Prima cerca nella cartella principale di Steam
+            // Prima la libreria che ha davvero l'appmanifest del gioco: una
+            // cartella omonima rimasta da una vecchia installazione (backup,
+            // file di prova) non deve vincere su quella vera.
+            let mut library_roots = vec![steam_dir.path().to_path_buf()];
+            if let Ok(libraries) = steam_dir.libraries() {
+                library_roots.extend(libraries.flatten().map(|lib| lib.path().to_path_buf()));
+            }
+            if let Some(p) = manifest_backed_install_path(&library_roots, &install_dir) {
+                let path_str = p.to_string_lossy().to_string();
+                info!("✅ Gioco trovato tramite appmanifest: {}", path_str);
+                return Ok(path_str);
+            }
+
+            // Poi cerca nella cartella principale di Steam
             let main_path = steam_dir.path().join("steamapps").join("common").join(&install_dir);
             if main_path.exists() {
                 let path_str = main_path.to_string_lossy().to_string();
@@ -2738,5 +2789,33 @@ mod tests_install_path {
             normalize_install_dir("MioGioco")
         );
         assert_eq!(normalize_install_dir("..., !!!"), "");
+    }
+
+    /// Misurato il 18/11/2026 su Danganronpa: gioco installato in una libreria
+    /// secondaria, cartella omonima di soli residui in quella principale.
+    #[test]
+    fn appmanifest_batte_la_cartella_residua() {
+        use super::manifest_backed_install_path;
+        let tmp = tempfile::tempdir().unwrap();
+        let main = tmp.path().join("main");
+        let second = tmp.path().join("second");
+        let dir = "Danganronpa Trigger Happy Havoc";
+        std::fs::create_dir_all(main.join("steamapps/common").join(dir)).unwrap();
+        std::fs::create_dir_all(second.join("steamapps/common").join(dir)).unwrap();
+        std::fs::write(
+            second.join("steamapps/appmanifest_413410.acf"),
+            format!("\"AppState\"\n{{\n\t\"appid\"\t\t\"413410\"\n\t\"installdir\"\t\t\"{dir}\"\n}}\n"),
+        )
+        .unwrap();
+        let roots = [main.clone(), second.clone()];
+
+        let expected = second.join("steamapps").join("common").join(dir);
+        assert_eq!(manifest_backed_install_path(&roots, dir), Some(expected.clone()));
+        // Anche quando arriva il nome del gioco al posto della cartella.
+        assert_eq!(
+            manifest_backed_install_path(&roots, "Danganronpa: Trigger Happy Havoc"),
+            Some(expected)
+        );
+        assert_eq!(manifest_backed_install_path(&roots, "Altro Gioco"), None);
     }
 }

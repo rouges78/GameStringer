@@ -169,7 +169,8 @@
     "sharp": "^0.35.5",
     "postcss": "$postcss",
     "@prisma/config": {
-      "deepmerge-ts": "^8.0.2"
+      "deepmerge-ts": "^8.0.2",
+      "effect": "3.22.2"
     }
   },
   "version": "1.17.0"

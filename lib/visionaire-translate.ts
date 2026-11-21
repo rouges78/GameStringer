@@ -39,6 +39,56 @@ function codeKey(s: string): string {
   return (s.match(CODE) ?? []).slice().sort().join('');
 }
 
+/** Riga del checkpoint su disco (`gamestringer_ckpt_<lang>.json`). */
+export interface VisCheckpointRow {
+  id: string;
+  original: string;
+  translated: string;
+}
+
+/**
+ * Riaggancia un checkpoint alle stringhe dell'archivio di OGGI.
+ *
+ * L'indice è la posizione nell'elenco dell'estrattore, non un identificativo:
+ * cambia se il gioco viene aggiornato o reinstallato (Foolish Mortals,
+ * 19/11/2026: 25.645 stringhe prima, 33.221 dopo). Le righe che portano il
+ * testo sorgente (`original`) si verificano contro l'archivio: valgono
+ * all'indice se lì c'è ancora il sorgente (o la traduzione già applicata),
+ * altrimenti si riassegnano alla stringa col medesimo testo. Le righe vecchie
+ * senza `original` restano legate all'indice come prima: non c'è modo di
+ * verificarle.
+ */
+export function reconcileVisCheckpoint(
+  rows: VisCheckpointRow[],
+  current: { index: number; text: string }[],
+): { translations: Record<number, string>; sources: Record<number, string> } {
+  const textAt = new Map(current.map(s => [s.index, s.text]));
+  const translations: Record<number, string> = {};
+  const sources: Record<number, string> = {};
+  const moved = new Map<string, string>(); // sorgente → traduzione, indice non più valido
+  for (const r of rows) {
+    if (!r.translated) continue;
+    const i = Number(r.id);
+    if (!r.original) { translations[i] = r.translated; continue; }
+    const cur = textAt.get(i);
+    // trimEnd: la patch riempie di spazi la coda della regione originale.
+    if (cur !== undefined && (cur === r.original || cur.trimEnd() === r.translated.trimEnd())) {
+      translations[i] = r.translated;
+      sources[i] = r.original;
+    } else {
+      moved.set(r.original, r.translated);
+    }
+  }
+  if (moved.size > 0) {
+    for (const s of current) {
+      if (translations[s.index] !== undefined) continue;
+      const t = moved.get(s.text);
+      if (t !== undefined) { translations[s.index] = t; sources[s.index] = s.text; }
+    }
+  }
+  return { translations, sources };
+}
+
 function lsGet(key: string): string | null {
   try { return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null; } catch { return null; }
 }
@@ -136,16 +186,8 @@ export async function runVisionaireTranslation(opts: {
       }
     }
   }
-  if (Object.keys(translations).length === 0) {
-    // idb vuota (porta diversa o prima volta): prova il file su disco.
-    try {
-      const rows = await invoke<{ id: string; translated: string }[]>(
-        'load_hendrix_translations', { inputPath: diskCkptPath }
-      );
-      for (const r of rows) if (r.translated) translations[Number(r.id)] = r.translated;
-      if (rows.length > 0) await set(ckptKey, translations).catch(() => {});
-    } catch { /* nessun checkpoint su disco: si parte da zero davvero */ }
-  }
+  // Il file su disco si legge più sotto, dopo l'estrazione: va confrontato con
+  // le stringhe dell'archivio di oggi (reconcileVisCheckpoint).
 
   // Registra il gioco nella pagina "Progetti" (IndexedDB), così appare appena
   // si inizia a lavorarci e mostra il progresso reale.
@@ -190,6 +232,22 @@ export async function runVisionaireTranslation(opts: {
     all.push(...page);
   }
 
+  // Checkpoint su disco, riagganciato alle stringhe appena estratte. Le righe
+  // col testo sorgente comandano su idb: se l'archivio è cambiato, l'indice
+  // salvato in idb punta a un'altra frase. Ciò che è solo in idb (scrittura su
+  // disco fallita) resta com'è.
+  let sources: Record<number, string> = {};
+  try {
+    const rows = await invoke<VisCheckpointRow[]>(
+      'load_hendrix_translations', { inputPath: diskCkptPath }
+    );
+    const rec = reconcileVisCheckpoint(rows, all);
+    for (const r of rows) if (r.original) delete translations[Number(r.id)];
+    translations = { ...translations, ...rec.translations };
+    sources = rec.sources;
+    if (rows.length > 0) await set(ckptKey, translations).catch(() => {});
+  } catch { /* nessun checkpoint su disco */ }
+
   // Da tradurre: testo non vuoto e indice non già nel checkpoint
   const todo = all.filter(s => s.text && s.text.trim() && translations[s.index] === undefined);
   let done = total - todo.length;
@@ -204,12 +262,13 @@ export async function runVisionaireTranslation(opts: {
   const flush = async () => {
     await set(ckptKey, translations).catch(() => {});
     // Copia su disco: è QUESTA la persistenza vera (vedi nota su diskCkptPath).
-    // original resta vuoto di proposito: il checkpoint mappa indice→testo,
-    // l'originale è ricostruibile dall'archivio.
+    // original = testo sorgente: è ciò che permette di riagganciare la
+    // traduzione quando l'indice cambia (gioco aggiornato o reinstallato).
+    // Vuoto solo per le righe nate prima del 21/11/2026.
     await invoke('save_hendrix_translations', {
       outputPath: diskCkptPath,
       strings: Object.keys(translations).map(k => ({
-        id: String(k), original: '', translated: translations[Number(k)], context: '',
+        id: String(k), original: sources[Number(k)] ?? '', translated: translations[Number(k)], context: '',
       })),
     }).catch(() => {});
     // patch_vis_strings è idempotente (backup .gs_bak creato una volta sola):
@@ -238,6 +297,7 @@ export async function runVisionaireTranslation(opts: {
       // (evita di marcare come "fatte" stringhe rimaste in lingua originale).
       if (!bad && out !== src.text && codeKey(out) === codeKey(src.text)) {
         translations[src.index] = out;
+        sources[src.index] = src.text;
       }
     });
     done += slice.length;

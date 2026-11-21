@@ -505,18 +505,21 @@ export default function TranslatorProPage() {
     setLocalizationInfo(null);
     try {
       let foundPath = '';
-      // Try a trovare il percorso
-      try {
-        foundPath = await invoke<string>('find_game_install_path', { installDir: game.name });
-      } catch { /* non trovato */ }
-      
-      if (!foundPath && game.id) {
+      // Try a trovare il percorso: prima per appid (è l'appmanifest di Steam a
+      // dire dove sta il gioco), il nome solo come ripiego.
+      if (game.id) {
         const appId = parseInt(game.id.replace('steam_', ''));
         if (!isNaN(appId)) {
           try {
             foundPath = await invoke<string | null>('find_game_path_by_appid', { appId }) || '';
           } catch { /* non trovato */ }
         }
+      }
+
+      if (!foundPath) {
+        try {
+          foundPath = await invoke<string>('find_game_install_path', { installDir: game.name });
+        } catch { /* non trovato */ }
       }
       
       if (foundPath) {
@@ -1200,17 +1203,19 @@ export default function TranslatorProPage() {
       let currentGamePath = gamePath;
       
       if (!currentGamePath) {
-        try {
-          currentGamePath = await invoke<string>('find_game_install_path', { installDir: selectedGame.name });
-        } catch { /* non trovato */ }
-        
-        if (!currentGamePath && selectedGame.id) {
+        if (selectedGame.id) {
           const appId = parseInt(selectedGame.id.replace('steam_', ''));
           if (!isNaN(appId)) {
             try {
               currentGamePath = await invoke<string | null>('find_game_path_by_appid', { appId }) || '';
             } catch { /* non trovato */ }
           }
+        }
+
+        if (!currentGamePath) {
+          try {
+            currentGamePath = await invoke<string>('find_game_install_path', { installDir: selectedGame.name });
+          } catch { /* non trovato */ }
         }
       }
       
