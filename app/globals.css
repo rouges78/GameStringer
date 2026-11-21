@@ -173,9 +173,11 @@
 @layer base {
   /* Tema "Rouge Noir" della suite Rouges (scelto l'11/11/2026; prima era la
      palette B + C blu-notte/magenta del 02/10/2026). Valori presi da
-     Rouges@Launcher src/themes.rs: fondo #0f0f10, superfici #161618/#1d1d20,
+     Rouges-Launcher src/themes.rs: fondo #0f0f10, superfici #161618/#1d1d20,
      hover #232327, bordi #2a2a2e/#3a3a40, testo #f2f2f2, testo tenue #9b9ba3,
-     rosso #ff3b4a con etichette #14060a. Angoli vivi come nel resto della suite.
+     rosso #ff3b4a con etichette #14060a. Angoli come nelle app Tauri
+     della suite (rouges-db, LightMail): 8px i pannelli, 6px i controlli, 4px i
+     dettagli (--radius e le sue derivate in tailwind.config.ts).
      Contrasti: testo ~17:1, tenue ≥6:1, rosso sul fondo 5.4:1, etichette sul
      rosso 5.6:1.
 
@@ -211,7 +213,7 @@
     --border: 60 5.4% 85.5%;
     --input: 60 3.3% 70%;
     --ring: 353 79% 45.5%;
-    --radius: 0rem;
+    --radius: 0.5rem;
 
     --chart-1: 353 79% 45.5%;
     --chart-2: 185 83% 25.7%;

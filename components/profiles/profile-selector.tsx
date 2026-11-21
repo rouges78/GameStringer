@@ -675,7 +675,7 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
                 />
               </motion.div>
               <h1 className="text-3xl font-extrabold tracking-tight mt-4 text-foreground">
-                <span className="text-muted-foreground">{BRAND_PREFIX}</span>
+                <span>{BRAND_PREFIX}</span>
                 <span className="text-primary">{BRAND_NAME}</span>
               </h1>
               <p className="text-xs text-noir-500 mt-3 font-mono">v{version}</p>
