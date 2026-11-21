@@ -451,8 +451,8 @@ function ProjectCard({
           {project.openHref && (
             <Button
               size="sm"
-              variant="default"
-              className="flex-1 h-7 text-2xs bg-rouge-600 hover:bg-rouge-500"
+              variant="secondary"
+              className="flex-1 h-7 text-2xs border border-border"
               onClick={() => { if (project.openHref) router.push(project.openHref); }}
             >
               <FileText className="w-3 h-3 mr-1" />
