@@ -109,6 +109,7 @@ import { WidgetErrorBoundary } from '@/components/error-boundary';
 import { initNetworkMonitor, stopNetworkMonitor } from '@/lib/network-resilience';
 import { StatusLine } from '@/components/layout/status-line';
 import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
+import { UiFlag } from '@/components/ui/language-flags';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -795,186 +796,71 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <Button variant="outline" size="sm" className="group h-9 gap-2.5 rounded-sm border-border border-b-[3px] bg-secondary px-3 text-foreground hover:bg-accent hover:text-foreground">
                     <Globe className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     {/* Mini bandiera lingua corrente */}
-                    {language === 'it' && (
-                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
-                        <span className="w-1/3 bg-green-500" />
-                        <span className="w-1/3 bg-white" />
-                        <span className="w-1/3 bg-red-500" />
-                      </span>
-                    )}
-                    {language === 'en' && (
-                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm">
-                        <span className="w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2060%2030%22%3E%3CclipPath%20id%3D%22a%22%3E%3Cpath%20d%3D%22M0%200v30h60V0z%22%2F%3E%3C%2FclipPath%3E%3CclipPath%20id%3D%22b%22%3E%3Cpath%20d%3D%22M30%2015h30v15zv15H0zH0V0zV0h30z%22%2F%3E%3C%2FclipPath%3E%3Cg%20clip-path%3D%22url(%23a)%22%3E%3Cpath%20d%3D%22M0%200v30h60V0z%22%20fill%3D%22%23012169%22%2F%3E%3Cpath%20d%3D%22M0%200l60%2030m0-30L0%2030%22%20stroke%3D%22%23fff%22%20stroke-width%3D%226%22%2F%3E%3Cpath%20d%3D%22M0%200l60%2030m0-30L0%2030%22%20clip-path%3D%22url(%23b)%22%20stroke%3D%22%23C8102E%22%20stroke-width%3D%224%22%2F%3E%3Cpath%20d%3D%22M30%200v30M0%2015h60%22%20stroke%3D%22%23fff%22%20stroke-width%3D%2210%22%2F%3E%3Cpath%20d%3D%22M30%200v30M0%2015h60%22%20stroke%3D%22%23C8102E%22%20stroke-width%3D%226%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')] bg-cover bg-center block w-full h-full" />
-                      </span>
-                    )}
-                    {language === 'es' && (
-                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
-                        <span className="h-1/4 bg-red-600" />
-                        <span className="h-2/4 bg-yellow-400" />
-                        <span className="h-1/4 bg-red-600" />
-                      </span>
-                    )}
-                    {language === 'fr' && (
-                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
-                        <span className="w-1/3 bg-rouge-600" />
-                        <span className="w-1/3 bg-white" />
-                        <span className="w-1/3 bg-red-500" />
-                      </span>
-                    )}
-                    {language === 'de' && (
-                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
-                        <span className="h-1/3 bg-black" />
-                        <span className="h-1/3 bg-red-500" />
-                        <span className="h-1/3 bg-yellow-400" />
-                      </span>
-                    )}
-                    {language === 'ja' && (
-                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-white flex items-center justify-center">
-                        <span className="w-2 h-2 rounded-full bg-red-500" />
-                      </span>
-                    )}
-                    {language === 'zh' && (
-                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-red-500 flex items-center justify-center">
-                        <span className="text-2xs text-yellow-400">★</span>
-                      </span>
-                    )}
-                    {language === 'ko' && (
-                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-white flex items-center justify-center">
-                        <span className="w-2 h-2 rounded-full bg-red-600 border border-noir-800" />
-                      </span>
-                    )}
-                    {language === 'pt' && (
-                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
-                        <span className="w-2/5 bg-green-600" />
-                        <span className="w-3/5 bg-yellow-400" />
-                      </span>
-                    )}
-                    {language === 'ru' && (
-                      <span className="w-5 h-3.5 rounded-[2px] overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
-                        <span className="h-1/3 bg-white" />
-                        <span className="h-1/3 bg-rouge-600" />
-                        <span className="h-1/3 bg-red-500" />
-                      </span>
-                    )}
-                    {language === 'pl' && (
-                      <span className="w-5 h-3.5 rounded-[2px] overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
-                        <span className="h-1/2 bg-white" />
-                        <span className="h-1/2 bg-red-500" />
-                      </span>
-                    )}
-                    {language === 'el' && (
-                      <span className="w-5 h-3.5 rounded-[2px] overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
-                        <span className="h-1/5 bg-rouge-700" />
-                        <span className="h-1/5 bg-white" />
-                        <span className="h-1/5 bg-rouge-700" />
-                        <span className="h-1/5 bg-white" />
-                        <span className="h-1/5 bg-rouge-700" />
-                      </span>
-                    )}
+                    <UiFlag code={language} />
                     <span className="font-mono text-xs font-bold tracking-widest">{language.toUpperCase()}</span>
                     <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="center" className="w-40">
                   <DropdownMenuItem onClick={() => setLanguage('en')} className="gap-3">
-                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm">
-                      <span className="w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2060%2030%22%3E%3CclipPath%20id%3D%22a%22%3E%3Cpath%20d%3D%22M0%200v30h60V0z%22%2F%3E%3C%2FclipPath%3E%3CclipPath%20id%3D%22b%22%3E%3Cpath%20d%3D%22M30%2015h30v15zv15H0zH0V0zV0h30z%22%2F%3E%3C%2FclipPath%3E%3Cg%20clip-path%3D%22url(%23a)%22%3E%3Cpath%20d%3D%22M0%200v30h60V0z%22%20fill%3D%22%23012169%22%2F%3E%3Cpath%20d%3D%22M0%200l60%2030m0-30L0%2030%22%20stroke%3D%22%23fff%22%20stroke-width%3D%226%22%2F%3E%3Cpath%20d%3D%22M0%200l60%2030m0-30L0%2030%22%20clip-path%3D%22url(%23b)%22%20stroke%3D%22%23C8102E%22%20stroke-width%3D%224%22%2F%3E%3Cpath%20d%3D%22M30%200v30M0%2015h60%22%20stroke%3D%22%23fff%22%20stroke-width%3D%2210%22%2F%3E%3Cpath%20d%3D%22M30%200v30M0%2015h60%22%20stroke%3D%22%23C8102E%22%20stroke-width%3D%226%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')] bg-cover bg-center block w-full h-full" />
-                    </span>
+                    <UiFlag code="en" round />
                     <span className="flex-1">{t('languages.en')}</span>
                     {language === 'en' && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('it')} className="gap-3">
-                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
-                      <span className="w-1/3 bg-green-500" />
-                      <span className="w-1/3 bg-white" />
-                      <span className="w-1/3 bg-red-500" />
-                    </span>
+                    <UiFlag code="it" round />
                     <span className="flex-1">{t('languages.it')}</span>
                     {language === 'it' && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setLanguage('es')} className="gap-3">
-                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
-                      <span className="h-1/4 bg-red-600" />
-                      <span className="h-2/4 bg-yellow-400" />
-                      <span className="h-1/4 bg-red-600" />
-                    </span>
+                    <UiFlag code="es" round />
                     <span className="flex-1">{t('languages.es')}</span>
                     {language === 'es' && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('fr')} className="gap-3">
-                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
-                      <span className="w-1/3 bg-rouge-600" />
-                      <span className="w-1/3 bg-white" />
-                      <span className="w-1/3 bg-red-500" />
-                    </span>
+                    <UiFlag code="fr" round />
                     <span className="flex-1">{t('languages.fr')}</span>
                     {language === 'fr' && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('de')} className="gap-3">
-                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
-                      <span className="h-1/3 bg-black" />
-                      <span className="h-1/3 bg-red-500" />
-                      <span className="h-1/3 bg-yellow-400" />
-                    </span>
+                    <UiFlag code="de" round />
                     <span className="flex-1">{t('languages.de')}</span>
                     {language === 'de' && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('ja')} className="gap-3">
-                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-white flex items-center justify-center">
-                      <span className="w-3 h-3 rounded-full bg-red-500" />
-                    </span>
+                    <UiFlag code="ja" round />
                     <span className="flex-1">日本語</span>
                     {language === 'ja' && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('zh')} className="gap-3">
-                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-red-500 flex items-center justify-center">
-                      <span className="text-2xs text-yellow-400">★</span>
-                    </span>
+                    <UiFlag code="zh" round />
                     <span className="flex-1">中文</span>
                     {language === 'zh' && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('ko')} className="gap-3">
-                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-white flex items-center justify-center">
-                      <span className="w-3 h-3 rounded-full bg-red-600 border border-noir-800" />
-                    </span>
+                    <UiFlag code="ko" round />
                     <span className="flex-1">한국어</span>
                     {language === 'ko' && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setLanguage('pt')} className="gap-3">
-                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
-                      <span className="w-2/5 bg-green-600" />
-                      <span className="w-3/5 bg-yellow-400" />
-                    </span>
+                    <UiFlag code="pt" round />
                     <span className="flex-1">{t('languages.pt')}</span>
                     {language === 'pt' && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('ru')} className="gap-3">
-                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
-                      <span className="h-1/3 bg-white" />
-                      <span className="h-1/3 bg-rouge-600" />
-                      <span className="h-1/3 bg-red-500" />
-                    </span>
+                    <UiFlag code="ru" round />
                     <span className="flex-1">Русский</span>
                     {language === 'ru' && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('pl')} className="gap-3">
-                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
-                      <span className="h-1/2 bg-white" />
-                      <span className="h-1/2 bg-red-500" />
-                    </span>
+                    <UiFlag code="pl" round />
                     <span className="flex-1">{t('languages.pl')}</span>
                     {language === 'pl' && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('el')} className="gap-3">
-                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
-                      <span className="h-1/5 bg-rouge-700" />
-                      <span className="h-1/5 bg-white" />
-                      <span className="h-1/5 bg-rouge-700" />
-                      <span className="h-1/5 bg-white" />
-                      <span className="h-1/5 bg-rouge-700" />
-                    </span>
+                    <UiFlag code="el" round />
                     <span className="flex-1">Ελληνικά</span>
                     {language === 'el' && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
