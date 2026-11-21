@@ -510,8 +510,8 @@ export function MainLayout({ children }: MainLayoutProps) {
               <Link href="/" className={cn('flex min-w-0 items-center gap-2.5', sidebarOpen && 'flex-1')} title={!sidebarOpen ? BRAND_FULL : undefined}>
                 <img src="/favicon.svg" alt={sidebarOpen ? '' : BRAND_FULL} className="h-8 w-8 shrink-0" />
                 {sidebarOpen && (
-                  <span className="truncate font-pixel text-lg leading-none text-foreground" title={BRAND_FULL}>
-                    <span className="text-muted-foreground">{BRAND_PREFIX}</span>{BRAND_NAME}
+                  <span className="truncate text-sm font-extrabold leading-none tracking-tight text-foreground" title={BRAND_FULL}>
+                    {BRAND_PREFIX}<span className="text-primary">{BRAND_NAME}</span>
                   </span>
                 )}
               </Link>

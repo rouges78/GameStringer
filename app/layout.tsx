@@ -38,7 +38,7 @@ const pixel = Pixelify_Sans({
 
 export const metadata: Metadata = {
   title: `${BRAND_FULL} - AI Game Translation`,
-  description: 'Rouges@Gamestringer è un sistema avanzato per la traduzione automatica e manuale di videogames.',
+  description: 'Rouges-GameStringer è un sistema avanzato per la traduzione automatica e manuale di videogames.',
 };
 
 export default function RootLayout({
