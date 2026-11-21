@@ -314,7 +314,7 @@ export function VisionTranslator() {
           <Button
             onClick={handleTranslate}
             disabled={loading || !text.trim()}
-            className="w-full h-10 bg-rouge-600 hover:bg-rouge-500 text-white font-semibold"
+            className="w-full h-10 glass-red text-white font-semibold"
           >
             {loading ? (
               <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t('visionTranslatorComp.traduzioneInCorso')}</>

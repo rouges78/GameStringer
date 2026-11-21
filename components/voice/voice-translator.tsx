@@ -557,7 +557,7 @@ export function VoiceTranslator() {
                 <Button
                   size="lg"
                   variant={state.isRecording ? 'destructive' : 'default'}
-                  className={state.isRecording ? '' : 'bg-rouge-500 hover:bg-rouge-600'}
+                  className={state.isRecording ? '' : 'glass-red'}
                   onClick={state.isRecording ? stopRecording : startRecording}
                 >
                   {state.isRecording ? (
@@ -634,7 +634,7 @@ export function VoiceTranslator() {
               <Button
                 onClick={() => void transcribeAudio()}
                 disabled={!state.audioBlob || state.isTranscribing}
-                className="w-full bg-rouge-600 hover:bg-rouge-500"
+                className="w-full glass-red"
               >
                 {state.isTranscribing ? (
                   <>
@@ -702,7 +702,7 @@ export function VoiceTranslator() {
                   onClick={() => void translateText()}
                   disabled={!state.transcription || state.isTranslating}
                   size="sm"
-                  className="bg-rouge-500 hover:bg-rouge-600"
+                  className="glass-red"
                 >
                   {state.isTranslating ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -799,7 +799,7 @@ export function VoiceTranslator() {
               <Button
                 onClick={() => void synthesizeSpeech()}
                 disabled={!state.translation || state.isSynthesizing}
-                className="w-full bg-rouge-600 hover:bg-rouge-500"
+                className="w-full glass-red"
               >
                 {state.isSynthesizing ? (
                   <>
@@ -850,7 +850,7 @@ export function VoiceTranslator() {
           onClick={runFullPipeline}
           disabled={state.isTranscribing || state.isTranslating || state.isSynthesizing}
           size="lg"
-          className="w-full bg-rouge-600 hover:bg-rouge-500"
+          className="w-full glass-red"
         >
           <Wand2 className="h-5 w-5 mr-2" />
           {t('voiceTranslator.runFullPipeline')}

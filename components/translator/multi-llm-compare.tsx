@@ -241,7 +241,7 @@ export function MultiLLMCompare() {
               onClick={handleCompare}
               disabled={isLoading || !sourceText.trim() || selectedProviders.length === 0}
               size="sm"
-              className="w-full bg-rouge-600 hover:bg-rouge-500"
+              className="w-full glass-red"
             >
               {isLoading ? (
                 <><Loader2 className="h-3 w-3 mr-1 animate-spin" />{t('multiLlmCompare.comparing')}</>

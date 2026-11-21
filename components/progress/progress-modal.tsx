@@ -267,7 +267,7 @@ export function ProgressModal({
           {!isInProgress && (
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-white bg-rouge-600 hover:bg-rouge-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white glass-red rounded-lg transition-colors"
             >
               Close
             </button>

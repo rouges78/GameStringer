@@ -226,7 +226,7 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
           <Button
             onClick={handleGenerate}
             disabled={generating || !audioPath.trim() || rhubarbAvailable !== true}
-            className="bg-rouge-600 hover:bg-rouge-500 mt-5"
+            className="glass-red mt-5"
           >
             {generating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Smile className="w-4 h-4 mr-2" />}
             {generating ? 'Generazione...' : 'Genera Lip Sync'}
@@ -393,7 +393,7 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
               )}
             </div>
 
-            <Button onClick={handleExport} size="sm" className="w-full bg-rouge-600 hover:bg-rouge-500">
+            <Button onClick={handleExport} size="sm" className="w-full glass-red">
               <Download className="w-3.5 h-3.5 mr-2" />
               {t('lipSyncPanel.export')}{exportEngine === 'unity' ? 'per Unity' : exportEngine === 'unreal' ? 'per Unreal' : exportFormat.toUpperCase()}
             </Button>

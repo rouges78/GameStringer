@@ -273,7 +273,7 @@ export default function OfflineTranslator() {
                   ) : (
                     <Button
                       size="sm"
-                      className="bg-rouge-600 hover:bg-rouge-700 text-xs shrink-0"
+                      className="glass-red text-xs shrink-0"
                       onClick={() => handlePullModel(model.name)}
                       disabled={!status?.ollama_running || isPulling !== ''}
                     >

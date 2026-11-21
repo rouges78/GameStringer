@@ -402,7 +402,7 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
                 <Button
                   size="sm"
                   onClick={handleNext}
-                  className="h-8 text-xs bg-rouge-600 hover:bg-rouge-500"
+                  className="h-8 text-xs glass-red"
                 >
                   {isLastStep ? (
                     <>

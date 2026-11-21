@@ -451,8 +451,8 @@ function ProjectCard({
           {project.openHref && (
             <Button
               size="sm"
-              variant="secondary"
-              className="flex-1 h-7 text-2xs border border-border"
+              variant="default"
+              className="flex-1 h-7 text-2xs"
               onClick={() => { if (project.openHref) router.push(project.openHref); }}
             >
               <FileText className="w-3 h-3 mr-1" />
@@ -1002,7 +1002,7 @@ export default function ProjectsPage() {
             <Upload className="w-4 h-4 mr-2" />
             {t('projectsPage.importBtn')}</Button>
           {/* Senza gioco: il wizard mostra il selettore dei giochi installati */}
-          <Button size="sm" className="bg-rouge-600 hover:bg-rouge-500" onClick={() => router.push('/auto-translate')}>
+          <Button size="sm" className="glass-red" onClick={() => router.push('/auto-translate')}>
             <Plus className="w-4 h-4 mr-2" />
             {t('projectsPage.newProject')}</Button>
         </div>
@@ -1099,7 +1099,7 @@ export default function ProjectsPage() {
               : 'Prova a modificare i filtri di ricerca.'}
           </p>
           {projects.length === 0 && (
-            <Button className="bg-rouge-600 hover:bg-rouge-500" onClick={() => router.push('/auto-translate')}>
+            <Button className="glass-red" onClick={() => router.push('/auto-translate')}>
               <Plus className="w-4 h-4 mr-2" />
               {t('projectsPage.startTranslating')}</Button>
           )}

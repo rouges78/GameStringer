@@ -264,7 +264,7 @@ export function CommunityOverview({
               <Button
                 onClick={() => onNewThread()}
                 size="sm"
-                className="bg-rouge-600 hover:bg-rouge-500 text-xs"
+                className="glass-red text-xs"
               >
                 <Plus className="h-3.5 w-3.5 mr-1" />
                 {t('forum.newThread') || 'Nuova discussione'}

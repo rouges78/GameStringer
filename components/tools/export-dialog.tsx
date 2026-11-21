@@ -355,7 +355,7 @@ export function ExportDialog({
               <Button 
                 onClick={handleExport} 
                 disabled={isExporting || entries.length === 0}
-                className="bg-rouge-600 hover:bg-rouge-500"
+                className="glass-red"
               >
                 {isExporting ? (
                   <>

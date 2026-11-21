@@ -521,7 +521,7 @@ export default function VideoExtractorPage() {
           <Button
             onClick={handleScan}
             disabled={scanning || !gamePath.trim()}
-            className="bg-rouge-600 hover:bg-rouge-500"
+            className="glass-red"
           >
             {scanning ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Search className="w-4 h-4 mr-2" />}
             {scanning ? 'Scansione...' : 'Scansiona'}

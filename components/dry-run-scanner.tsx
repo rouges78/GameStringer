@@ -121,7 +121,7 @@ export default function DryRunScanner() {
         <Button
           onClick={startScan}
           disabled={running}
-          className="bg-rouge-600 hover:bg-rouge-500 text-white text-sm px-4 py-2 rounded-lg"
+          className="glass-red text-white text-sm px-4 py-2 rounded-lg"
         >
           {running ? (
             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('common.scanning')}</>

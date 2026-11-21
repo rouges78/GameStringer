@@ -1209,7 +1209,7 @@ export default function DanganronpaPatcherPage() {
                   onClick={rebuildWad}
                   disabled={!selectedSteamGame || applyingPatch}
                   size="sm"
-                  className="w-full h-8 bg-rouge-600 hover:bg-rouge-500 text-xs"
+                  className="w-full h-8 glass-red text-xs"
                 >
                   {applyingPatch ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -1442,7 +1442,7 @@ export default function DanganronpaPatcherPage() {
                       onClick={translateWithAI} 
                       disabled={loading || linDialogues.filter(d => !d.translated).length === 0}
                       size="sm" 
-                      className="h-8 bg-rouge-600 hover:bg-rouge-500"
+                      className="h-8 glass-red"
                     >
                       {loading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Globe className="w-3 h-3 mr-1" />}
                       {t('danganronpaPatcher.translateWithAi')}</Button>

@@ -289,7 +289,7 @@ export function UniversalInjector() {
                   <Button
                     onClick={handleInject}
                     disabled={isInjecting}
-                    className="w-full bg-rouge-600 hover:bg-rouge-500"
+                    className="w-full glass-red"
                     size="sm"
                   >
                     {isInjecting ? (

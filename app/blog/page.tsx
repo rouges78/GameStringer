@@ -209,7 +209,7 @@ export default function BlogPage() {
         </div>
       )}
       <div className="flex gap-2 pt-1">
-        <Button size="sm" onClick={onSave} className="h-7 text-xs bg-rouge-500 hover:bg-rouge-400 text-white">
+        <Button size="sm" onClick={onSave} className="h-7 text-xs glass-red text-white">
           <Save className="h-3 w-3 mr-1" /> {t('common.save')}
         </Button>
         <Button size="sm" variant="outline" onClick={onCancel} className="h-7 text-xs border-noir-700 text-noir-400 hover:bg-noir-700/30">
@@ -238,7 +238,7 @@ export default function BlogPage() {
         
         <button 
           onClick={() => { resetForm(); setIsAdding(true); setEditingId(null); }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-rouge-500 hover:bg-rouge-400 text-white text-xs font-medium transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm glass-red text-white text-xs font-medium transition-colors"
         >
           <Plus className="h-3.5 w-3.5" />
           {t('common.newPost')}
@@ -327,7 +327,7 @@ export default function BlogPage() {
           <p className="text-[11px] text-noir-400/40 mb-4">{t('common.createTheFirstNewsToPopulateTheDashboardFeed')}</p>
           <button 
             onClick={() => { resetForm(); setIsAdding(true); }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-sm bg-rouge-500 hover:bg-rouge-400 text-white text-xs font-medium transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-sm glass-red text-white text-xs font-medium transition-colors"
           >
             <Plus className="h-3.5 w-3.5" />
             {t('common.createFirstPost')}

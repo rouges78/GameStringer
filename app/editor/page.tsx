@@ -1468,7 +1468,7 @@ export default function EditorPage() {
                   <Separator orientation="vertical" className="h-5 bg-noir-700/50 mx-1" />
                   <Button 
                     size="sm" 
-                    className={cn("h-8 text-xs font-bold rounded-lg shadow-sm transition-all", hasUnsavedChanges ? "bg-rouge-600 hover:bg-rouge-500 text-white shadow-rouge-500/20" : "bg-noir-800 text-noir-400 hover:bg-noir-700")}
+                    className={cn("h-8 text-xs font-bold rounded-lg transition-all", hasUnsavedChanges ? "glass-red text-white" : "shadow-sm bg-noir-800 text-noir-400 hover:bg-noir-700")}
                     onClick={handleManualSave} 
                     disabled={!hasUnsavedChanges || isSaving}
                   >

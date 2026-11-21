@@ -237,7 +237,7 @@ export function CharacterProfileManager({
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button size="sm" className="bg-rouge-500 hover:bg-rouge-600">
+            <Button size="sm" className="glass-red">
               <Plus className="h-4 w-4 mr-1" />
               New Profile
             </Button>
