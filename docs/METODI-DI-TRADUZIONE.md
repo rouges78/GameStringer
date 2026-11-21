@@ -3013,6 +3013,36 @@ teneva bloccato `gamestringer.exe`, quindi è girato solo il test. Non è
 accertato nemmeno perché quelle 52 stringhe del `.pak` non si traducano: sulla
 cartella sbagliata la domanda non aveva senso.
 
+### Visionaire: il checkpoint resta nella cartella vecchia quando il gioco cambia libreria (19/11/2026)
+
+**Il fatto.** Aprendo «Progetti» la console dava in rosso «Nessun file .vis
+trovato» da `scan_vis_strings`. Foolish Mortals era stato tradotto in agosto in
+`C:\Program Files (x86)\Steam\steamapps\common\foolishmortals` e reinstallato il
+13/11 in `E:\SteamLibrary`. Nella cartella su C: Steam ha lasciato solo i file
+di GameStringer: `data.vis.gs_bak` (867.752.026 byte) e
+`gamestringer_ckpt_it.json` (5.771 traduzioni, indici 0–5.770). Il checkpoint in
+IndexedDB ha per chiave il percorso, quindi il backfill dei progetti continua a
+interrogare la cartella vuota e in «Progetti» restano due schede dello stesso
+gioco: «Foolish Mortals» (E:, 540/33.221) e «foolishmortals» (C:, 5.771/25.645).
+È lo stesso residuo della voce qui sopra, visto dal lato dei checkpoint.
+
+**Perché il checkpoint vecchio non si porta dietro.** È una mappa indice →
+traduzione, e l'indice è la posizione nell'elenco prodotto dall'euristica di
+`extract_strings_from_binary`: non è un identificativo del gioco. Il `data.vis`
+di oggi pesa 865.145.180 byte e dà 33.221 stringhe contro le 25.645 di allora.
+Copiare il file accanto al gioco nuovo metterebbe traduzioni su stringhe che non
+sono garantite essere le stesse.
+
+**Dove vive nel codice.** `lib/tauri-api.ts` registra quell'esito come debug (il
+chiamante ripiega già sul conteggio del checkpoint); `lib/backfill-visionaire-projects.ts`
+controlla la lapide prima dello scan, così una scheda eliminata non fa più
+interrogare la cartella.
+
+**Cosa NON è provato.** L'allineamento non è stato misurato stringa per stringa:
+l'incompatibilità è dedotta dai due totali diversi, e la misura non si può più
+fare perché la cartella residua su C: è stata eliminata il 19/11/2026. Non c'è
+ancora un modo di riagganciare un checkpoint a un gioco spostato.
+
 ## Come si aggiunge una voce
 
 Quando trovi un modo nuovo di estrarre o reiniettare testo, o capisci perché un

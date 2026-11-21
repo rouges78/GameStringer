@@ -46,19 +46,20 @@ export async function backfillVisionaireProjects(): Promise<number> {
     const translated = ckpt ? Object.keys(ckpt).length : 0;
     if (translated <= 0) continue;
 
+    const name = gamePath.replace(/[\\/]+$/, '').split(/[\\/]/).pop() || gamePath;
+    const gameId = `vis-${gamePath}`;
+
+    // Card eliminata dall'utente: non risorgerla dal checkpoint (stessa
+    // regola del backfill session — «Elimina» deve restare eliminato).
+    // Prima dello scan: per una card eliminata non serve leggere il gioco.
+    if (isProjectTombstoned(gameId, lang)) continue;
+
     // Totale reale via scan (best-effort: il gioco potrebbe non essere più installato)
     let total = translated;
     try {
       const info = await invoke<{ total_strings?: number }>('scan_vis_strings', { gamePath });
       if (info?.total_strings && info.total_strings > 0) total = info.total_strings;
     } catch { /* gioco non disponibile: usa translated come totale */ }
-
-    const name = gamePath.replace(/[\\/]+$/, '').split(/[\\/]/).pop() || gamePath;
-    const gameId = `vis-${gamePath}`;
-
-    // Card eliminata dall'utente: non risorgerla dal checkpoint (stessa
-    // regola del backfill session — «Elimina» deve restare eliminato).
-    if (isProjectTombstoned(gameId, lang)) continue;
 
     try {
       const proj = await projectService.createOrGetProject({
