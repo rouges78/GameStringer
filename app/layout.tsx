@@ -1,7 +1,6 @@
 
 import type { Metadata } from 'next';
 import { BRAND_FULL } from '@/lib/brand';
-import { Pixelify_Sans } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import Providers from '@/components/providers';
@@ -15,16 +14,9 @@ import { ScreenProvider } from '@/components/providers/screen-provider';
 import { SettingsBootGate } from '@/components/providers/settings-boot-gate';
 import { FeedbackHost } from '@/components/feedback/feedback-host';
 
-// Testo e dati usano i font di sistema della suite Rouges (Segoe UI Variable,
-// Cascadia Mono: vedi tailwind.config.ts), che coprono già latino, cirillico e
-// greco delle 12 lingue. next/font resta solo per l'accento pixel: scarica i
-// file in build e li serve dall'app, quindi funziona offline in Tauri.
-// Accento "Save Slot": solo titoli brevi e contatori, mai testo corrente.
-const pixel = Pixelify_Sans({
-  subsets: ['latin', 'latin-ext', 'cyrillic'],
-  weight: ['400', '600'],
-  variable: '--font-pixel',
-});
+// Nessun font incluso: testo e dati usano i font di sistema della suite Rouges
+// (Segoe UI Variable, Cascadia Mono: vedi tailwind.config.ts), che coprono già
+// latino, cirillico e greco delle 12 lingue.
 
 export const metadata: Metadata = {
   title: `${BRAND_FULL} - AI Game Translation`,
@@ -37,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="it" className={`dark ${pixel.variable}`} suppressHydrationWarning>
+    <html lang="it" className="dark" suppressHydrationWarning>
       {/* Niente più AnimatedBackground: blob sfocati e 50 particelle in un loop
           rAF permanente, anche nelle finestre overlay. */}
       <body className="font-sans">

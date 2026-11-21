@@ -931,7 +931,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <DialogContent className="max-w-2xl max-h-[85vh] p-0 overflow-hidden">
             <DialogHeader className="p-6 pb-4 border-b border-border">
               <DialogTitle className="flex flex-col items-start gap-1.5">
-                <span className="font-pixel text-xl leading-none text-foreground">{t('common.changelog')}</span>
+                <span className="text-xl font-extrabold tracking-tight leading-none text-foreground">{t('common.changelog')}</span>
                 <span className="rounded-sm border border-border bg-secondary px-2 py-0.5 font-mono text-xs font-medium text-muted-foreground">
                   {t('changelog.currentVersion')} v{version}
                 </span>

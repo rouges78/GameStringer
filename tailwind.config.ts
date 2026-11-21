@@ -38,13 +38,10 @@ const config: Config = {
         '2xs':   ['0.625rem',  { lineHeight: '0.875rem' }],  // 10px — replaces text-2xs
       },
       // Font di sistema della suite Rouges (come rouges-db e LightMail): Segoe UI
-      // Variable per il testo, Cascadia Mono per i dati. Pixel SOLO come accento
-      // (titoli, contatori, ≥16px), mai nelle tabelle: la sua variabile viene da
-      // next/font in app/layout.tsx.
+      // Variable per il testo, Cascadia Mono per i dati.
       fontFamily: {
         sans: ['"Segoe UI Variable Text"', '"Segoe UI"', 'system-ui', 'sans-serif'],
         mono: ['"Cascadia Mono"', '"Cascadia Code"', 'Consolas', 'monospace'],
-        pixel: ['var(--font-pixel)', '"Cascadia Mono"', 'Consolas', 'monospace'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
