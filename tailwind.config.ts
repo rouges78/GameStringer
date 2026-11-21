@@ -37,13 +37,14 @@ const config: Config = {
         'micro': ['0.5625rem', { lineHeight: '0.75rem' }],   // 9px  — replaces text-micro
         '2xs':   ['0.625rem',  { lineHeight: '0.875rem' }],  // 10px — replaces text-2xs
       },
-      // B + C: testo in IBM Plex Sans, dati in JetBrains Mono, pixel SOLO come
-      // accento (titoli, contatori, ≥16px) — mai nelle tabelle. Le variabili
-      // vengono da next/font in app/layout.tsx.
+      // Font di sistema della suite Rouges (come rouges-db e LightMail): Segoe UI
+      // Variable per il testo, Cascadia Mono per i dati. Pixel SOLO come accento
+      // (titoli, contatori, ≥16px), mai nelle tabelle: la sua variabile viene da
+      // next/font in app/layout.tsx.
       fontFamily: {
-        sans: ['var(--font-body)', 'system-ui', 'Segoe UI', 'sans-serif'],
-        mono: ['var(--font-mono)', 'ui-monospace', 'Consolas', 'monospace'],
-        pixel: ['var(--font-pixel)', 'var(--font-mono)', 'monospace'],
+        sans: ['"Segoe UI Variable Text"', '"Segoe UI"', 'system-ui', 'sans-serif'],
+        mono: ['"Cascadia Mono"', '"Cascadia Code"', 'Consolas', 'monospace'],
+        pixel: ['var(--font-pixel)', '"Cascadia Mono"', 'Consolas', 'monospace'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
