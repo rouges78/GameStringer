@@ -985,9 +985,14 @@ export default function GameDetailPage() {
       let installPath = game.installPath;
       if (!installPath) {
         try {
-          installPath = await invoke<string>('find_game_install_path', {
-            installDir: game.install_dir || game.name || game.title
-          });
+          if (typeof game.appid === 'number' && game.appid > 0) {
+            installPath = await invoke<string | null>('find_game_path_by_appid', { appId: game.appid }).catch(() => null) || undefined;
+          }
+          if (!installPath) {
+            installPath = await invoke<string>('find_game_install_path', {
+              installDir: game.install_dir || game.name || game.title
+            });
+          }
         } catch (e: unknown) {
           clientLogger.error('Impossibile trovare cartella gioco:', String(e));
           setPatchStatus({ success: false, message: 'Cartella del gioco non trovata' });
@@ -1665,8 +1670,14 @@ export default function GameDetailPage() {
             (!isNonSteamGame && appId && appId > 0)
               ? safeInvoke<SteamApiData>('fetch_steam_game_details', { appId }, 8000)
               : Promise.resolve(null),
-            // Install path (prova installDir, poi appId)
+            // Install path: prima appId (è l'appmanifest di Steam a dire dove sta
+            // il gioco), poi installDir/nome, che può combaciare con una
+            // cartella residua di una vecchia installazione.
             (async () => {
+              if (!isNonSteamGame && appId && appId > 0) {
+                const path = await safeInvoke<string>('find_game_path_by_appid', { appId }, 5000);
+                if (path) return path;
+              }
               if (urlInstallDir || urlInstalled) {
                 const path = await safeInvoke<string>('find_game_install_path', { installDir: urlInstallDir || urlName || '' }, 5000);
                 if (path) return path;

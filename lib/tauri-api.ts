@@ -89,7 +89,7 @@ export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unk
     } else if (errorMessage.includes('Credenziali corrotte') || errorMessage.includes('Riconnettiti a Steam')) {
       // Credenziali corrotte - messaggio già gestito, non loggare come errore
       clientLogger.info('ℹ️ Credenziali Steam rimosse. Riconnettiti nelle Impostazioni.');
-    } else if (cmd === 'load_renpy_translations' && errorMessage.includes('os error 2')) {
+    } else if ((cmd === 'load_renpy_translations' || cmd === 'load_hendrix_translations') && errorMessage.includes('os error 2')) {
       // Nessun checkpoint precedente: è la NORMA alla prima traduzione di un
       // gioco, e il chiamante ha già `catch { /* nessun checkpoint */ }`.
       // In rosso sembrava un guasto proprio nel momento in cui l'utente guarda
@@ -104,6 +104,12 @@ export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unk
       // Hollow l'errore compariva a schermo mentre la traduzione partiva.
       // Stessa logica dei probe detect_*: esito atteso con fallback → debug.
       clientLogger.debug(`🔎 ${cmd}: nessun .rpy sciolto (atteso) — provo gli archivi .rpa.`);
+    } else if (cmd === 'scan_vis_strings' && errorMessage.includes('Nessun file .vis')) {
+      // Cartella senza .vis (gioco disinstallato o spostato): il backfill dei
+      // progetti lo prova a ogni apertura di "Progetti" per ogni checkpoint e
+      // ripiega sul conteggio del checkpoint. Gli altri chiamanti ricevono
+      // comunque l'errore rilanciato qui sotto. Esito atteso → debug.
+      clientLogger.debug(`🔎 ${cmd}: nessun file .vis nella cartella (gioco non più installato?).`);
     } else if (cmd.startsWith('detect_') && errorMessage.includes('Non sembra essere')) {
       // Probe di rilevamento engine: "non è questo engine" è un esito ATTESO (il chiamante
       // ha un fallback), non un errore → debug, niente rumore rosso in console.

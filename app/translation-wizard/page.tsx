@@ -346,7 +346,12 @@ export default function TranslationWizardPage() {
       let installPath: string | null = null;
       const searchDir = game.install_path || game.title;
       try {
-        installPath = await invoke<string>('find_game_install_path', { installDir: searchDir });
+        if (game.steam_app_id) {
+          installPath = await invoke<string | null>('find_game_path_by_appid', { appId: game.steam_app_id }).catch(() => null);
+        }
+        if (!installPath) {
+          installPath = await invoke<string>('find_game_install_path', { installDir: searchDir });
+        }
       } catch {
         if (game.install_path && (game.install_path.includes(':') || game.install_path.startsWith('/'))) {
           installPath = game.install_path;

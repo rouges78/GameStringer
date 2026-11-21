@@ -1,5 +1,7 @@
 import React from 'react';
 import * as CountryFlags from 'country-flag-icons/react/3x2';
+import * as RoundFlags from 'country-flag-icons/react/1x1';
+import { cn } from '@/lib/utils';
 
 // Mappa migliorata e più robusta dalle lingue di Steam ai codici paese ISO 3166-1 alpha-2
 export const languageToCountryCode: { [key: string]: string } = {
@@ -218,6 +220,19 @@ export const getCountryCode = (language: string): string | undefined => {
     return languageToCountryCode[trimmed] || languageToCountryCode[trimmed.toLowerCase()];
 };
 
+type FlagSet = Record<string, React.ComponentType<{ className?: string }>>;
 
-
-
+/** Bandiera di una lingua dell'interfaccia (codice ISO: 'it', 'en', ...), rettangolare o tonda. */
+export function UiFlag({ code, round }: { code: string; round?: boolean }) {
+    const country = getCountryCode(code);
+    const Flag = country ? ((round ? RoundFlags : CountryFlags) as unknown as FlagSet)[country] : undefined;
+    if (!Flag) return null;
+    return (
+        <span className={cn(
+            'overflow-hidden flex-shrink-0 border border-white/20 shadow-sm',
+            round ? 'w-6 h-6 rounded-full' : 'w-5 h-3.5 rounded-sm'
+        )}>
+            <Flag className="block w-full h-full" />
+        </span>
+    );
+}
