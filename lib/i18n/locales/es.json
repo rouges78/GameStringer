@@ -4113,7 +4113,7 @@
     "detected": "detectados",
     "translated": "traducidos",
     "waitingForText": "Esperando texto...",
-    "footerInfo": "OCR funciona con cualquier juego • Traducciones con Gemini AI",
+    "footerInfo": "OCR funciona con cualquier juego",
     "aiProvider": "Proveedor de IA",
     "languagePackMissing": "Windows no puede leer texto en este idioma ({lang}): falta su paquete de idioma con reconocimiento óptico de caracteres (OCR). Añádelo en Configuración > Hora e idioma > Idioma y región y vuelve a iniciar."
   },

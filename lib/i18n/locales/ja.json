@@ -3969,7 +3969,7 @@
     "detected": "検出",
     "translated": "翻訳済み",
     "waitingForText": "テキストを待機中...",
-    "footerInfo": "OCRはどのゲームでも動作します • Gemini AIで翻訳",
+    "footerInfo": "OCRはどのゲームでも動作します",
     "aiProvider": "AI プロバイダー",
     "languagePackMissing": "Windows はこの言語 ({lang}) のテキストを読み取れません：光学式文字認識 (OCR) を含む言語パックがインストールされていません。設定 > 時刻と言語 > 言語と地域 で追加してから、もう一度開始してください。"
   },

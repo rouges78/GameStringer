@@ -50,6 +50,15 @@ const SOURCE_LANGUAGES = [
   { code: 'ko', name: '한국어', flag: '🇰🇷' },
 ];
 
+// Etichetta del traduttore scelto, mostrata nel piè di pagina: prima c'era
+// scritto fisso «Traduzioni con Gemini AI» anche col traduttore gratuito.
+const OCR_PROVIDER_LABEL_KEYS = {
+  libre: 'ocrTranslator.lingvaOption',
+  ollama: 'ocrTranslator.ollamaOption',
+  vlm: 'ocrTranslator.ollamaVlm',
+  gemini: 'ocrTranslator.geminiOption',
+} as const;
+
 export default function OcrTranslatorPage() {
   const { t } = useTranslation();
   const [isRunning, setIsRunning] = useState(false);
@@ -880,7 +889,7 @@ export default function OcrTranslatorPage() {
 
       {/* Info */}
       <p className="text-center text-2xs text-muted-foreground">
-        💡 {t('ocrTranslator.footerInfo')}
+        💡 {t('ocrTranslator.footerInfo')} • {t(OCR_PROVIDER_LABEL_KEYS[ocrProvider])}
       </p>
     </div>
   );
