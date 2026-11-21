@@ -111,7 +111,7 @@ export function ProgressNotificationComponent({
                   className={cn(
                     'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
                     {
-                      'bg-rouge-600 hover:bg-rouge-700 text-white': notification.type === 'info',
+                      'glass-red text-white': notification.type === 'info',
                       'bg-green-600 hover:bg-green-700 text-white': notification.type === 'success',
                       'bg-yellow-600 hover:bg-yellow-700 text-white': notification.type === 'warning',
                       'bg-red-600 hover:bg-red-700 text-white': notification.type === 'error'

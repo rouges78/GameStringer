@@ -1159,7 +1159,7 @@ export default function PredictionToolPage() {
               </select>
             </div>
             <button onClick={analyze} disabled={loading || (!installDir && !result)}
-              className="px-6 py-2 rounded-lg bg-rouge-600 hover:bg-rouge-500 disabled:bg-noir-700 disabled:text-noir-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
+              className="px-6 py-2 rounded-lg glass-red disabled:bg-noir-700 disabled:text-noir-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {loading ? 'Analisi...' : 'Analizza'}
             </button>

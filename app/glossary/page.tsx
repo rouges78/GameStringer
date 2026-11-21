@@ -617,7 +617,7 @@ export default function GlossaryPage() {
                     <Button
                       onClick={handleExtractTerms}
                       disabled={extracting || !gameTexts || gameTexts.length === 0}
-                      className="bg-rouge-600 hover:bg-rouge-700"
+                      className="glass-red"
                     >
                       {extracting ? (
                         <>

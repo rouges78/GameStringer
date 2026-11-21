@@ -579,7 +579,7 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
               <Languages className="h-3.5 w-3.5 mr-1.5" />
               {t('gameMakerTranslator.translatePage')}</Button>
 
-            <Button size="xs" className="bg-rouge-600 hover:bg-rouge-700 text-white"
+            <Button size="xs" className="glass-red text-white"
               onClick={translateAll}
               disabled={isTranslating || !dataInfo}>
               <Zap className="h-3.5 w-3.5 mr-1.5" />

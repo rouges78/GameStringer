@@ -403,7 +403,7 @@ export function SmartContextPanel({
                         className="bg-noir-800 border-noir-600 h-20"
                       />
                     </div>
-                    <Button onClick={handleAddCharacter} className="w-full bg-rouge-600 hover:bg-rouge-700">
+                    <Button onClick={handleAddCharacter} className="w-full glass-red">
                       <Check className="h-4 w-4 mr-2" />
                       {t('smartContextPanelComp.addCharacter')}</Button>
                   </div>
@@ -490,7 +490,7 @@ export function SmartContextPanel({
                         className="bg-muted/50 border-border"
                       />
                     </div>
-                    <Button onClick={handleAddTerm} className="w-full bg-rouge-600 hover:bg-rouge-700">
+                    <Button onClick={handleAddTerm} className="w-full glass-red">
                       <Check className="h-4 w-4 mr-2" />
                       {t('smartContextPanelComp.addTerm')}</Button>
                   </div>

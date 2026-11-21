@@ -473,7 +473,7 @@ export function BatchFolderTranslator() {
                         </Button>
                       </Link>
                       <Link href="/community-hub?action=publish">
-                        <Button size="xs" className="text-xs bg-rouge-600 hover:bg-rouge-500 text-white">
+                        <Button size="xs" className="text-xs glass-red text-white">
                           <Globe className="h-3 w-3 mr-1" />
                           Condividi
                         </Button>

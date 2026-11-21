@@ -184,7 +184,7 @@ export function GmGlyphCard({ installPath, engine, targetLang }: GmGlyphCardProp
               {/* Applica: solo se l'anteprima dice che ci sta */}
               {!esito.applicato && esito.realizzabile && (
                 <Button size="xs" disabled={busy !== null}
-                  className="mt-1 bg-rouge-600 hover:bg-rouge-500 text-white"
+                  className="mt-1 glass-red text-white"
                   onClick={() => void run(true)}>
                   {busy === 'apply' ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}
                   <span className="ml-1">{busy === 'apply' ? t('gmGlyph.applying') : t('gmGlyph.apply')}</span>

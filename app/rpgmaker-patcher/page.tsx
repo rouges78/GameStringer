@@ -303,7 +303,7 @@ export default function RpgMakerPatcherPage() {
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="flex items-center gap-3">
-            <Button onClick={selectGameFolder} disabled={loading} size="xs" className="bg-rouge-600 hover:bg-rouge-500">
+            <Button onClick={selectGameFolder} disabled={loading} size="xs" className="glass-red">
               {loading ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FolderOpen className="w-3 h-3 mr-2" />}
               {t('rpgmakerPatcherPage.browse')}
             </Button>
@@ -320,7 +320,7 @@ export default function RpgMakerPatcherPage() {
                   onClick={extractAllStrings} 
                   disabled={extracting}
                   size="sm" 
-                  className="h-8 bg-rouge-600 hover:bg-rouge-500 ml-auto"
+                  className="h-8 glass-red ml-auto"
                 >
                   {extracting ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Sparkles className="w-3 h-3 mr-2" />}
                   {t('common.estraiStringhe')}
@@ -363,7 +363,7 @@ export default function RpgMakerPatcherPage() {
                   <Upload className="w-3 h-3 mr-1" />
                   {t('common.upload')}
                 </Button>
-                <Button onClick={saveTranslations} size="xs" className="bg-rouge-600 hover:bg-rouge-500">
+                <Button onClick={saveTranslations} size="xs" className="glass-red">
                   <Save className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
                 <Button size="sm" variant="outline" onClick={handleExportPO} disabled={strings.length === 0} className="h-8" aria-label={t('common.esportaFilePo')}>
                   <Download className="h-4 w-4 mr-1.5" />
@@ -452,7 +452,7 @@ export default function RpgMakerPatcherPage() {
                               <Button
                                 size="sm"
                                 onClick={() => updateTranslation(entry.id, editedTranslation)}
-                                className="h-7 bg-rouge-600 hover:bg-rouge-500"
+                                className="h-7 glass-red"
                               >
                                 <Check className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
                               <Button

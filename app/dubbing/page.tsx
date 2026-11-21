@@ -175,7 +175,7 @@ export default function DubbingPage() {
         </div>
         <div className="flex gap-2">
           {!isRunning ? (
-            <Button onClick={handleStart} className="bg-rouge-600 hover:bg-rouge-700 gap-2" disabled={!gamePath}>
+            <Button onClick={handleStart} className="glass-red gap-2" disabled={!gamePath}>
               <Play className="h-4 w-4" /> {t('dubbingPage.startDubbing')}</Button>
           ) : (
             <>

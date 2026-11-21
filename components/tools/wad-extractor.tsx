@@ -310,7 +310,7 @@ export function WadExtractor() {
                   onClick={translateBatch}
                   disabled={translating || stats.translated === stats.total}
                   size="sm"
-                  className="h-8 bg-rouge-600 hover:bg-rouge-500"
+                  className="h-8 glass-red"
                 >
                   {translating ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Sparkles className="w-3 h-3 mr-1" />}
                   {t('wadExtractor.translateAi')}</Button>

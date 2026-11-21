@@ -1095,7 +1095,7 @@ export default function SettingsPage() {
             </Dialog>
             <Button variant="outline" size="sm" onClick={resetSettings} className="border-white/30 text-white hover:bg-white/10 h-8 text-xs">
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />{t('subtitleTranslator.reset')}</Button>
-            <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-rouge-600 hover:bg-rouge-500 h-8 text-xs">
+            <Button size="sm" onClick={saveSettings} disabled={isSaving} className="glass-red h-8 text-xs">
               {isSaving ? (
                 <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />{t('settings.saving')}</>
               ) : (
@@ -1862,7 +1862,7 @@ export default function SettingsPage() {
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl border border-amber-500/40 bg-noir-900/95 shadow-xl backdrop-blur">
           <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" aria-hidden />
           <span className="text-xs text-amber-200">{t('settings.unsavedChanges')}</span>
-          <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-rouge-600 hover:bg-rouge-500 h-7 text-xs">
+          <Button size="sm" onClick={saveSettings} disabled={isSaving} className="glass-red h-7 text-xs">
             {isSaving ? (
               <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />{t('settings.saving')}</>
             ) : (

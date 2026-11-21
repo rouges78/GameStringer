@@ -462,7 +462,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
             <Button
               type="submit"
               disabled={isCreating}
-              className="flex-1 h-10 bg-rouge-600 hover:bg-rouge-500 text-white border-0"
+              className="flex-1 h-10 glass-red text-white border-0"
             >
               {isCreating ? (
                 <>

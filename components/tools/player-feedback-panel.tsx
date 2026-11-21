@@ -523,7 +523,7 @@ export function PlayerFeedbackPanel() {
             <Button variant="outline" onClick={() => setShowSubmitDialog(false)}>
               {t('playerFeedback.cancel')}
             </Button>
-            <Button onClick={handleSubmitFeedback} className="bg-rouge-600 hover:bg-rouge-500">
+            <Button onClick={handleSubmitFeedback} className="glass-red">
               <Send className="h-4 w-4 mr-1" />
               {t('playerFeedback.submit')}
             </Button>

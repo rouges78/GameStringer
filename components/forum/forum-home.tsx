@@ -241,7 +241,7 @@ export function ForumHome({ initialCategory, initialSearch, packsOnly = false, o
         <Button
           onClick={() => handleNewThread(selectedCategory !== 'all' ? selectedCategory : undefined)}
           size="sm"
-          className="bg-rouge-600 hover:bg-rouge-500 h-9"
+          className="glass-red h-9"
         >
           <Plus className="h-4 w-4 mr-1" />
           {t('forum.newThread')}
@@ -475,7 +475,7 @@ function EmptyState({
           {t('communityHub.openPatchHub') || 'Apri il Patch Hub'}
         </Button>
       ) : (
-        <Button size="sm" onClick={onNewThread} className="bg-rouge-600 hover:bg-rouge-500">
+        <Button size="sm" onClick={onNewThread} className="glass-red">
           <Plus className="h-4 w-4 mr-1" />
           {t('forum.newThread')}
         </Button>

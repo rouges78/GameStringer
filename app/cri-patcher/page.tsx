@@ -612,7 +612,7 @@ export default function CriPatcherPage() {
                   onClick={handleAnalyze}
                   disabled={!gamePath || analyzing}
                   size="sm"
-                  className="h-9 bg-rouge-600 hover:bg-rouge-500 text-xs"
+                  className="h-9 glass-red text-xs"
                   aria-label={t('common.analizzaCartella')}
                 >
                   {analyzing ? (
@@ -733,7 +733,7 @@ export default function CriPatcherPage() {
                       onClick={handleExtractAndParse}
                       disabled={extracting || selectedTextFiles.size === 0}
                       size="xs"
-                      className="bg-rouge-600 hover:bg-rouge-500 text-xs"
+                      className="glass-red text-xs"
                       aria-label={t('common.estraiFileSelezionati')}
                     >
                       {extracting ? (
@@ -960,7 +960,7 @@ export default function CriPatcherPage() {
                     {t('criPatcher.importPo')}</Button>
                   <Button
                     size="sm"
-                    className="h-8 text-xs bg-rouge-600 hover:bg-rouge-500"
+                    className="h-8 text-xs glass-red"
                     onClick={() => setStep(4)}
                     disabled={stats.translated === 0}
                     aria-label={t('criPatcher.goToExportAria')}
@@ -1021,7 +1021,7 @@ export default function CriPatcherPage() {
                 <Button
                   onClick={handleBuildPatchedCpk}
                   disabled={exporting || !selectedCpk || cpkBlockedFormats.length > 0}
-                  className="h-auto py-3 flex flex-col items-center gap-1.5 bg-rouge-600 hover:bg-rouge-500 text-xs"
+                  className="h-auto py-3 flex flex-col items-center gap-1.5 glass-red text-xs"
                   aria-label={t('common.creaCpkPatchato')}
                 >
                   {exporting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Package className="h-5 w-5" />}

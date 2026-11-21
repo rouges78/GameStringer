@@ -499,7 +499,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
                   <Button 
                     onClick={handleUseCustomUrl} 
                     disabled={!customUrlPreview || saving}
-                    className="bg-rouge-600 hover:bg-rouge-700"
+                    className="glass-red"
                   >
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   </Button>
@@ -818,7 +818,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
             <Button 
               onClick={handleSelectCover} 
               disabled={!selectedCover || saving}
-              className="bg-rouge-600 hover:bg-rouge-700"
+              className="glass-red"
             >
               {saving ? (
                 <>

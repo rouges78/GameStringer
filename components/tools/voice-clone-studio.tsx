@@ -257,7 +257,7 @@ export function VoiceCloneStudio() {
                     <Button
                       onClick={handleSynthesize}
                       disabled={isGenerating || !inputText.trim()}
-                      className="bg-rouge-600 hover:bg-rouge-500"
+                      className="glass-red"
                     >
                       {isGenerating ? (
                         <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
@@ -454,7 +454,7 @@ export function VoiceCloneStudio() {
               <Button
                 onClick={handleCloneVoice}
                 disabled={isCloning || !cloneName.trim() || audioSamples.length === 0}
-                className="w-full bg-rouge-600 hover:bg-rouge-500"
+                className="w-full glass-red"
               >
                 {isCloning ? (
                   <RefreshCw className="h-4 w-4 mr-1 animate-spin" />

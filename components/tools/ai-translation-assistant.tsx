@@ -344,7 +344,7 @@ export function AITranslationAssistant() {
               onClick={handleTranslate} 
               disabled={isTranslating || !inputText.trim()}
               size="sm"
-              className="bg-rouge-600 hover:bg-rouge-500"
+              className="glass-red"
             >
               {isTranslating ? (
                 <>
@@ -512,7 +512,7 @@ export function AITranslationAssistant() {
                   placeholder={t('aiTranslation.translationPlaceholder')}
                   className="w-28 min-w-0"
                 />
-                <Button size="icon" onClick={addGlossaryTerm} className="bg-rouge-600 hover:bg-rouge-500 shrink-0" aria-label={t('aiTranslation.addTerm')}>
+                <Button size="icon" onClick={addGlossaryTerm} className="glass-red shrink-0" aria-label={t('aiTranslation.addTerm')}>
                   <Check className="h-4 w-4" />
                 </Button>
               </div>

@@ -618,7 +618,7 @@ export function UnityInkTranslator() {
                   <Button 
                     onClick={handleSelectGame}
                     disabled={!gameDir.trim()}
-                    className="bg-rouge-600 hover:bg-rouge-500"
+                    className="glass-red"
                   >
                     <Search className="h-4 w-4 mr-1" />
                     {t('unityInkTranslator.detect')}</Button>
@@ -686,7 +686,7 @@ export function UnityInkTranslator() {
                   <Button 
                     onClick={handleExtract}
                     disabled={extracting}
-                    className="bg-rouge-600 hover:bg-rouge-500 w-full"
+                    className="glass-red w-full"
                     size="lg"
                   >
                     {extracting ? (
@@ -700,7 +700,7 @@ export function UnityInkTranslator() {
                 {extractResult && (
                   <Button 
                     onClick={() => setStep('translate')} 
-                    className="bg-rouge-600 hover:bg-rouge-500 w-full"
+                    className="glass-red w-full"
                   >
                     {t('unityInkTranslator.proceedToTranslation')} <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
@@ -809,7 +809,7 @@ export function UnityInkTranslator() {
                       onClick={handleTranslate}
                       className={cn(
                         "w-full",
-                        useCharacterVoices ? "bg-rouge-600 hover:bg-rouge-500" : "bg-green-600 hover:bg-green-500"
+                        useCharacterVoices ? "glass-red" : "bg-green-600 hover:bg-green-500"
                       )}
                       size="lg"
                     >
@@ -858,7 +858,7 @@ export function UnityInkTranslator() {
                 {translateProgress.status === 'done' && (
                   <Button 
                     onClick={() => setStep('inject')} 
-                    className="bg-rouge-600 hover:bg-rouge-500 w-full"
+                    className="glass-red w-full"
                   >
                     {t('unityInkTranslator.proceedToInjection')} <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>

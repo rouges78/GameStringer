@@ -298,7 +298,7 @@ export function RomPatcherUI() {
 
               {/* Apply button */}
               <Button
-                className="w-full bg-rouge-500 hover:bg-rouge-600"
+                className="w-full glass-red"
                 disabled={!applyRomFile || !applyPatchFile || isApplying}
                 onClick={handleApply}
               >
@@ -471,7 +471,7 @@ export function RomPatcherUI() {
                           <ShieldCheck className={`h-3 w-3 mr-1 ${verifyStatus === 'ok' ? 'text-green-500' : verifyStatus === 'fail' ? 'text-red-500' : ''}`} />
                           {verifyStatus === 'ok' ? 'Verificata' : verifyStatus === 'fail' ? 'Fallita' : 'Verifica'}
                         </Button>
-                        <Button size="sm" className="bg-rouge-500 hover:bg-rouge-600" onClick={handlePublishToHub}>
+                        <Button size="sm" className="glass-red" onClick={handlePublishToHub}>
                           <Share2 className="h-3 w-3 mr-1" />{t('romPatcher.publishToHub')}</Button>
                       </div>
                       <div className="mt-2 p-2 rounded bg-muted/50">

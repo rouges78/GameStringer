@@ -456,7 +456,7 @@ export function ThreadView({ threadId, userId, authUserId, userName, userAvatar,
             variant={liked ? 'default' : 'ghost'}
             size="sm"
             onClick={handleLike}
-            className={liked ? 'bg-rouge-600 hover:bg-rouge-500' : ''}
+            className={liked ? 'glass-red' : ''}
           >
             <Heart className={`h-4 w-4 mr-1 ${liked ? 'fill-current' : ''}`} />
             {likeCount}

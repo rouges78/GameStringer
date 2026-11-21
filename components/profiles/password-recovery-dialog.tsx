@@ -60,7 +60,7 @@ export function PasswordRecoveryDialog({
           <div className="flex-1" />
           <Button
             onClick={() => onOpenChange(false)}
-            className="bg-rouge-600 hover:bg-rouge-700"
+            className="glass-red"
           >
             {t('common.close')}
           </Button>
