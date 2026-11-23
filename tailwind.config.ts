@@ -48,6 +48,11 @@ const config: Config = {
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
+      // Tailwind 3.3 salta da opacity-10 a opacity-20: opacity-15 è usata nelle
+      // copertine degli header e senza questa voce non genera CSS.
+      opacity: {
+        15: '0.15',
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
