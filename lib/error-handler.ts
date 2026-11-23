@@ -314,7 +314,7 @@ export class ErrorHandler {
 
     const report = this.createErrorReport(error, {
       ...context,
-      componentStack: errorInfo?.componentStack
+      componentStack: errorInfo?.componentStack ?? undefined
     });
 
     // Send to monitoring service in production

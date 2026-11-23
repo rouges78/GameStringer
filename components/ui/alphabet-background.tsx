@@ -43,7 +43,7 @@ export function AlphabetBackground({
   className = ''
 }: AlphabetBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
   const lettersRef = useRef<FloatingLetter[]>([]);
 
   // Genera lettere casuali

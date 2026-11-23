@@ -37,7 +37,7 @@ export function useBatchOperations(options: UseBatchOperationsOptions = {}) {
   const [activeOperations, setActiveOperations] = useState<BatchOperationStatus[]>([]);
   const [operationHistory, setOperationHistory] = useState<BatchOperationStatus[]>([]);
   
-  const refreshIntervalRef = useRef<NodeJS.Timeout>();
+  const refreshIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const refreshActiveOperations = useCallback(async () => {
     try {
