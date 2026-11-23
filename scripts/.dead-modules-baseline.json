@@ -84,7 +84,6 @@
     "components/virtualized-game-grid.tsx": "88 righe",
     "hooks/useHowLongToBeat.ts": "84 righe",
     "app/utils/steam-local-files.ts": "81 righe",
-    "components/ui/calendar.tsx": "71 righe",
     "components/ui/toggle.tsx": "50 righe",
     "components/ui/theme-toggle.tsx": "36 righe",
     "components/theme-toggle.tsx": "32 righe",
