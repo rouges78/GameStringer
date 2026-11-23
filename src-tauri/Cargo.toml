@@ -94,7 +94,7 @@ lz4_flex = "0.11"
 byteorder = "1.5"
 encoding_rs = "0.8"
 image = "0.24"
-libloading = "0.8"
+libloading = "0.9"
 # Texture GameMaker (chunk TXTR): QOI compresso con BZip2 — vedi ADR-005.
 # Era gia' nel Cargo.lock a 0.4.4 come transitiva, quindi dichiararla diretta
 # non aggiunge nulla da compilare.
