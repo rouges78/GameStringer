@@ -7,10 +7,11 @@ import { Brain, Scan, Image as ImageIcon, Database, Sparkles, Zap, Bot } from 'l
 import { Button } from '@/components/ui/button';
 import { AITranslationAssistant } from '@/components/tools/ai-translation-assistant';
 import { useTranslation, translations } from '@/lib/i18n';
+import { trustedImageSrc } from '@/lib/trusted-image-src';
 
 export default function AITranslatorPage() {
   const searchParams = useSearchParams();
-  const gameImage = searchParams.get('gameImage');
+  const gameImage = trustedImageSrc(searchParams.get('gameImage'));
   const gameName = searchParams.get('gameName');
   
   const { language } = useTranslation();
