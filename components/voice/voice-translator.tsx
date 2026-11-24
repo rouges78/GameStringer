@@ -27,6 +27,7 @@ import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/lib/i18n';
 import { translateWithFallback, getApiKeys } from '@/lib/ai/ai-translate-direct';
 import { clientLogger } from '@/lib/client-logger';
+import { synthesizeOpenAISpeech, OPENAI_TTS_MAX_SPEED } from '@/lib/voice/openai-realtime-tts';
 
 interface TranscriptionSegment {
   start: number;
@@ -84,11 +85,13 @@ const LANGUAGES = [
 ];
 
 const TTS_VOICES = [
-  { id: 'nova', name: 'Nova', description: 'Female, natural' },
+  { id: 'marin', name: 'Marin', description: 'Female, natural' },
+  { id: 'cedar', name: 'Cedar', description: 'Male, natural' },
+  { id: 'coral', name: 'Coral', description: 'Female, warm' },
   { id: 'alloy', name: 'Alloy', description: 'Neutral, versatile' },
   { id: 'echo', name: 'Echo', description: 'Male, deep' },
-  { id: 'fable', name: 'Fable', description: 'Narrative, expressive' },
-  { id: 'onyx', name: 'Onyx', description: 'Male, authoritative' },
+  { id: 'verse', name: 'Verse', description: 'Expressive' },
+  { id: 'ash', name: 'Ash', description: 'Male, clear' },
   { id: 'shimmer', name: 'Shimmer', description: 'Female, bright' },
   { id: 'clone', name: '🎤 Voice Clone (Locale/XTTS)', description: 'Clona la voce originale (Richiede XTTS/AllTalk locale)' }
 ];
@@ -109,7 +112,7 @@ export function VoiceTranslator() {
     targetLanguage: 'it',
     isSynthesizing: false,
     synthesizedAudioUrl: null,
-    selectedVoice: 'nova',
+    selectedVoice: 'marin',
     speechSpeed: 1.0,
     durationMatchEnabled: false,
     originalDuration: 0,
@@ -347,21 +350,11 @@ export function VoiceTranslator() {
 
     try {
       const { openai: openaiKey } = getApiKeys();
-      
-      let ttsUrl = 'https://api.openai.com/v1/audio/speech';
+
       // Calculate speed: if duration matching is enabled, auto-calculate
       let effectiveSpeed = state.speechSpeed;
-
-      let requestBody: Record<string, unknown> = {
-        model: 'tts-1',
-        input: text,
-        voice: state.selectedVoice,
-        speed: effectiveSpeed,
-        response_format: 'mp3',
-      };
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
+      let maxSpeed = OPENAI_TTS_MAX_SPEED;
+      let synthesize: (speed: number) => Promise<Blob>;
 
       // Se l'utente sceglie "clone", proviamo a usare un endpoint locale (es. AllTalk/XTTS)
       if (state.selectedVoice === 'clone') {
@@ -378,9 +371,12 @@ export function VoiceTranslator() {
 
         // Configurazione per server locale XTTS/AllTalk (API compatibile o custom)
         const settings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
-        ttsUrl = settings?.voice?.localTtsUrl || 'http://127.0.0.1:8000/v1/audio/speech';
-        
-        requestBody = {
+        const ttsUrl = settings?.voice?.localTtsUrl || 'http://127.0.0.1:8000/v1/audio/speech';
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+
+        const requestBody = {
           model: 'xtts',
           input: text,
           voice: 'clone',
@@ -398,25 +394,29 @@ export function VoiceTranslator() {
         } else {
           headers['Authorization'] = `Bearer ${openaiKey || 'local'}`;
         }
+
+        maxSpeed = 2.0;
+        synthesize = async (speed) => {
+          const response = await fetch(ttsUrl, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ ...requestBody, speed })
+          });
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err?.error?.message || `TTS errore ${response.status}`);
+          }
+          return response.blob();
+        };
       } else {
         if (!openaiKey) {
           throw new Error('OpenAI API key non configurata. Vai nelle Impostazioni.');
         }
-        headers['Authorization'] = `Bearer ${openaiKey}`;
+        synthesize = (speed) => synthesizeOpenAISpeech({ apiKey: openaiKey, text, voice: state.selectedVoice, speed });
       }
 
-      const response = await fetch(ttsUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `TTS errore ${response.status}`);
-      }
-
-      let audioBlob = await response.blob();
+      effectiveSpeed = Math.min(maxSpeed, effectiveSpeed);
+      let audioBlob = await synthesize(effectiveSpeed);
       let synthDuration = await measureDuration(audioBlob);
 
       // Duration matching: if enabled and we have original duration, re-synthesize with adjusted speed
@@ -426,24 +426,18 @@ export function VoiceTranslator() {
 
         if (diff > tolerance) {
           const speedRatio = synthDuration / state.originalDuration;
-          effectiveSpeed = Math.max(0.5, Math.min(2.0, state.speechSpeed * speedRatio));
+          effectiveSpeed = Math.max(0.5, Math.min(maxSpeed, state.speechSpeed * speedRatio));
 
           clientLogger.debug(`[DurationMatch] Original: ${state.originalDuration.toFixed(2)}s, Synthesized: ${synthDuration.toFixed(2)}s → Speed: ${effectiveSpeed.toFixed(2)}x`);
 
           // Re-synthesize with adjusted speed
-          requestBody.speed = effectiveSpeed;
-          const response2 = await fetch(ttsUrl, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(requestBody)
-          });
-          if (response2.ok) {
-            audioBlob = await response2.blob();
+          try {
+            audioBlob = await synthesize(effectiveSpeed);
             synthDuration = await measureDuration(audioBlob);
-          } else {
+          } catch (resynthError) {
             // Si tiene il primo audio: il badge non deve mostrare una velocità mai applicata.
             effectiveSpeed = state.speechSpeed;
-            clientLogger.warn(`[DurationMatch] Re-synthesis failed: ${response2.status}`);
+            clientLogger.warn(`[DurationMatch] Re-synthesis failed: ${resynthError instanceof Error ? resynthError.message : resynthError}`);
           }
         }
       }

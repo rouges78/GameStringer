@@ -11,6 +11,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const getApiKeysMock = vi.fn();
 const persistMock = vi.fn();
+const synthMock = vi.fn();
 
 vi.mock('@/lib/ai/ai-translate-direct', () => ({
   getApiKeys: () => getApiKeysMock(),
@@ -18,6 +19,10 @@ vi.mock('@/lib/ai/ai-translate-direct', () => ({
 
 vi.mock('@/lib/settings-persistence', () => ({
   persistSettingsToDisk: () => persistMock(),
+}));
+
+vi.mock('@/lib/voice/openai-realtime-tts', () => ({
+  synthesizeOpenAISpeech: (...args: unknown[]) => synthMock(...args),
 }));
 
 vi.mock('@/lib/client-logger', () => ({
@@ -76,8 +81,7 @@ describe('voiceCloneService — chiavi dallo store centrale', () => {
 
   it('la sintesi OpenAI (usata da /dubbing) parte con la chiave delle Impostazioni', async () => {
     getApiKeysMock.mockReturnValue({ openai: 'sk-settings' });
-    const fetchMock = vi.fn(async () => new Response(new Blob(['mp3']), { status: 200 }));
-    vi.stubGlobal('fetch', fetchMock);
+    synthMock.mockResolvedValue(new Blob(['wav'], { type: 'audio/wav' }));
     URL.createObjectURL = vi.fn(() => 'blob:x'); // jsdom non lo implementa
     const service = await freshService();
 
@@ -89,10 +93,8 @@ describe('voiceCloneService — chiavi dallo store centrale', () => {
       },
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe('https://api.openai.com/v1/audio/speech');
-    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer sk-settings');
+    expect(synthMock).toHaveBeenCalledTimes(1);
+    expect(synthMock).toHaveBeenCalledWith(expect.objectContaining({ apiKey: 'sk-settings', text: 'Ciao', voice: 'alloy' }));
   });
 
   it('senza chiave da nessuna parte fallisce prima della rete', async () => {

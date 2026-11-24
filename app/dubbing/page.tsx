@@ -35,9 +35,11 @@ const LANGUAGES = [
 const VOICES = [
   { id: 'alloy', name: 'Alloy', desc: 'Neutro' },
   { id: 'echo', name: 'Echo', desc: 'Maschile profondo' },
-  { id: 'fable', name: 'Fable', desc: 'Narratore' },
-  { id: 'onyx', name: 'Onyx', desc: 'Maschile autorevole' },
-  { id: 'nova', name: 'Nova', desc: 'Femminile energico' },
+  { id: 'verse', name: 'Verse', desc: 'Espressivo' },
+  { id: 'ash', name: 'Ash', desc: 'Maschile chiaro' },
+  { id: 'coral', name: 'Coral', desc: 'Femminile caldo' },
+  { id: 'marin', name: 'Marin', desc: 'Femminile naturale' },
+  { id: 'cedar', name: 'Cedar', desc: 'Maschile naturale' },
   { id: 'shimmer', name: 'Shimmer', desc: 'Femminile caldo' },
 ];
 
