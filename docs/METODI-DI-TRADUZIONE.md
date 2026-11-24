@@ -2763,7 +2763,12 @@ verificato. La corsa completa di Danganronpa non è stata fatta.
 **Trappole.**
 
 1. **`translategemma` risponde 404**: è installato come `translategemma:12b`,
-   ma la catena lo chiama con un nome che Ollama non trova. Non corretto.
+   ma la catena lo chiama con un nome che Ollama non trova. Ollama legge un
+   nome senza tag come `:latest`. **Corretto il 24/11/2026:**
+   `lib/ai/ollama-model-name.ts` prende il nome con tag da `/api/tags`, sia
+   nella catena (`translateWithTranslateGemma`) sia nel menu dell'Assistente AI.
+   Provato nell'app: l'Assistente traduce con `translategemma:12b` senza
+   scegliere il modello a mano.
 2. **La ricerca in Libreria con i punti non trova il gioco**: «A.I.L.A» dà 20
    risultati senza AILA in cima, «AILA» lo trova. Non corretto.
 3. **MyMemory ora raggiunge il server dall'app** (risponde, anche se col testo
