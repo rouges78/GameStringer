@@ -5,6 +5,7 @@ import { type GameGenre } from './genre-prompts';
 import { clientLogger } from '@/lib/client-logger';
 import { ollamaFetch } from './ollama-http';
 import { buildOllamaOptions } from './ollama-options';
+import { pickInstalledModel } from './ollama-model-name';
 import { httpPostJson } from './http-proxy';
 import { isTauri } from '@/lib/tauri-api';
 import { providerUrl } from './provider-endpoints';
@@ -957,14 +958,16 @@ async function translateWithTranslateGemma(
 ): Promise<string[]> {
   const srcLang = opts.sourceLanguage || 'en';
 
-  // Verifica se il modello è installato
+  // Verifica se il modello è installato e ne prende il nome esatto (con tag):
+  // chiedere "translategemma" a chi ha solo "translategemma:12b" dà 404.
+  let model: string | null = null;
   try {
     const tagsRes = await ollamaFetch('/api/tags', { method: 'GET', timeoutMs: 3000 });
     if (!tagsRes.ok) throw new Error('Ollama non raggiungibile');
     const tagsData = await tagsRes.json();
     const available = (tagsData.models || []).map((m: { name: string }) => m.name);
-    const hasModel = available.some((n: string) => n.startsWith('translategemma'));
-    if (!hasModel) {
+    model = pickInstalledModel(available, 'translategemma');
+    if (!model) {
       blockProvider('translategemma'); // Modello mancante → blocco permanente
       throw new Error('TranslateGemma non installato. Esegui: ollama pull translategemma');
     }
@@ -983,7 +986,7 @@ async function translateWithTranslateGemma(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'translategemma',
+        model,
         messages: [{ role: 'user', content: prompt }],
         stream: false,
         options: { ...buildOllamaOptions({ temperature: 0.2 }), num_predict: 4096 },
@@ -1014,7 +1017,7 @@ async function translateWithTranslateGemma(
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: 'translategemma',
+            model,
             messages: [{ role: 'user', content: `Translate from ${srcLang} to ${opts.targetLanguage}: ${text}` }],
             stream: false,
             options: { ...buildOllamaOptions({ temperature: 0.2 }), num_predict: 500 },
