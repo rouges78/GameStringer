@@ -6,6 +6,7 @@
 import { clientLogger } from '@/lib/client-logger';
 import { getApiKeys } from '@/lib/ai/ai-translate-direct';
 import { persistSettingsToDisk } from '@/lib/settings-persistence';
+import { synthesizeOpenAISpeech } from '@/lib/voice/openai-realtime-tts';
 
 /**
  * Le chiavi voce vivono nello store centrale delle Impostazioni
@@ -110,9 +111,11 @@ export const VOICE_PRESETS: Record<string, Partial<VoiceSettings>> = {
 export const OPENAI_VOICES = [
   { id: 'alloy', name: 'Alloy', gender: 'neutral', style: 'balanced' },
   { id: 'echo', name: 'Echo', gender: 'male', style: 'warm' },
-  { id: 'fable', name: 'Fable', gender: 'neutral', style: 'expressive' },
-  { id: 'onyx', name: 'Onyx', gender: 'male', style: 'deep' },
-  { id: 'nova', name: 'Nova', gender: 'female', style: 'friendly' },
+  { id: 'verse', name: 'Verse', gender: 'male', style: 'expressive' },
+  { id: 'ash', name: 'Ash', gender: 'male', style: 'clear' },
+  { id: 'coral', name: 'Coral', gender: 'female', style: 'warm' },
+  { id: 'marin', name: 'Marin', gender: 'female', style: 'natural' },
+  { id: 'cedar', name: 'Cedar', gender: 'male', style: 'natural' },
   { id: 'shimmer', name: 'Shimmer', gender: 'female', style: 'clear' },
 ];
 
@@ -360,27 +363,13 @@ class VoiceCloneService {
       throw new Error('API key OpenAI non configurata');
     }
 
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'tts-1-hd',
-        input: request.text,
-        voice: request.voiceProfile.voiceId,
-        response_format: request.outputFormat || 'mp3',
-        speed: request.voiceProfile.settings.speed || 1.0,
-      }),
+    // Realtime restituisce solo PCM, consegnato come WAV: outputFormat qui non si applica.
+    const audioBlob = await synthesizeOpenAISpeech({
+      apiKey,
+      text: request.text,
+      voice: request.voiceProfile.voiceId,
+      speed: request.voiceProfile.settings.speed || 1.0,
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Errore sintesi vocale OpenAI');
-    }
-
-    const audioBlob = await response.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
 
     return {

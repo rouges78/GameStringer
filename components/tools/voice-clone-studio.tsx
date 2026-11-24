@@ -41,7 +41,7 @@ export function VoiceCloneStudio() {
   const [inputText, setInputText] = useState('');
   const [generatedAudio, setGeneratedAudio] = useState<SynthesisResult | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'elevenlabs'>('openai');
-  const [selectedVoice, setSelectedVoice] = useState('nova');
+  const [selectedVoice, setSelectedVoice] = useState('marin');
   
   // Voice settings
   const [stability, setStability] = useState(0.5);

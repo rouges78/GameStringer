@@ -10,6 +10,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 const translateMock = vi.fn();
+const synthMock = vi.fn();
 
 vi.mock('@/lib/i18n', () => ({
   useTranslation: () => ({ t: (k: string) => k, language: 'it' }),
@@ -20,6 +21,11 @@ vi.mock('@/lib/ai/ai-translate-direct', () => ({
   translateWithFallback: (...args: unknown[]) => translateMock(...args),
 }));
 
+vi.mock('@/lib/voice/openai-realtime-tts', () => ({
+  OPENAI_TTS_MAX_SPEED: 1.5,
+  synthesizeOpenAISpeech: (...args: unknown[]) => synthMock(...args),
+}));
+
 vi.mock('@/lib/client-logger', () => ({
   clientLogger: { debug: vi.fn(), warn: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
@@ -27,7 +33,6 @@ vi.mock('@/lib/client-logger', () => ({
 import { VoiceTranslator } from '@/components/voice/voice-translator';
 
 const WHISPER_URL = 'https://api.openai.com/v1/audio/transcriptions';
-const TTS_URL = 'https://api.openai.com/v1/audio/speech';
 
 const fetchMock = vi.fn();
 
@@ -49,6 +54,8 @@ function callsTo(url: string) {
 
 beforeEach(() => {
   translateMock.mockReset();
+  synthMock.mockReset();
+  synthMock.mockResolvedValue(new Blob(['wav'], { type: 'audio/wav' }));
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
   URL.createObjectURL = vi.fn(() => 'blob:x'); // jsdom non lo implementa
@@ -62,16 +69,15 @@ afterEach(() => {
 describe('VoiceTranslator — pipeline completa', () => {
   it('trascrive, traduce e genera l audio passando i risultati da un passo all altro', async () => {
     fetchMock.mockImplementation(async (url: string) =>
-      url === WHISPER_URL ? whisperOk('Hello') : new Response(new Blob(['mp3']), { status: 200 }));
+      url === WHISPER_URL ? whisperOk('Hello') : new Response('{}', { status: 404 }));
     translateMock.mockResolvedValue({ translations: ['Ciao'], provider: 'gemini', success: true });
 
     await loadAudioAndRunPipeline();
 
-    await waitFor(() => expect(callsTo(TTS_URL)).toHaveLength(1));
+    await waitFor(() => expect(synthMock).toHaveBeenCalledTimes(1));
     expect(callsTo(WHISPER_URL)).toHaveLength(1);
     expect(translateMock).toHaveBeenCalledWith(expect.objectContaining({ texts: ['Hello'], targetLanguage: 'it' }));
-    const ttsBody = JSON.parse((callsTo(TTS_URL)[0][1] as RequestInit).body as string);
-    expect(ttsBody.input).toBe('Ciao');
+    expect(synthMock).toHaveBeenCalledWith(expect.objectContaining({ apiKey: 'sk-test', text: 'Ciao' }));
   });
 
   it('si ferma se la trascrizione fallisce', async () => {
@@ -81,18 +87,18 @@ describe('VoiceTranslator — pipeline completa', () => {
 
     expect(await screen.findByText('quota')).toBeInTheDocument();
     expect(translateMock).not.toHaveBeenCalled();
-    expect(callsTo(TTS_URL)).toHaveLength(0);
+    expect(synthMock).not.toHaveBeenCalled();
   });
 
   it('si ferma se nessun provider traduce, invece di leggere il testo originale come tradotto', async () => {
     fetchMock.mockImplementation(async (url: string) =>
-      url === WHISPER_URL ? whisperOk('Hello') : new Response(new Blob(['mp3']), { status: 200 }));
+      url === WHISPER_URL ? whisperOk('Hello') : new Response('{}', { status: 404 }));
     translateMock.mockResolvedValue({ translations: ['Hello'], provider: 'none', success: false });
 
     await loadAudioAndRunPipeline();
 
     expect(await screen.findByText('voiceTranslator.translationError')).toBeInTheDocument();
-    expect(callsTo(TTS_URL)).toHaveLength(0);
+    expect(synthMock).not.toHaveBeenCalled();
   });
 
   it('nessun parlato riconosciuto: lo dice e non traduce', async () => {

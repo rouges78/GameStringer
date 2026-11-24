@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
+import { synthesizeOpenAISpeech } from '@/lib/voice/openai-realtime-tts';
 
 // Voci disponibili per la Web Speech API
 const BROWSER_VOICES = [
@@ -80,7 +81,7 @@ export function TTSPreview({
   const [volume, setVolume] = useState(1);
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [useOpenAI, setUseOpenAI] = useState(false);
-  const [openAIVoice, setOpenAIVoice] = useState('nova');
+  const [openAIVoice, setOpenAIVoice] = useState('coral');
   
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -182,7 +183,7 @@ export function TTSPreview({
     setIsLoading(true);
     
     try {
-      // Chiamata diretta OpenAI TTS (no API routes Next.js)
+      // Chiamata diretta OpenAI (Realtime API, no API routes Next.js)
       let openaiKey = '';
       try {
         const settings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
@@ -190,27 +191,7 @@ export function TTSPreview({
       } catch {}
       if (!openaiKey) throw new Error('OpenAI API key non configurata');
 
-      const response = await fetch('https://api.openai.com/v1/audio/speech', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openaiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'tts-1',
-          input: text,
-          voice: openAIVoice,
-          speed: rate,
-          response_format: 'mp3',
-        }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err?.error?.message || 'Errore API TTS');
-      }
-
-      const audioBlob = await response.blob();
+      const audioBlob = await synthesizeOpenAISpeech({ apiKey: openaiKey, text, voice: openAIVoice, speed: rate });
       const audioUrl = URL.createObjectURL(audioBlob);
       
       if (audioRef.current) {
@@ -371,11 +352,11 @@ export function TTSPreview({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="nova">{t('ttsPreviewComp.novaFemminile')}</SelectItem>
+                        <SelectItem value="coral">{t('ttsPreviewComp.coralFemminile')}</SelectItem>
                         <SelectItem value="alloy">{t('ttsPreviewComp.alloyNeutro')}</SelectItem>
                         <SelectItem value="echo">{t('ttsPreviewComp.echoMaschile')}</SelectItem>
-                        <SelectItem value="fable">{t('ttsPreviewComp.fableNarratore')}</SelectItem>
-                        <SelectItem value="onyx">{t('ttsPreviewComp.onyxProfondo')}</SelectItem>
+                        <SelectItem value="verse">{t('ttsPreviewComp.verseNarratore')}</SelectItem>
+                        <SelectItem value="ash">{t('ttsPreviewComp.ashProfondo')}</SelectItem>
                         <SelectItem value="shimmer">{t('ttsPreviewComp.shimmerSoft')}</SelectItem>
                       </SelectContent>
                     </Select>
