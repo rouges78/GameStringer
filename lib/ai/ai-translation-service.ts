@@ -7,6 +7,7 @@
 
 import { clientLogger } from '@/lib/client-logger';
 import { ollamaFetch } from './ollama-http';
+import { installedVariants } from './ollama-model-name';
 import { getModelConfig, getProviderModels } from '@/lib/remote-config';
 
 export interface AIProvider {
@@ -225,7 +226,11 @@ class AITranslationService {
         // TranslateGemma — attiva se installato
         const tgProvider = this.providers.find(p => p.id === 'translategemma');
         if (tgProvider) {
-          tgProvider.isAvailable = modelNames.some(n => n.startsWith('translategemma'));
+          // Nel menu solo le varianti installate: "translategemma" senza tag
+          // dà 404 a chi ha solo "translategemma:12b".
+          const installed = installedVariants(modelNames, 'translategemma');
+          tgProvider.isAvailable = installed.length > 0;
+          if (installed.length > 0) tgProvider.models = installed;
         }
         
         // HY-MT1.5 — attiva se installato
