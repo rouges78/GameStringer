@@ -34,6 +34,7 @@ import { GameMakerTranslator } from '@/components/gamemaker-translator';
 import { clientLogger } from '@/lib/client-logger';
 import { translateWithFallback, translateWithFallbackBatched, getChainFailureSince } from '@/lib/ai/ai-translate-direct';
 import { runUnityStaticTranslation } from '@/lib/string-it/unity-static';
+import { runXUnityAiTranslation } from '@/lib/string-it/xunity-ai';
 import { projectService } from '@/lib/services/translation-projects';
 import { gamePathKey } from '@/lib/game-path';
 import { runHendrixTranslation } from '@/lib/hendrix-translate';
@@ -2887,6 +2888,58 @@ export default function GameDetailPage() {
           clientLogger.info(`[StringIt] metodo statico Unity ${outcome.status}: ${outcome.reason}`);
           toast.info(t('stringItPlan.unityStaticFallback').replace('{reason}', outcome.reason.slice(0, 160)));
         }
+        // Secondo passo di XUnity: se è già installato per questa lingua, i
+        // testi che ha catturato giocando (tradotti da Google) si ritraducono
+        // con la catena AI dell'app, in un file che XUnity preferisce al suo.
+        // Stessa lingua e stesso nome file di handleInstallUnityPatch e di
+        // «Migliora con AI», così i tre passi parlano dello stesso file.
+        const xuLang = targetLang || language || 'it';
+        const xuGameName = game.title || game.name || 'Game';
+        const xuStatus = await invoke<{ bepinex_installed: boolean; translation_dir_exists: boolean; captured_strings: number }>(
+          'get_translation_status', { gamePath: game.installPath, lang: xuLang, gameName: xuGameName },
+        ).catch(() => null);
+        if (xuStatus?.bepinex_installed && xuStatus.translation_dir_exists) {
+          const stepLabel = `🧠 ${t('stringItPlan.xunityAiStep')}`;
+          setAutoTranslateSteps([{ label: stepLabel, status: 'running' }]);
+          const outcome = await runXUnityAiTranslation({
+            gamePath: game.installPath,
+            lang: xuLang,
+            gameName: xuGameName,
+            translate: async texts => {
+              const res = await translateWithFallbackBatched(
+                { texts, targetLanguage: tgt, sourceLanguage: 'en', gameId: game.id || game.appid?.toString() || gameId },
+                20,
+                (done, total) => setAutoTranslateSteps([{
+                  label: stepLabel, status: 'running',
+                  detail: t('stringItPlan.unityStaticTranslating').replace('{done}', String(done)).replace('{total}', String(total)),
+                }]),
+              );
+              return res.success ? res.translations : texts.map(() => null);
+            },
+          });
+          if (outcome.status === 'done') {
+            const done = t('stringItPlan.xunityAiDone').replace('{changed}', String(outcome.changed));
+            const detail = outcome.failed > 0
+              ? `${done} ${t('stringItPlan.xunityAiFailedPart').replace('{failed}', String(outcome.failed))}`
+              : done;
+            setAutoTranslateSteps([{ label: stepLabel, status: 'done', detail }]);
+            toast.success(done, { description: detail === done ? undefined : detail, duration: 20000 });
+            void activityHistory.trackPatch(game.name || game.title || '', game.appid?.toString(), detail);
+          } else if (outcome.status === 'no-captures') {
+            const msg = t('stringItPlan.xunityAiNoCaptures');
+            setAutoTranslateSteps([{ label: stepLabel, status: 'done', detail: msg }]);
+            toast.info(msg, { duration: 20000 });
+          } else {
+            const msg = t('stringItPlan.xunityAiFailed').replace('{reason}', outcome.reason.slice(0, 160));
+            setAutoTranslateSteps([{ label: stepLabel, status: 'error', detail: msg }]);
+            setAutoTranslateError(msg);
+            toast.error(msg);
+          }
+          setAutoTranslateBusy(false);
+          setAutoTranslateProgress('');
+          autoTranslateRunningRef.current = false;
+          return;
+        }
         // Anti-cheat: XUnity inietta un loader nel gioco, quindi non si installa.
         if (findMethod(translationPlanRef.current, 'unity-xunity')?.blocked_by) {
           const blockedMsg = t('stringItPlan.injectionBlocked').replace('{name}', translationPlanRef.current?.anti_cheat ?? '');
@@ -2901,7 +2954,7 @@ export default function GameDetailPage() {
         try {
           const ok = await handleInstallUnityPatch();
           if (ok) {
-            setAutoTranslateSteps([{ label: `🩹 ${t('heroJob.unityRouteStep')}`, status: 'done', detail: t('heroJob.unityRouteDone') }]);
+            setAutoTranslateSteps([{ label: `🩹 ${t('heroJob.unityRouteStep')}`, status: 'done', detail: `${t('heroJob.unityRouteDone')} ${t('stringItPlan.xunityAiNext')}` }]);
             toast.success(t('heroJob.unityRouteDone'));
           } else {
             setAutoTranslateSteps([{ label: `🩹 ${t('heroJob.unityRouteStep')}`, status: 'error', detail: t('heroJob.unityRouteFail') }]);

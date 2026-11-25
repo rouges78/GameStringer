@@ -2853,6 +2853,88 @@ pub async fn save_xunity_translation(game_path: String, original: String, new_tr
     Ok(())
 }
 
+/// Codifica un testo per un file di traduzione XUnity, come `TextHelper.Encode`
+/// di XUnity: `\` → `\\`, `=` → `\=`, a capo → `\n` / `\r`, e `//` → `\/\/`
+/// (altrimenti XUnity lo leggerebbe come l'inizio di un commento).
+pub(crate) fn xunity_encode(text: &str) -> String {
+    let mut out = String::with_capacity(text.len() + 8);
+    let mut chars = text.chars().peekable();
+    while let Some(c) = chars.next() {
+        match c {
+            '/' if chars.peek() == Some(&'/') => {
+                chars.next();
+                out.push_str("\\/\\/");
+            }
+            '\\' => out.push_str("\\\\"),
+            '=' => out.push_str("\\="),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            _ => out.push(c),
+        }
+    }
+    out
+}
+
+/// Legge una riga `chiave=valore` di un file XUnity come la legge XUnity
+/// (`ReadTranslationLineAndDecode`): divide al primo `=` non preceduto da `\`,
+/// toglie gli escape, si ferma a un `//` non preceduto da `\` (commento).
+/// Una riga con due `=` liberi, o senza `=`, per XUnity non esiste: `None`.
+///
+/// Come in XUnity, un escape che non conosce resta com'è: `\/` resta `\/`.
+/// Così la chiave che si rilegge qui è la stessa che XUnity tiene in memoria.
+pub(crate) fn xunity_decode_line(line: &str) -> Option<(String, String)> {
+    let chars: Vec<char> = line.chars().collect();
+    let mut parts = vec![String::new()];
+    let mut i = 0;
+    while i < chars.len() {
+        let c = chars[i];
+        let cur = parts.last_mut().expect("almeno una parte");
+        if c == '\\' {
+            match chars.get(i + 1) {
+                Some('=') => cur.push('='),
+                Some('\\') => cur.push('\\'),
+                Some('n') => cur.push('\n'),
+                Some('r') => cur.push('\r'),
+                Some('u') => {
+                    let hex: String = chars.iter().skip(i + 2).take(4).collect();
+                    match u32::from_str_radix(&hex, 16).ok().and_then(char::from_u32) {
+                        Some(ch) if hex.len() == 4 => {
+                            cur.push(ch);
+                            i += 6;
+                            continue;
+                        }
+                        _ => cur.push_str("\\u"),
+                    }
+                }
+                Some(&other) => {
+                    cur.push('\\');
+                    cur.push(other);
+                }
+                None => cur.push('\\'),
+            }
+            i += 2;
+            continue;
+        }
+        if c == '=' {
+            if parts.len() > 1 {
+                return None;
+            }
+            parts.push(String::new());
+        } else if c == '/' && chars.get(i + 1) == Some(&'/') {
+            break;
+        } else {
+            cur.push(c);
+        }
+        i += 1;
+    }
+    if parts.len() != 2 {
+        return None;
+    }
+    let value = parts.pop().unwrap_or_default();
+    let key = parts.pop().unwrap_or_default();
+    Some((key, value))
+}
+
 /// Legge le stringhe catturate da XUnity dal percorso corretto per la lingua specificata
 #[command]
 pub async fn read_captured_translations(game_path: String, lang: String) -> Result<Vec<TranslationEntry>, String> {
@@ -2872,17 +2954,19 @@ pub async fn read_captured_translations(game_path: String, lang: String) -> Resu
     let content = fs::read_to_string(&file_to_read)
         .map_err(|e| format!("Errore lettura: {}", e))?;
 
+    // Le righe si decodificano come le legge XUnity: un testo con un a capo
+    // sta su una riga sola come `\n`, e un `=` dentro il testo è `\=`. Prima si
+    // tagliava al primo `=` e si passava all'AI il testo ancora codificato.
     let entries = content.lines().enumerate()
-        .filter(|(_, l)| { let l = l.trim(); !l.is_empty() && !l.starts_with('#') && !l.starts_with(';') && l.contains('=') })
+        .filter(|(_, l)| { let l = l.trim(); !l.is_empty() && !l.starts_with('#') && !l.starts_with(';') })
         .filter_map(|(i, line)| {
-            let line = line.trim();
-            line.find('=').map(|pos| TranslationEntry {
-                original: line[..pos].to_string(),
-                translated: line[pos + 1..].to_string(),
+            xunity_decode_line(line).map(|(original, translated)| TranslationEntry {
+                original,
+                translated,
                 line_number: i + 1,
             })
         })
-        .filter(|e| !e.original.is_empty())
+        .filter(|e| !e.original.trim().is_empty())
         .collect();
 
     Ok(entries)
@@ -2911,9 +2995,9 @@ pub async fn write_translation_file(
     let mut written = 0usize;
     for e in &entries {
         if !e.original.is_empty() && !e.translated.is_empty() && e.original != e.translated {
-            content.push_str(&e.original);
+            content.push_str(&xunity_encode(&e.original));
             content.push('=');
-            content.push_str(&e.translated);
+            content.push_str(&xunity_encode(&e.translated));
             content.push('\n');
             written += 1;
         }
@@ -3750,6 +3834,106 @@ pub(crate) fn detect_anti_cheat_files(game_path: &str) -> (Option<String>, Optio
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn xunity_line_splits_at_first_unescaped_equals() {
+        assert_eq!(
+            xunity_decode_line("New Game=Nieuw spel"),
+            Some(("New Game".to_string(), "Nieuw spel".to_string()))
+        );
+        assert_eq!(
+            xunity_decode_line(r"a\=b=c"),
+            Some(("a=b".to_string(), "c".to_string()))
+        );
+        // Due `=` liberi o nessuno: XUnity scarta la riga.
+        assert_eq!(xunity_decode_line("a=b=c"), None);
+        assert_eq!(xunity_decode_line("solo testo"), None);
+    }
+
+    #[test]
+    fn xunity_line_decodes_escapes_and_stops_at_comment() {
+        assert_eq!(
+            xunity_decode_line(r"Line one\nLine two=Riga uno\nRiga due"),
+            Some(("Line one\nLine two".to_string(), "Riga uno\nRiga due".to_string()))
+        );
+        assert_eq!(
+            xunity_decode_line(r"C:\\dir=x"),
+            Some((r"C:\dir".to_string(), "x".to_string()))
+        );
+        assert_eq!(
+            xunity_decode_line(r"\u00e8=e"),
+            Some(("è".to_string(), "e".to_string()))
+        );
+        assert_eq!(
+            xunity_decode_line("Hi=Ciao // nota"),
+            Some(("Hi".to_string(), "Ciao ".to_string()))
+        );
+        assert_eq!(xunity_decode_line("// commento=no"), None);
+        // Escape sconosciuto: resta com'è, come in XUnity.
+        assert_eq!(
+            xunity_decode_line(r"a\/\/b=x"),
+            Some((r"a\/\/b".to_string(), "x".to_string()))
+        );
+    }
+
+    #[test]
+    fn xunity_encode_round_trips_through_decode() {
+        for text in ["Play", "a=b", "Riga uno\nRiga due", "C:\\dir", "x\r\ny", "50% = metà"] {
+            let line = format!("{}={}", xunity_encode(text), xunity_encode(text));
+            assert_eq!(
+                xunity_decode_line(&line),
+                Some((text.to_string(), text.to_string())),
+                "{text:?}"
+            );
+        }
+        // `//` va scritto in modo che XUnity non lo prenda per un commento.
+        assert_eq!(xunity_encode("http://x"), r"http:\/\/x");
+        assert!(xunity_decode_line(&format!("k={}", xunity_encode("a//b"))).is_some());
+    }
+
+    /// Sui file che XUnity ha scritto davvero: ogni riga si legge, e
+    /// riscriverla dà gli stessi byte. Sola lettura.
+    /// `GS_XUNITY_FILES="a.txt;b.txt" cargo test --bin gamestringer real_xunity_files -- --ignored --nocapture`
+    #[test]
+    #[ignore]
+    fn real_xunity_files_round_trip() {
+        let files = std::env::var("GS_XUNITY_FILES").expect("GS_XUNITY_FILES");
+        for file in files.split(';').filter(|f| !f.trim().is_empty()) {
+            let content = std::fs::read_to_string(file).expect(file);
+            let (mut lines, mut read, mut escaped, mut multiline, mut same) = (0, 0, 0, 0, 0);
+            let mut dropped = Vec::new();
+            for line in content.lines() {
+                if line.trim().is_empty() || line.trim_start().starts_with('#') {
+                    continue;
+                }
+                lines += 1;
+                if line.contains('\\') {
+                    escaped += 1;
+                }
+                match xunity_decode_line(line) {
+                    Some((k, v)) => {
+                        read += 1;
+                        if k.contains('\n') {
+                            multiline += 1;
+                        }
+                        if format!("{}={}", xunity_encode(&k), xunity_encode(&v)) == line {
+                            same += 1;
+                        }
+                    }
+                    None => dropped.push(line.to_string()),
+                }
+            }
+            println!(
+                "{file}: {lines} righe, {read} lette, {escaped} con escape, {multiline} chiavi su più righe, \
+                 {same} riscritte identiche, {} scartate",
+                dropped.len()
+            );
+            for d in dropped.iter().take(5) {
+                println!("  scartata: {d}");
+            }
+            assert_eq!(read + dropped.len(), lines);
+        }
+    }
     use tempfile::TempDir;
 
     // ========================================================================
