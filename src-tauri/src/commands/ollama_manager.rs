@@ -223,6 +223,20 @@ pub async fn download_ollama(app: tauri::AppHandle) -> Result<String, String> {
     }
     
     drop(file);
+
+    // L'URL punta sempre all'ultima versione: niente hash pinnabile. Prima di
+    // eseguire l'installer si verifica la firma Authenticode (firmatario Ollama);
+    // se non è valida il file viene cancellato e non parte nulla.
+    let verify_path = installer_path.clone();
+    let verified = tokio::task::spawn_blocking(move || {
+        super::download_verify::verify_authenticode(&verify_path, "Ollama", "OllamaSetup.exe")
+    })
+    .await
+    .unwrap_or_else(|e| Err(format!("Verifica firma interrotta: {}", e)));
+    if let Err(e) = verified {
+        let _ = std::fs::remove_file(&installer_path);
+        return Err(e);
+    }
     
     println!("[OLLAMA] Download completato: {:?} ({} bytes)", installer_path, downloaded);
     let _ = app.emit("ollama-download-progress", serde_json::json!({

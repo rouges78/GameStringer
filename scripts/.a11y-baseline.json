@@ -1,14 +1,11 @@
 {
   "_nota": "Conteggi noti per file e regola. Aggiornare SOLO dopo aver corretto o valutato: vedi i LIMITI in scripts/check-a11y.js — i backdrop non vanno resi focusabili.",
-  "aggiornato": "2026-08-20",
+  "aggiornato": "2026-11-25",
   "totali": {
-    "div-onclick": 75,
+    "div-onclick": 70,
     "div-onclick-overlay": 3
   },
   "known": {
-    "app/ai-pipeline/page.tsx": {
-      "div-onclick": 1
-    },
     "app/auto-translate/page.tsx": {
       "div-onclick": 1
     },
@@ -49,9 +46,6 @@
       "div-onclick": 2
     },
     "app/wolfrpg-patcher/page.tsx": {
-      "div-onclick": 1
-    },
-    "components/admin/logging-dashboard.tsx": {
       "div-onclick": 1
     },
     "components/cover-picker.tsx": {
@@ -119,9 +113,6 @@
     "components/tools/texture-translator.tsx": {
       "div-onclick": 5
     },
-    "components/tools/unity-ink-translator.tsx": {
-      "div-onclick": 1
-    },
     "components/tools/visual-translation-editor.tsx": {
       "div-onclick": 1
     },
@@ -137,9 +128,6 @@
     "components/translator/background-jobs-widget.tsx": {
       "div-onclick": 1
     },
-    "components/translator/batch-folder-translator.tsx": {
-      "div-onclick": 1
-    },
     "components/translator/character-voice-editor.tsx": {
       "div-onclick": 1
     },
@@ -150,9 +138,6 @@
       "div-onclick": 1
     },
     "components/tutorial/tutorial-overlay.tsx": {
-      "div-onclick": 1
-    },
-    "components/ui/drop-zone.tsx": {
       "div-onclick": 1
     },
     "components/ui/featured-game-widget.tsx": {

@@ -113,14 +113,16 @@ Get the latest release from **[GitHub Releases](https://github.com/rouges78/Game
 
 | Platform | File | Notes |
 |----------|------|-------|
-| **Windows** | `GameStringer_1.15.0_x64-setup.exe` | Installer (recommended) |
-| **Windows** | `GameStringer_1.15.0_x64-portable.zip` | No install needed |
-| **Windows** | `GameStringer_1.15.0_x64_en-US.msi` | MSI alternative |
-| **macOS** | `GameStringer_1.15.0_x64.dmg` | Intel Mac |
-| **macOS** | `GameStringer_1.15.0_aarch64.dmg` | Apple Silicon |
-| **Linux** | `GameStringer_1.15.0_amd64.AppImage` | Universal (recommended) |
-| **Linux** | `GameStringer_1.15.0_amd64.deb` | Debian / Ubuntu |
-| **Linux** | `GameStringer-1.15.0-1.x86_64.rpm` | Fedora / RHEL |
+| **Windows** | `GameStringer_1.17.0_x64-setup.exe` | Installer (recommended) |
+| **Windows** | `GameStringer_1.17.0_x64-portable.zip` | No install needed |
+| **Windows** | `GameStringer_1.17.0_x64_en-US.msi` | MSI alternative |
+| **macOS** | `GameStringer_1.17.0_x64.dmg` | Intel Mac |
+| **macOS** | `GameStringer_1.17.0_aarch64.dmg` | Apple Silicon |
+| **Linux** | `GameStringer_1.17.0_amd64.AppImage` | Universal (recommended) |
+| **Linux** | `GameStringer_1.17.0_amd64.deb` | Debian / Ubuntu |
+| **Linux** | `GameStringer-1.17.0-1.x86_64.rpm` | Fedora / RHEL |
+
+**Windows-only for now:** runtime translation (in-game hook, OCR overlay, screen capture) and the injector. The macOS and Linux builds include the library and the file-based methods, but String it has only been tested on Windows.
 
 **Requirements:** Windows 10+, macOS 10.15+, or Linux (Ubuntu 22.04+, Fedora 38+). 4 GB RAM (8 GB+ for local AI), 500 MB disk. Updates are **cryptographically signed** and delivered via Tauri Updater (the app verifies each update against a bundled public key).
 

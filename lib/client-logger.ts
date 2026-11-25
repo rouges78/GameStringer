@@ -16,7 +16,6 @@ export interface ClientLoggerConfig {
   enableRemote: boolean;
   bufferSize: number;
   flushInterval: number;
-  remoteEndpoint: string;
   sensitiveFields: string[];
 }
 
@@ -30,11 +29,14 @@ class ClientLogger {
     const isDev = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development';
     this.config = {
       level: isDev ? 'debug' : 'warn',
-      enableConsole: isDev,
+      // Nella build installata la console della webview resta l'unico posto
+      // visibile con gli strumenti di sviluppo: teniamola accesa.
+      enableConsole: true,
+      // "Remote" = file di log dell'app via Tauri (l'endpoint /api/logs non
+      // esiste nella build statica: prima ogni warn/error andava perso).
       enableRemote: !isDev,
       bufferSize: 100,
       flushInterval: 10000, // 10 seconds
-      remoteEndpoint: '/api/logs',
       sensitiveFields: ['password', 'apiKey', 'token', 'secret', 'key']
     };
 
@@ -178,21 +180,18 @@ class ClientLogger {
 
   private async sendToRemote(entries: ClientLogEntry[]): Promise<void> {
     if (!this.config.enableRemote) return;
+    if (typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)) return;
 
     try {
-      const response = await fetch(this.config.remoteEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ logs: entries })
-      });
-
-      if (!response.ok) {
-        console.error('Failed to send logs to remote endpoint:', response.statusText);
+      const { invoke } = await import('@tauri-apps/api/core');
+      // Al massimo 20 righe per giro: un ciclo di errori non deve intasare il log.
+      for (const e of entries.slice(-20)) {
+        await invoke('log_frontend_warning', {
+          message: `[${e.level}] ${e.message}${e.metadata ? ' ' + JSON.stringify(e.metadata) : ''}`,
+        });
       }
     } catch (error: unknown) {
-      console.error('Error sending logs to remote endpoint:', error);
+      console.error('Impossibile scrivere il log su file:', error);
     }
   }
 

@@ -12,7 +12,6 @@ import {
   Wand2, 
   Globe, 
   Settings,
-  Layers,
   FolderOpen,
   BarChart3,
   FileText,
@@ -26,7 +25,6 @@ import {
   Scan,
   ShoppingBag,
   Package,
-  Workflow,
   ShieldCheck,
   Eye,
   Puzzle,
@@ -68,15 +66,12 @@ export function CommandPalette() {
     { id: 'settings', title: t('nav.settings'), description: t('commandPalette.settingsDesc'), icon: <Settings className="h-4 w-4" />, action: () => router.push('/settings'), keywords: ['config', 'options', 'impostazioni'], category: 'navigation' },
     // Batch nascosti: /batch dichiara "non implementato" con Avvia disabilitato, e
     // /batch-translation fa fallire ogni job con BATCH_NON_IMPLEMENTATO.
-    { id: 'batch', title: t('nav.batch'), description: t('commandPalette.batchDesc'), icon: <Layers className="h-4 w-4" />, action: () => router.push('/batch'), keywords: ['queue', 'multiple', 'batch'], category: 'navigation', hidden: true },
     { id: 'guide', title: t('nav.guide'), description: t('commandPalette.settingsDesc'), icon: <FolderOpen className="h-4 w-4" />, action: () => router.push('/guide'), keywords: ['guide', 'help', 'guida'], category: 'navigation' },
     { id: 'stats', title: t('commandPalette.stats'), description: t('commandPalette.statsDesc'), icon: <BarChart3 className="h-4 w-4" />, action: () => router.push('/stats'), keywords: ['analytics', 'progress', 'statistiche'], category: 'navigation' },
     { id: 'glossary', title: t('nav.glossary'), description: t('commandPalette.dictionaryDesc'), icon: <BookOpen className="h-4 w-4" />, action: () => router.push('/glossary'), keywords: ['glossary', 'terms', 'glossario'], category: 'navigation' },
     { id: 'editor', title: t('nav.editor'), description: t('editor.subtitle'), icon: <FileText className="h-4 w-4" />, action: () => router.push('/editor'), keywords: ['edit', 'editor', 'modifica'], category: 'navigation' },
     { id: 'ocr', title: t('nav.ocrTranslator'), description: t('ocrTranslator.subtitle'), icon: <Scan className="h-4 w-4" />, action: () => router.push('/ocr-translator'), keywords: ['ocr', 'screen', 'immagine', 'schermo'], category: 'navigation' },
     { id: 'stores', title: t('nav.stores'), description: t('stores.steam'), icon: <ShoppingBag className="h-4 w-4" />, action: () => router.push('/stores'), keywords: ['store', 'steam', 'epic', 'negozio'], category: 'navigation' },
-    { id: 'batch-queue', title: t('nav.translationQueue'), description: t('commandPalette.batchDesc'), icon: <Layers className="h-4 w-4" />, action: () => router.push('/batch-translation'), keywords: ['queue', 'coda', 'batch'], category: 'navigation', hidden: true },
-    { id: 'ai-pipeline', title: t('nav.aiPipeline'), description: t('aiTranslation.subtitle'), icon: <Workflow className="h-4 w-4" />, action: () => router.push('/ai-pipeline'), keywords: ['pipeline', 'workflow', 'qa'], category: 'navigation' },
     { id: 'qa-check', title: t('nav.qaCheck'), description: t('qaCheck.subtitle'), icon: <ShieldCheck className="h-4 w-4" />, action: () => router.push('/qa-check'), keywords: ['quality', 'check', 'qualità'], category: 'navigation' },
     { id: 'vision', title: t('nav.visionLlm'), description: t('aiTranslation.subtitle'), icon: <Eye className="h-4 w-4" />, action: () => router.push('/vision-translator'), keywords: ['vision', 'llm', 'visual', 'immagine'], category: 'navigation' },
     // Arrivavano da Ctrl+K solo tramite GlobalSearch, non più montata nel layout.

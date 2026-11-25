@@ -82,13 +82,14 @@ ALTER TABLE community_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE community_room_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE community_presence ENABLE ROW LEVEL SECURITY;
 
--- Rooms: tutti possono leggere/creare, solo owner può archiviare
+-- Rooms: tutti possono leggere/creare, solo il creatore può modificare/archiviare
+-- (UPDATE/ALL legate al proprietario: vedi migrations/20261125120000_tighten_update_policies.sql)
 DROP POLICY IF EXISTS "Read rooms" ON community_rooms;
 DROP POLICY IF EXISTS "Create rooms" ON community_rooms;
 DROP POLICY IF EXISTS "Update rooms" ON community_rooms;
 CREATE POLICY "Read rooms" ON community_rooms FOR SELECT USING (true);
 CREATE POLICY "Create rooms" ON community_rooms FOR INSERT WITH CHECK (true);
-CREATE POLICY "Update rooms" ON community_rooms FOR UPDATE USING (true);
+CREATE POLICY "Update rooms" ON community_rooms FOR UPDATE TO authenticated USING (created_by = (auth.uid())::text) WITH CHECK (created_by = (auth.uid())::text);
 
 -- Messages: tutti possono leggere/inviare, solo autore può modificare
 DROP POLICY IF EXISTS "Read messages" ON community_messages;
@@ -96,7 +97,7 @@ DROP POLICY IF EXISTS "Send messages" ON community_messages;
 DROP POLICY IF EXISTS "Edit own messages" ON community_messages;
 CREATE POLICY "Read messages" ON community_messages FOR SELECT USING (true);
 CREATE POLICY "Send messages" ON community_messages FOR INSERT WITH CHECK (true);
-CREATE POLICY "Edit own messages" ON community_messages FOR UPDATE USING (true);
+CREATE POLICY "Edit own messages" ON community_messages FOR UPDATE TO authenticated USING (author_id = (auth.uid())::text) WITH CHECK (author_id = (auth.uid())::text);
 
 -- Members: pubblico
 DROP POLICY IF EXISTS "Read members" ON community_room_members;
@@ -104,13 +105,14 @@ DROP POLICY IF EXISTS "Join room" ON community_room_members;
 DROP POLICY IF EXISTS "Update membership" ON community_room_members;
 CREATE POLICY "Read members" ON community_room_members FOR SELECT USING (true);
 CREATE POLICY "Join room" ON community_room_members FOR INSERT WITH CHECK (true);
-CREATE POLICY "Update membership" ON community_room_members FOR UPDATE USING (true);
+CREATE POLICY "Update membership" ON community_room_members FOR UPDATE TO authenticated USING (user_id = (auth.uid())::text) WITH CHECK (user_id = (auth.uid())::text);
 
--- Presence: pubblico in lettura, upsert libero
+-- Presence: pubblico in lettura, scrittura solo sulla propria riga (come 20260704)
 DROP POLICY IF EXISTS "Read presence" ON community_presence;
 DROP POLICY IF EXISTS "Upsert presence" ON community_presence;
+DROP POLICY IF EXISTS "cpres_write_own" ON community_presence;
 CREATE POLICY "Read presence" ON community_presence FOR SELECT USING (true);
-CREATE POLICY "Upsert presence" ON community_presence FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "cpres_write_own" ON community_presence FOR ALL TO authenticated USING (user_id = (auth.uid())::text) WITH CHECK (user_id = (auth.uid())::text);
 
 -- ─── REALTIME ──────────────────────────────────────────────────────────────
 -- Abilita Realtime per le nuove tabelle (opzionale, fatto via dashboard Supabase)

@@ -6,22 +6,33 @@ use reqwest::Client;
 use zip::ZipArchive;
 use super::process_util::no_window_command;
 
+// Ogni URL pinnato ha accanto lo SHA-256 atteso dell'asset: preso dal campo
+// `digest` dell'API GitHub dove c'è, calcolato una volta sul file dove la release
+// è troppo vecchia per averlo (BepInEx 5.4.11, 6.0.0-pre.2, IPA 3.4.1). Se un
+// asset non corrisponde non viene estratto: vedi download_and_extract.
+
 // URL per BepInEx 5.x (Unity 2017+) - Aggiornato a v5.4.23.5
 const BEPINEX5_X64_URL: &str = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip";
+const BEPINEX5_X64_SHA256: &str = "82f9878551030f54657792c0740d9d51a09500eeae1fba21106b0c441e6732c4";
 const BEPINEX5_X86_URL: &str = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x86_5.4.23.5.zip";
+const BEPINEX5_X86_SHA256: &str = "37651c79e40d6f909572a4f461ac25350bb3ef8fe7fbd29f1aa8791a33b84c82";
 
 // URL per BepInEx Legacy (Unity 5.6+) - v5.4.11 più compatibile con Unity vecchie
 const BEPINEX_LEGACY_X64_URL: &str = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.11/BepInEx_x64_5.4.11.0.zip";
+const BEPINEX_LEGACY_X64_SHA256: &str = "792566fd51807d257191b88b33c7cb510a8141490ac40836887025659635a27b";
 const BEPINEX_LEGACY_X86_URL: &str = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.11/BepInEx_x86_5.4.11.0.zip";
+const BEPINEX_LEGACY_X86_SHA256: &str = "46b1bd5ef5113de28f95a601d15fefc03f3eb09a621f7a8b6f9b8990b3942611";
 
 // URL per IPA (Illusion Plugin Architecture) - Per Unity 5.0-5.5 molto vecchie
 // Nome file con UNDERSCORE: `IPA_3.4.1.zip`. Fino al 23/08/2026 qui c'era un
 // trattino e l'URL dava 404 — verificato con una HEAD su tutti i download
 // hardcoded di questo file (era l'unico rotto su tredici).
 const IPA_URL: &str = "https://github.com/Eusth/IPA/releases/download/3.4.1/IPA_3.4.1.zip";
+const IPA_SHA256: &str = "6ec4835abf1900992a6857c5b63823c0227a8eda61f59d7eaebfb4a1e391dbe7";
 
 // XUnity per IPA (versione IPA-compatible) — aggiornato a v5.6.1 (rilascio 2026-04-19)
 const XUNITY_IPA_URL: &str = "https://github.com/bbepis/XUnity.AutoTranslator/releases/download/v5.6.1/XUnity.AutoTranslator-IPA-5.6.1.zip";
+const XUNITY_IPA_SHA256: &str = "7808187aa2609c8e7ee508cd13cacfa88f84e9b0caf33c8bccd370781eace1b4";
 
 // URL per BepInEx 6.x Mono (Unity 2021+) - Pre-release ufficiale v6.0.0-pre.2
 #[allow(dead_code)]
@@ -31,20 +42,25 @@ const BEPINEX6_MONO_X86_URL: &str = "https://github.com/BepInEx/BepInEx/releases
 
 // URL per BepInEx 6.x IL2CPP - Per giochi Unity IL2CPP
 const BEPINEX6_IL2CPP_X64_URL: &str = "https://github.com/BepInEx/BepInEx/releases/download/v6.0.0-pre.2/BepInEx-Unity.IL2CPP-win-x64-6.0.0-pre.2.zip";
+const BEPINEX6_IL2CPP_X64_SHA256: &str = "616ec7eb06cf11b2a0000e8fcef04d1b12bb58e84a2e0bdac9523234fc193ceb";
 const BEPINEX6_IL2CPP_X86_URL: &str = "https://github.com/BepInEx/BepInEx/releases/download/v6.0.0-pre.2/BepInEx-Unity.IL2CPP-win-x86-6.0.0-pre.2.zip";
+const BEPINEX6_IL2CPP_X86_SHA256: &str = "cfef3a1e946dac5db8b9de4de1a922f47584dd775da32863f36762fbaad80f19";
 
 // XUnity AutoTranslator — aggiornato a v5.6.1 (rilascio 2026-04-19)
 // Novità 5.6.x: UIElements, tag XUAIGNORETREE, fix Papago, Yandex API v2, PluginInitializationCompleted event
 const XUNITY_URL: &str = "https://github.com/bbepis/XUnity.AutoTranslator/releases/download/v5.6.1/XUnity.AutoTranslator-BepInEx-5.6.1.zip";
+const XUNITY_SHA256: &str = "fbb7d1bbe2c7cc168da6dccbc500fb74786a85a548f52495c8a1592ac46407f5";
 
 // XUnity per BepInEx IL2CPP (versione speciale per IL2CPP) — aggiornato a v5.6.1
 const XUNITY_IL2CPP_URL: &str = "https://github.com/bbepis/XUnity.AutoTranslator/releases/download/v5.6.1/XUnity.AutoTranslator-BepInEx-IL2CPP-5.6.1.zip";
+const XUNITY_IL2CPP_SHA256: &str = "9d6b26e9d4957459bdb64b6d4852edb39cd5e8d31c28e0a157cefd6510ada811";
 
 // TMP Font AssetBundles (arialuni_sdf_*) — necessari per OverrideFontTextMeshPro
 // con lingue non latine (cirillico, CJK, ecc.). L'archivio è allegato alla release
 // v5.5.0 di XUnity (le release successive rimandano lì). ~129MB, scaricato una
 // volta sola e tenuto in cache in %LOCALAPPDATA%\GameStringer\tmp_fonts.
 const TMP_FONTS_URL: &str = "https://github.com/bbepis/XUnity.AutoTranslator/releases/download/v5.5.0/TMP_Font_AssetBundles_2025-12-08.7z";
+const TMP_FONTS_SHA256: &str = "889e963fb9dbd4b64927e0adf5d9060e1d0fb9d6bceb0c407d0597643e2b54ec";
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct PatchStatus {
@@ -1991,8 +2007,8 @@ async fn install_with_ipa(game_dir: &Path, exe_path: &Path, target_lang: &str, m
     // l'URL corretto come fallback: se l'asset viene rinominato di nuovo, si
     // aggiusta da solo invece di rompersi in silenzio.
     steps.push("Download IPA (Illusion Plugin Architecture)...".to_string());
-    let ipa_dl = resolve_gh_asset("Eusth/IPA", &["ipa", ".zip"], &[], IPA_URL).await;
-    match download_and_extract(&ipa_dl, game_dir).await {
+    let (ipa_dl, ipa_sha) = resolve_gh_asset("Eusth/IPA", &["ipa", ".zip"], &[], IPA_URL, IPA_SHA256).await;
+    match download_and_extract(&ipa_dl, &ipa_sha, game_dir).await {
         Ok(_) => steps.push("✓ IPA estratto".to_string()),
         Err(e) => return Err(format!("Errore download IPA: {}", e)),
     }
@@ -2029,8 +2045,8 @@ async fn install_with_ipa(game_dir: &Path, exe_path: &Path, target_lang: &str, m
     
     // 3. Scarica XUnity versione IPA
     steps.push("Download XUnity.AutoTranslator (IPA)...".to_string());
-    let ipa_url = resolve_gh_asset("bbepis/XUnity.AutoTranslator", &["ipa", ".zip"], &["il2cpp"], XUNITY_IPA_URL).await;
-    match download_and_extract(&ipa_url, game_dir).await {
+    let (ipa_url, ipa_sha) = resolve_gh_asset("bbepis/XUnity.AutoTranslator", &["ipa", ".zip"], &["il2cpp"], XUNITY_IPA_URL, XUNITY_IPA_SHA256).await;
+    match download_and_extract(&ipa_url, &ipa_sha, game_dir).await {
         Ok(_) => steps.push("✓ XUnity.AutoTranslator installato".to_string()),
         Err(e) => return Err(format!("Errore installazione XUnity: {}", e)),
     }
@@ -2196,13 +2212,21 @@ pub async fn install_unity_autotranslator(game_path: String, game_exe_name: Stri
     }
     
     // Mono: usa BepInEx 5.x
-    let (bepinex_url, xunity_url, bepinex_version) = if use_legacy {
+    let (bepinex_url, bepinex_sha, xunity_url, bepinex_version) = if use_legacy {
         // Unity 5.6+ usa BepInEx Legacy 5.4.11
-        let url = if is_64bit { BEPINEX_LEGACY_X64_URL } else { BEPINEX_LEGACY_X86_URL };
-        (url, XUNITY_URL, "5.4.11 (Legacy)")
+        let (url, sha) = if is_64bit {
+            (BEPINEX_LEGACY_X64_URL, BEPINEX_LEGACY_X64_SHA256)
+        } else {
+            (BEPINEX_LEGACY_X86_URL, BEPINEX_LEGACY_X86_SHA256)
+        };
+        (url, sha, XUNITY_URL, "5.4.11 (Legacy)")
     } else {
-        let url = if is_64bit { BEPINEX5_X64_URL } else { BEPINEX5_X86_URL };
-        (url, XUNITY_URL, "5.4.23")
+        let (url, sha) = if is_64bit {
+            (BEPINEX5_X64_URL, BEPINEX5_X64_SHA256)
+        } else {
+            (BEPINEX5_X86_URL, BEPINEX5_X86_SHA256)
+        };
+        (url, sha, XUNITY_URL, "5.4.23")
     };
     
     if let Some(ref ver) = unity_version {
@@ -2214,20 +2238,20 @@ pub async fn install_unity_autotranslator(game_path: String, game_exe_name: Stri
     steps.push(format!("Download BepInEx {} {}...", bepinex_version, arch_str));
     // La legacy 5.4.11 resta pinnata (compat Unity 5.6); per il path 5.x risolvi l'ultima
     // 5.4.x stabile dalla release più recente, con fallback al tag pinnato.
-    let bepinex_url = if use_legacy {
-        bepinex_url.to_string()
+    let (bepinex_url, bepinex_sha) = if use_legacy {
+        (bepinex_url.to_string(), bepinex_sha.to_string())
     } else {
-        resolve_gh_asset("BepInEx/BepInEx", &["win", arch_str, ".zip"], &["il2cpp", "unity"], bepinex_url).await
+        resolve_gh_asset("BepInEx/BepInEx", &["win", arch_str, ".zip"], &["il2cpp", "unity"], bepinex_url, bepinex_sha).await
     };
-    match download_and_extract(&bepinex_url, game_dir).await {
+    match download_and_extract(&bepinex_url, &bepinex_sha, game_dir).await {
         Ok(_) => steps.push("✓ BepInEx installato".to_string()),
         Err(e) => return Err(format!("Errore installazione BepInEx: {}", e)),
     }
 
     // 2. Scarica e Installa XUnity.AutoTranslator
     steps.push("Download XUnity.AutoTranslator...".to_string());
-    let xunity_url = resolve_gh_asset("bbepis/XUnity.AutoTranslator", &["bepinex", ".zip"], &["il2cpp", "ipa"], xunity_url).await;
-    match download_and_extract(&xunity_url, game_dir).await {
+    let (xunity_url, xunity_sha) = resolve_gh_asset("bbepis/XUnity.AutoTranslator", &["bepinex", ".zip"], &["il2cpp", "ipa"], xunity_url, XUNITY_SHA256).await;
+    match download_and_extract(&xunity_url, &xunity_sha, game_dir).await {
         Ok(_) => steps.push("✓ XUnity.AutoTranslator installato".to_string()),
         Err(e) => return Err(format!("Errore installazione XUnity: {}", e)),
     }
@@ -2313,28 +2337,32 @@ async fn install_il2cpp_patch(game_dir: &Path, lang: &str, mode: &str, is_64bit:
     }
     
     // 1. Scarica BepInEx 6 IL2CPP
-    let bepinex_fallback = if is_64bit { BEPINEX6_IL2CPP_X64_URL } else { BEPINEX6_IL2CPP_X86_URL };
+    let (bepinex_fallback, bepinex_fallback_sha) = if is_64bit {
+        (BEPINEX6_IL2CPP_X64_URL, BEPINEX6_IL2CPP_X64_SHA256)
+    } else {
+        (BEPINEX6_IL2CPP_X86_URL, BEPINEX6_IL2CPP_X86_SHA256)
+    };
     let arch_str = if is_64bit { "x64" } else { "x86" };
     // Le build IL2CPP sono pre-release: risolvi l'ultima dalla lista GitHub (arch giusta),
     // con fallback al tag pinnato.
-    let bepinex_url = resolve_gh_asset("BepInEx/BepInEx", &["il2cpp", "win", arch_str, ".zip"], &["mono"], bepinex_fallback).await;
+    let (bepinex_url, bepinex_sha) = resolve_gh_asset("BepInEx/BepInEx", &["il2cpp", "win", arch_str, ".zip"], &["mono"], bepinex_fallback, bepinex_fallback_sha).await;
 
     steps.push(format!("Download BepInEx 6 IL2CPP {}...", arch_str));
-    match download_and_extract(&bepinex_url, game_dir).await {
+    match download_and_extract(&bepinex_url, &bepinex_sha, game_dir).await {
         Ok(_) => steps.push("✓ BepInEx 6 IL2CPP installato".to_string()),
         Err(e) => return Err(format!("Errore installazione BepInEx 6 IL2CPP: {}", e)),
     }
 
     // 2. Scarica XUnity IL2CPP
     steps.push("Download XUnity.AutoTranslator IL2CPP...".to_string());
-    let xunity_il2cpp_url = resolve_gh_asset("bbepis/XUnity.AutoTranslator", &["il2cpp", ".zip"], &[], XUNITY_IL2CPP_URL).await;
-    match download_and_extract(&xunity_il2cpp_url, game_dir).await {
+    let (xunity_il2cpp_url, xunity_il2cpp_sha) = resolve_gh_asset("bbepis/XUnity.AutoTranslator", &["il2cpp", ".zip"], &[], XUNITY_IL2CPP_URL, XUNITY_IL2CPP_SHA256).await;
+    match download_and_extract(&xunity_il2cpp_url, &xunity_il2cpp_sha, game_dir).await {
         Ok(_) => steps.push("✓ XUnity.AutoTranslator IL2CPP installato".to_string()),
         Err(e) => {
             // Fallback: prova versione standard (potrebbe funzionare con alcuni giochi)
             steps.push(format!("⚠ XUnity IL2CPP non disponibile ({}), provo versione standard...", e));
-            let xunity_std_url = resolve_gh_asset("bbepis/XUnity.AutoTranslator", &["bepinex", ".zip"], &["il2cpp", "ipa"], XUNITY_URL).await;
-            match download_and_extract(&xunity_std_url, game_dir).await {
+            let (xunity_std_url, xunity_std_sha) = resolve_gh_asset("bbepis/XUnity.AutoTranslator", &["bepinex", ".zip"], &["il2cpp", "ipa"], XUNITY_URL, XUNITY_SHA256).await;
+            match download_and_extract(&xunity_std_url, &xunity_std_sha, game_dir).await {
                 Ok(_) => steps.push("✓ XUnity.AutoTranslator (standard) installato".to_string()),
                 Err(e2) => return Err(format!("Errore installazione XUnity: {}", e2)),
             }
@@ -2518,8 +2546,8 @@ async fn ensure_tmp_fonts(game_dir: &Path, lang: &str, tmp_font: &str, steps: &m
         let _ = fs::create_dir_all(&cache_dir);
         steps.push("Download TMP Font AssetBundles (~129MB, solo la prima volta)...".to_string());
         let archive_path = cache_dir.join("TMP_Font_AssetBundles.7z");
-        let tmp_fonts_url = resolve_gh_asset("bbepis/XUnity.AutoTranslator", &["tmp", "font"], &[], TMP_FONTS_URL).await;
-        match download_to_file(&tmp_fonts_url, &archive_path).await {
+        let (tmp_fonts_url, tmp_fonts_sha) = resolve_gh_asset("bbepis/XUnity.AutoTranslator", &["tmp", "font"], &[], TMP_FONTS_URL, TMP_FONTS_SHA256).await;
+        match download_to_file(&tmp_fonts_url, &tmp_fonts_sha, &archive_path).await {
             // sevenz-rust2: il crate originale era vulnerabile a path traversal in
             // estrazione (RUSTSEC-2026-0245) ed è abbandonato. Qui l'archivio arriva
             // da GitHub e non dall'utente, ma un decompressore che scrive dove gli
@@ -2678,7 +2706,17 @@ fn find_file_recursive(dir: &Path, name: &str) -> Option<std::path::PathBuf> {
 /// `excludes`; prova /releases/latest e poi la lista (per asset su release più vecchie o
 /// pre-release). Se non trova nulla ritorna `fallback` (l'URL pinnato corrente): così la
 /// conversione è sempre sicura, al massimo ricade sul comportamento attuale.
-async fn resolve_gh_asset(repo: &str, contains: &[&str], excludes: &[&str], fallback: &str) -> String {
+///
+/// Ritorna anche lo SHA-256 atteso: quello pinnato se l'asset trovato è proprio il
+/// fallback, altrimenti il `digest` che l'API GitHub dichiara per l'asset. Un asset
+/// senza `digest` (release vecchie) non è verificabile: si ripiega sul fallback pinnato.
+async fn resolve_gh_asset(
+    repo: &str,
+    contains: &[&str],
+    excludes: &[&str],
+    fallback: &str,
+    fallback_sha256: &str,
+) -> (String, String) {
     let apis = [
         format!("https://api.github.com/repos/{}/releases/latest", repo),
         format!("https://api.github.com/repos/{}/releases?per_page=30", repo),
@@ -2716,17 +2754,28 @@ async fn resolve_gh_asset(repo: &str, contains: &[&str], excludes: &[&str], fall
                     continue;
                 }
                 if contains.iter().all(|c| name.contains(c)) && !excludes.iter().any(|e| name.contains(e)) {
-                    return dl.to_string();
+                    if dl == fallback {
+                        return (fallback.to_string(), fallback_sha256.to_string());
+                    }
+                    let digest = a.get("digest").and_then(|v| v.as_str());
+                    if let Some(sha) = super::download_verify::github_asset_sha256(digest) {
+                        return (dl.to_string(), sha);
+                    }
+                    log::warn!("resolve_gh_asset({}): {} non ha digest SHA-256, uso il fallback pinnato", repo, dl);
+                    return (fallback.to_string(), fallback_sha256.to_string());
                 }
             }
         }
     }
     log::warn!("resolve_gh_asset({}): nessun asset per {:?} (escl. {:?}), uso fallback", repo, contains, excludes);
-    fallback.to_string()
+    (fallback.to_string(), fallback_sha256.to_string())
 }
 
 /// Scarica un file di grandi dimensioni in streaming (senza tenerlo tutto in RAM).
-async fn download_to_file(url: &str, dest: &Path) -> Result<(), String> {
+/// L'hash si calcola chunk per chunk mentre arriva; se non corrisponde a
+/// `expected_sha256` il file viene cancellato e si ritorna Err.
+async fn download_to_file(url: &str, expected_sha256: &str, dest: &Path) -> Result<(), String> {
+    use sha2::{Digest, Sha256};
     use std::io::Write;
     let client = Client::new();
     let mut resp = client.get(url).send().await.map_err(|e| e.to_string())?;
@@ -2734,13 +2783,27 @@ async fn download_to_file(url: &str, dest: &Path) -> Result<(), String> {
         return Err(format!("HTTP {}", resp.status()));
     }
     let mut file = File::create(dest).map_err(|e| e.to_string())?;
-    while let Some(chunk) = resp.chunk().await.map_err(|e| e.to_string())? {
-        file.write_all(&chunk).map_err(|e| e.to_string())?;
+    let mut hasher = Sha256::new();
+    let written: Result<(), String> = async {
+        while let Some(chunk) = resp.chunk().await.map_err(|e| e.to_string())? {
+            hasher.update(&chunk);
+            file.write_all(&chunk).map_err(|e| e.to_string())?;
+        }
+        Ok(())
     }
-    Ok(())
+    .await;
+    drop(file);
+    let verified = written.and_then(|_| {
+        super::download_verify::check_sha256_digest(&hasher.finalize(), expected_sha256, url)
+    });
+    if verified.is_err() {
+        let _ = fs::remove_file(dest);
+    }
+    verified
 }
 
-async fn download_and_extract(url: &str, target_dir: &Path) -> Result<(), String> {
+/// Scarica uno zip, ne verifica lo SHA-256 in memoria e solo allora lo estrae.
+async fn download_and_extract(url: &str, expected_sha256: &str, target_dir: &Path) -> Result<(), String> {
     let client = Client::new();
     let response = client.get(url).send().await.map_err(|e| e.to_string())?;
     
@@ -2749,6 +2812,7 @@ async fn download_and_extract(url: &str, target_dir: &Path) -> Result<(), String
     }
 
     let bytes = response.bytes().await.map_err(|e| e.to_string())?;
+    super::download_verify::verify_sha256(&bytes, expected_sha256, url)?;
     let reader = Cursor::new(bytes);
     let mut archive = ZipArchive::new(reader).map_err(|e| e.to_string())?;
 
@@ -3508,7 +3572,7 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
         name: "GameMaker Translator".to_string(),
         description: "Estrae stringhe da data.win di GameMaker Studio".to_string(),
         reliability: if is_gamemaker { 75 } else { 0 },
-        route: "/translation-wizard".to_string(),
+        route: "/auto-translate".to_string(),
         available: is_gamemaker,
         reason: if is_gamemaker { "GameMaker Studio rilevato".to_string() }
                 else { "Solo per GameMaker Studio".to_string() },

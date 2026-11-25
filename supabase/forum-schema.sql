@@ -144,8 +144,8 @@ CREATE POLICY "Authenticated insert downloads" ON forum_downloads FOR INSERT WIT
 DROP POLICY IF EXISTS "Author update threads" ON forum_threads;
 DROP POLICY IF EXISTS "Author update posts" ON forum_posts;
 DROP POLICY IF EXISTS "Author delete reactions" ON forum_reactions;
-CREATE POLICY "Author update threads" ON forum_threads FOR UPDATE USING (true);
-CREATE POLICY "Author update posts" ON forum_posts FOR UPDATE USING (true);
+CREATE POLICY "Author update threads" ON forum_threads FOR UPDATE TO authenticated USING (author_id = (auth.uid())::text) WITH CHECK (author_id = (auth.uid())::text);
+CREATE POLICY "Author update posts" ON forum_posts FOR UPDATE TO authenticated USING (author_id = (auth.uid())::text) WITH CHECK (author_id = (auth.uid())::text);
 CREATE POLICY "Author delete reactions" ON forum_reactions FOR DELETE USING (true);
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -333,7 +333,8 @@ DROP POLICY IF EXISTS "Public read profiles" ON user_profiles;
 DROP POLICY IF EXISTS "Owner update profile" ON user_profiles;
 DROP POLICY IF EXISTS "Insert own profile" ON user_profiles;
 CREATE POLICY "Public read profiles" ON user_profiles FOR SELECT USING (true);
-CREATE POLICY "Owner update profile" ON user_profiles FOR UPDATE USING (true);
+-- proprietario: `id` (= auth.users.id nello schema reale) o `user_id` (questo schema)
+CREATE POLICY "Owner update profile" ON user_profiles FOR UPDATE TO authenticated USING (id::text = (auth.uid())::text OR user_id = (auth.uid())::text) WITH CHECK (id::text = (auth.uid())::text OR user_id = (auth.uid())::text);
 CREATE POLICY "Insert own profile" ON user_profiles FOR INSERT WITH CHECK (true);
 
 -- Amicizie: lettura/scrittura per utenti coinvolti
@@ -343,14 +344,14 @@ DROP POLICY IF EXISTS "Update own friendships" ON friendships;
 DROP POLICY IF EXISTS "Delete own friendships" ON friendships;
 CREATE POLICY "Read own friendships" ON friendships FOR SELECT USING (true);
 CREATE POLICY "Insert friendships" ON friendships FOR INSERT WITH CHECK (true);
-CREATE POLICY "Update own friendships" ON friendships FOR UPDATE USING (true);
+CREATE POLICY "Update own friendships" ON friendships FOR UPDATE TO authenticated USING (requester_id = (auth.uid())::text OR addressee_id = (auth.uid())::text) WITH CHECK (requester_id = (auth.uid())::text OR addressee_id = (auth.uid())::text);
 CREATE POLICY "Delete own friendships" ON friendships FOR DELETE USING (true);
 
 -- Presenza: lettura pubblica, scrittura proprietario
 DROP POLICY IF EXISTS "Public read presence" ON user_presence;
 DROP POLICY IF EXISTS "Update own presence" ON user_presence;
 CREATE POLICY "Public read presence" ON user_presence FOR SELECT USING (true);
-CREATE POLICY "Update own presence" ON user_presence FOR ALL USING (true);
+CREATE POLICY "Update own presence" ON user_presence FOR ALL TO authenticated USING (user_id = (auth.uid())::text) WITH CHECK (user_id = (auth.uid())::text);
 
 -- Activity: lettura pubblica per attività pubbliche
 DROP POLICY IF EXISTS "Read public activity" ON activity_feed;
@@ -364,7 +365,7 @@ DROP POLICY IF EXISTS "Insert notifications" ON notifications;
 DROP POLICY IF EXISTS "Update own notifications" ON notifications;
 CREATE POLICY "Read own notifications" ON notifications FOR SELECT USING (true);
 CREATE POLICY "Insert notifications" ON notifications FOR INSERT WITH CHECK (true);
-CREATE POLICY "Update own notifications" ON notifications FOR UPDATE USING (true);
+CREATE POLICY "Update own notifications" ON notifications FOR UPDATE TO authenticated USING (user_id = (auth.uid())::text) WITH CHECK (user_id = (auth.uid())::text);
 
 -- Achievements
 DROP POLICY IF EXISTS "Public read achievements" ON user_achievements;
@@ -458,21 +459,21 @@ DROP POLICY IF EXISTS "Create conversations" ON chat_conversations;
 DROP POLICY IF EXISTS "Update own conversations" ON chat_conversations;
 CREATE POLICY "Read own conversations" ON chat_conversations FOR SELECT USING (true);
 CREATE POLICY "Create conversations" ON chat_conversations FOR INSERT WITH CHECK (true);
-CREATE POLICY "Update own conversations" ON chat_conversations FOR UPDATE USING (true);
+CREATE POLICY "Update own conversations" ON chat_conversations FOR UPDATE TO authenticated USING (created_by = (auth.uid())::text) WITH CHECK (created_by = (auth.uid())::text);
 
 DROP POLICY IF EXISTS "Read own participants" ON chat_participants;
 DROP POLICY IF EXISTS "Insert participants" ON chat_participants;
 DROP POLICY IF EXISTS "Update own participant" ON chat_participants;
 CREATE POLICY "Read own participants" ON chat_participants FOR SELECT USING (true);
 CREATE POLICY "Insert participants" ON chat_participants FOR INSERT WITH CHECK (true);
-CREATE POLICY "Update own participant" ON chat_participants FOR UPDATE USING (true);
+CREATE POLICY "Update own participant" ON chat_participants FOR UPDATE TO authenticated USING (user_id = (auth.uid())::text) WITH CHECK (user_id = (auth.uid())::text);
 
 DROP POLICY IF EXISTS "Read conversation messages" ON chat_messages;
 DROP POLICY IF EXISTS "Send messages" ON chat_messages;
 DROP POLICY IF EXISTS "Edit own messages" ON chat_messages;
 CREATE POLICY "Read conversation messages" ON chat_messages FOR SELECT USING (true);
 CREATE POLICY "Send messages" ON chat_messages FOR INSERT WITH CHECK (true);
-CREATE POLICY "Edit own messages" ON chat_messages FOR UPDATE USING (true);
+CREATE POLICY "Edit own messages" ON chat_messages FOR UPDATE TO authenticated USING (sender_id = (auth.uid())::text) WITH CHECK (sender_id = (auth.uid())::text);
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- DONE! Ora ricarica la pagina Community Hub

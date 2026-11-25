@@ -174,3 +174,15 @@ _gs_split/
 
 # Preserved local data archive (not the active profiles)
 /gamestringer_data_archive/
+
+# Build e report locali: mai nel repo
+native/build/
+release/*.msi
+release/*.zip
+release/*.exe
+/dist/
+playwright-report/
+test-results/
+translation-audit-report.json
+src-tauri/*.exe
+src-tauri/*.pdb

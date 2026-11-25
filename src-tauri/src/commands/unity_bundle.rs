@@ -15,6 +15,8 @@ use std::io::{Cursor, Write};
 
 #[allow(dead_code)]
 const UABEA_URL: &str = "https://github.com/nesrak1/UABEA/releases/download/v8/uabea-windows.zip";
+// SHA-256 di uabea-windows.zip v8, calcolato sul file (la release non ha `digest`).
+const UABEA_SHA256: &str = "0623ab1dc099a6397c3a7e72782b91405e60b286c6825fb6fa21e553ff2ea580";
 #[allow(dead_code)]
 const UABEA_FOLDER: &str = "tools/uabea";
 
@@ -390,6 +392,7 @@ pub async fn install_uabea() -> Result<UabeaStatus, String> {
         .await
         .map_err(|e| format!("Errore lettura dati: {}", e))?;
     
+    super::download_verify::verify_sha256(&bytes, UABEA_SHA256, UABEA_URL)?;
     println!("[UABEA] Scaricati {} bytes, estrazione...", bytes.len());
     
     // Estrai ZIP
@@ -401,9 +404,13 @@ pub async fn install_uabea() -> Result<UabeaStatus, String> {
         let mut file = archive.by_index(i)
             .map_err(|e| format!("Errore lettura ZIP: {}", e))?;
         
-        let outpath = uabea_dir.join(&*file.name()
-            .map_err(|e| format!("Errore lettura ZIP: {}", e))?);
-        
+        // enclosed_name rifiuta voci con ".." o percorsi assoluti (zip-slip):
+        // una voce del genere scriverebbe fuori dalla cartella di UABEA.
+        let Some(rel) = file.enclosed_name() else {
+            return Err("Archivio UABEA non valido: voce fuori dalla cartella di destinazione".to_string());
+        };
+        let outpath = uabea_dir.join(rel);
+
         if file.is_dir() {
             fs::create_dir_all(&outpath).ok();
         } else {

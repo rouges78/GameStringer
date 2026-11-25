@@ -9,7 +9,6 @@ import {
   AudioLines,
   User,
   Film,
-  FolderTree,
   Database,
   Wand2,
   Cpu,
@@ -294,22 +293,6 @@ export function getToolsRegistry(): ToolDefinition[] {
     },
 
     // ── TRADUZIONE › Utility ──────────────────────────────
-    {
-      id: 'batch',
-      href: '/batch',
-      name: 'Batch Translator',
-      nameKey: 'nav.batch',
-      icon: FolderTree,
-      color: 'noir',
-      category: 'translation',
-      subcategory: 'utility',
-      features: [
-        'Traduzione multipla di file in batch',
-        'Tracking progresso con pausa/ripresa',
-        'Tempo stimato rimanente',
-        'Report errori per file',
-      ],
-    },
     {
       id: 'dictionary',
       href: '/memory',
