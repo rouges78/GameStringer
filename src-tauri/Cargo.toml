@@ -62,7 +62,7 @@ aes = "0.8"
 pbkdf2 = { version = "0.12", features = ["simple"] }
 sha2 = "0.10"
 sha1 = "0.10"
-hmac = "0.12"
+hmac = "0.13"
 log = "0.4"
 urlencoding = "2.1"
 base64 = "0.22"
