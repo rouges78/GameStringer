@@ -9,7 +9,6 @@ import {
   AudioLines,
   User,
   Film,
-  FolderTree,
   Database,
   Wand2,
   Cpu,
