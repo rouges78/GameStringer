@@ -1561,7 +1561,7 @@ dependencies = [
  "flate2",
  "fontdue",
  "futures",
- "hmac 0.12.1",
+ "hmac 0.13.0",
  "image",
  "keyvalues-serde",
  "libloading 0.9.1",
