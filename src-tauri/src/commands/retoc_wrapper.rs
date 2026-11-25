@@ -26,8 +26,11 @@ use super::process_util::no_window_command;
 use reqwest::Client;
 use zip::ZipArchive;
 
+// Pinnato al tag v0.1.5 (era /latest/download): un URL che galleggia non si può
+// verificare con un hash. SHA-256 dal campo `digest` dell'API GitHub.
 const RETOC_DOWNLOAD_URL: &str =
-    "https://github.com/trumank/retoc/releases/latest/download/retoc_cli-x86_64-pc-windows-msvc.zip";
+    "https://github.com/trumank/retoc/releases/download/v0.1.5/retoc_cli-x86_64-pc-windows-msvc.zip";
+const RETOC_SHA256: &str = "cc036b06ad3bdcf7003690b00d82719980c374e48a95bf0654f9959148d263aa";
 
 /// Versione container passata a `to-zen`. Misurata su un gioco UE5.6+ reale: UE5_7
 /// produce una coppia che il gioco monta. Se un altro gioco la rifiutasse,
@@ -84,6 +87,7 @@ pub async fn download_retoc() -> Result<PathBuf, String> {
     if bytes.len() < 4 || &bytes[..4] != b"PK\x03\x04" {
         return Err("Non è uno ZIP valido".to_string());
     }
+    super::download_verify::verify_sha256(&bytes, RETOC_SHA256, RETOC_DOWNLOAD_URL)?;
 
     let mut archive = ZipArchive::new(Cursor::new(bytes))
         .map_err(|e| format!("ZIP: {}", e))?;

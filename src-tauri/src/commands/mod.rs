@@ -20,6 +20,7 @@ pub mod steam_workshop;
 
 // === Core features (cross-platform) ===
 pub mod process_util;
+pub mod download_verify;
 pub mod extensions;
 pub mod mod_profiles;
 pub mod load_order;
@@ -43,6 +44,7 @@ pub mod smart_glossary;
 pub mod context_injection;
 pub mod prediction_tool;
 pub mod file_manager;
+pub mod path_guard;
 #[cfg(windows)]
 pub mod translation_bridge;
 #[cfg(not(windows))]
@@ -137,6 +139,7 @@ pub mod retoc_wrapper;
 pub mod rss_proxy;
 // Pianificatore di String it: ordina i metodi di traduzione per un gioco
 pub mod translation_plan;
+pub mod string_it_restore;
 // Lettore ad accesso casuale dei bundle UnityFS (data.unity3d)
 pub mod unity_fs;
 // Stringhe dentro gli oggetti dei file serializzati Unity (scene comprese)

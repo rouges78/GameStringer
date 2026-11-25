@@ -137,35 +137,40 @@ interface NavGroup {
 // una pagina era stata aggiunta qui proprio perché altrimenti irraggiungibile.
 // ═══════════════════════════════════════════════════════════════════
 const getNavGroups = (t: (key: string) => string): NavGroup[] => [
-  // ── CORE ────────────────────────────────────────────────────────
+  // ── CORE: il percorso di String it, sempre visibile ─────────────
+  // Libreria → String it → revisione. Tutto il resto sta nei gruppi chiusi
+  // qui sotto: i patcher per motore sono strumenti manuali, non la strada
+  // principale (che è il pulsante String it nella scheda del gioco).
   {
     label: t('nav.core'),
     items: [
       { name: t('nav.dashboard'), href: '/', icon: Home },
       { name: t('nav.library'), href: '/library', icon: Gamepad2 },
       { name: t('nav.projects'), href: '/projects', icon: Rocket },
+      { name: t('nav.editor'), href: '/editor', icon: Edit3 },
+      { name: t('nav.settings'), href: '/settings', icon: Settings },
+      { name: t('nav.guide'), href: '/guide', icon: BookOpen },
     ],
   },
-  // ── TRADUZIONE ──────────────────────────────────────────────────
+  // ── STRUMENTI AVANZATI (chiuso di default) ──────────────────────
   {
-    label: t('nav.translation'),
-    icon: Sparkles,
+    label: t('nav.advancedTools'),
+    icon: Wrench,
     collapsible: true,
     items: [
       { name: t('nav.translate'), href: '/ai-translator', icon: Sparkles },
       { name: t('nav.ocrTranslator'), href: '/ocr-translator', icon: Scan },
-      // La pagina esisteva da tempo e non era raggiungibile: nessun link in
-      // tutta l'applicazione, nessuna voce di menu. Ci si arrivava solo
-      // scrivendo l'URL a mano, cosa che in una finestra Tauri non si puo' fare.
       { name: t('nav.liveTranslate'), href: '/live-translate', icon: Radio },
       { name: t('nav.voice'), href: '/voice-translator', icon: Mic },
-      // '/batch' tolta finché la traduzione batch non esiste: la pagina dichiara
-      // "non implementato" e tiene disabilitato Avvia. Era un vicolo cieco.
       { name: t('nav.offlineTranslator'), href: '/offline-translator', icon: WifiOff },
-      { name: t('nav.editor'), href: '/editor', icon: Edit3 },
+      { name: 'Universal Injector', href: '/injector', icon: Wand2 },
+      { name: 'Video Extractor', href: '/video-extractor', icon: Film },
+      { name: 'Lip Sync', href: '/lip-sync', icon: Smile },
+      // '/overlay' tolta: "Avvia Cattura" genera sottotitoli casuali di esempio
+      // (subtitle-overlay.tsx), non cattura niente. Torna quando è collegata.
     ],
   },
-  // ── MOTORI ──────────────────────────────────────────────────────
+  // ── PATCHER PER MOTORE (chiuso di default) ──────────────────────
   {
     label: t('nav.engines'),
     icon: Cpu,
@@ -179,42 +184,20 @@ const getNavGroups = (t: (key: string) => string): NavGroup[] => [
       { name: "Ren'Py", href: '/renpy-patcher', icon: Heart },
       { name: 'Bethesda', href: '/bethesda-patcher', icon: Shield },
       { name: 'CRI Middleware', href: '/cri-patcher', icon: Disc },
-      // ⚠️ Aggiunta il 12/08/2026: la pagina esisteva dalla v1.6.0 con tre
-      // comandi Tauri registrati (read_pak_archive, extract_pak_file,
-      // extract_all_pak) e NON era in nessun menu. Compariva solo nella
-      // pagina Guida, che legge da lib/tools-registry.ts — l'unico
-      // consumatore di quel registro. Per l'utente non esisteva.
       { name: 'Danganronpa', href: '/danganronpa-patcher', icon: Package },
     ],
   },
-  // ── STRUMENTI ───────────────────────────────────────────────────
-  {
-    label: t('nav.tools'),
-    icon: Wrench,
-    collapsible: true,
-    items: [
-      { name: 'Universal Injector', href: '/injector', icon: Wand2 },
-      { name: 'Video Extractor', href: '/video-extractor', icon: Film },
-      { name: 'Lip Sync', href: '/lip-sync', icon: Smile },
-      // '/overlay' tolta: "Avvia Cattura" genera sottotitoli casuali di esempio
-      // (subtitle-overlay.tsx), non cattura niente. Torna quando è collegata.
-    ],
-  },
-  // ── RISORSE ─────────────────────────────────────────────────────
+  // ── RISORSE (chiuso di default) ─────────────────────────────────
   {
     label: t('nav.resources'),
     icon: FolderOpen,
     collapsible: true,
     items: [
       { name: t('nav.community'), href: '/community-hub', icon: Users },
-      // Prima del 09/08/2026 il Patch Hub NON era in nessuna navigazione:
-      // ci si arrivava solo da bottoni dentro il Community Hub, quasi tutti
-      // visibili solo a community vuota. "patchHubPage.title" = nome proprio.
+      // "patchHubPage.title" = nome proprio.
       { name: t('patchHubPage.title'), href: '/patch-hub', icon: PackageOpen },
       { name: t('nav.stores'), href: '/stores', icon: Store },
       { name: 'Ollama / AI', href: '/ollama-manager', icon: Package, ollamaIndicator: true },
-      { name: t('nav.settings'), href: '/settings', icon: Settings },
-      { name: t('nav.guide'), href: '/guide', icon: BookOpen },
       { name: t('nav.feedback'), href: '/feedback', icon: MessageSquarePlus },
     ],
   },

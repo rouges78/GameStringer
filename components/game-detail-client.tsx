@@ -35,6 +35,9 @@ import { clientLogger } from '@/lib/client-logger';
 import { translateWithFallback, translateWithFallbackBatched, getChainFailureSince } from '@/lib/ai/ai-translate-direct';
 import { runUnityStaticTranslation } from '@/lib/string-it/unity-static';
 import { runXUnityAiTranslation } from '@/lib/string-it/xunity-ai';
+import { ENGINE_PAGE_ROUTES, engineMatches, hasDirectRoute } from '@/lib/string-it/route';
+import { appendEntry, loadRunResult, recordingToast, saveRunResult, type RunResult } from '@/lib/string-it/run-log';
+import { StringItResultPanel } from '@/components/game-detail/string-it-result-panel';
 import { projectService } from '@/lib/services/translation-projects';
 import { gamePathKey } from '@/lib/game-path';
 import { runHendrixTranslation } from '@/lib/hendrix-translate';
@@ -205,15 +208,6 @@ async function traduciConSplit(testi: string[], lang: string): Promise<(string |
  * con «nessuna stringa è entrata nel gioco».
  * `engine` e `tool` sono nomi propri: entrano nei testi tradotti come {engine}/{tool}.
  */
-const ENGINE_PAGE_ROUTES: { match: (eng: string) => boolean; href: string; engine: string; tool: string }[] = [
-  // 'wolf' da solo prenderebbe anche Wolfenstein (id Tech).
-  { match: e => e.includes('wolf') && e.includes('rpg'), href: '/wolfrpg-patcher', engine: 'Wolf RPG', tool: 'Wolf RPG Patcher' },
-  { match: e => e.includes('creation engine') || e.includes('bethesda'), href: '/bethesda-patcher', engine: 'Bethesda', tool: 'Bethesda Patcher' },
-  // CRI è middleware (archivi .cpk), non un motore: parola intera, per non
-  // agganciare nomi di motore che contengono «cri».
-  { match: e => /\bcri\b|criware/.test(e), href: '/cri-patcher', engine: 'CRI', tool: 'CRI Patcher' },
-  { match: e => e.includes('telltale'), href: '/telltale-patcher', engine: 'Telltale', tool: 'Telltale Patcher' },
-];
 
 export default function GameDetailPage() {
   const { t, language } = useTranslation();
@@ -322,6 +316,11 @@ export default function GameDetailPage() {
   // Onboarding "primo gioco": all'arrivo da ?firstGame=1 evidenzia e porta in vista
   // il CTA "String it!" per accorciare il time-to-wow (highlight guidato, non avvio auto).
   const stringItBtnRef = useRef<HTMLButtonElement>(null);
+  const stringItRef = useRef<(() => void) | null>(null);
+  const [pendingStringIt, setPendingStringIt] = useState(false);
+  // Esito dell'ultima corsa di String it (pannello persistente sotto il bottone).
+  const [lastRun, setLastRun] = useState<RunResult | null>(null);
+  useEffect(() => { setLastRun(gameId ? loadRunResult(gameId) : null); }, [gameId]);
   const [highlightStringIt, setHighlightStringIt] = useState(false);
   const firstGameHandledRef = useRef(false);
 
@@ -361,17 +360,17 @@ export default function GameDetailPage() {
     return () => { clearTimeout(scrollT); clearTimeout(clearT); };
   }, [game, searchParams]);
 
-  // Arrivo da "String it!" premuto nella libreria (?stringit=1): stessa destinazione
-  // e stessa azione dell'hero, invece del vecchio salto al /translation-wizard —
-  // erano tre entry point con lo stesso nome e comportamenti diversi.
-  // Evidenzia e porta in vista SENZA avviare da solo: la traduzione passa dal gate
-  // legale e da quello P.T., e farli comparire a sorpresa sarebbe peggio di un clic.
+  // Arrivo da "String it!" premuto nella libreria (?stringit=1): l'utente ha già
+  // cliccato String it, quindi qui lo si AVVIA davvero (prima si limitava a far
+  // pulsare il bottone e serviva un secondo clic). Il flusso passa comunque dai
+  // suoi gate (copia legale, lingua già presente, P.T.): sono la risposta al clic.
   useEffect(() => {
     if (firstGameHandledRef.current) return;
     if (searchParams.get('stringit') !== '1') return;
     if (!game) return;
     firstGameHandledRef.current = true;
     setHighlightStringIt(true);
+    setPendingStringIt(true);
     const scrollT = setTimeout(() => {
       stringItBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 300);
@@ -2126,8 +2125,7 @@ export default function GameDetailPage() {
     // generico (execute_complete_workflow) → per questi niente dialog, si parte.
     {
       const engDirect = currentEngine().toLowerCase();
-      const DIRECT_ENGINES = ['hendrix', "ren'py", 'renpy', 'visionaire', 'tyrano', 'nw.js', 'electron', 'rpg maker', 'rpgmaker', 'unity', 'unreal', 'godot', 'spike', 'danganronpa'];
-      if (DIRECT_ENGINES.some(k => engDirect.includes(k)) || ENGINE_PAGE_ROUTES.some(r => r.match(engDirect))) {
+      if (hasDirectRoute(engDirect) || ENGINE_PAGE_ROUTES.some(r => r.match(engDirect))) {
         startAutoTranslate();
         return;
       }
@@ -2159,6 +2157,20 @@ export default function GameDetailPage() {
       startAutoTranslate();
     }
   };
+  // Sempre l'ultima versione (stato aggiornato) per l'avvio da ?stringit=1.
+  stringItRef.current = handleStringIt;
+
+  // Avvio da ?stringit=1 solo quando il piano è arrivato e il motore è noto:
+  // partire prima sceglierebbe il ramo sbagliato. Se il piano non arriva entro
+  // 8 s si parte comunque (String it sa lavorare anche senza piano).
+  useEffect(() => {
+    if (!pendingStringIt) return;
+    const ready = translationPlan !== null && !isDetectingEngine;
+    const fire = () => { setPendingStringIt(false); stringItRef.current?.(); };
+    if (ready) { fire(); return; }
+    const t = setTimeout(fire, 8000);
+    return () => clearTimeout(t);
+  }, [pendingStringIt, translationPlan, isDetectingEngine]);
 
   // ═══ FALLBACK A RUNTIME ═══
   // Quando la strada statica non scrive nulla nel gioco, il gioco non è
@@ -2312,9 +2324,18 @@ export default function GameDetailPage() {
 
   // ═══ AUTO-TRANSLATE ONE-CLICK FLOW ═══
   const autoTranslateRunningRef = useRef(false);
+  // Ogni messaggio della corsa resta anche nel pannello risultato, non solo nel toast.
+  const runToast = recordingToast(toast, (entry) => {
+    setLastRun(prev => {
+      const next = appendEntry(prev ?? { startedAt: Date.now(), entries: [] }, entry);
+      if (gameId) saveRunResult(gameId, next);
+      return next;
+    });
+  });
+
   const startAutoTranslate = async () => {
     if (!game?.installPath) {
-      toast.error(t('common.percorsoDiInstallazioneNonDisponibile'));
+      runToast.error(t('common.percorsoDiInstallazioneNonDisponibile'));
       return;
     }
     // Guard anti-doppio-click + feedback pulsante valido per OGNI motore (anche i rami
@@ -2322,6 +2343,11 @@ export default function GameDetailPage() {
     if (autoTranslateBusy || autoTranslateRunningRef.current) return;
     autoTranslateRunningRef.current = true;
     autoTranslateStartedAtRef.current = Date.now();
+    {
+      const fresh: RunResult = { startedAt: Date.now(), entries: [] };
+      setLastRun(fresh);
+      if (gameId) saveRunResult(gameId, fresh);
+    }
     setAutoTranslateBusy(true);
     setAutoTranslateProgress('');
 
@@ -2341,7 +2367,7 @@ export default function GameDetailPage() {
     // checkpoint → rebuild WAD in Rust con verifica interna. Stop dal widget.
     {
       const engD = currentEngine().toLowerCase();
-      if (engD.includes('spike') || engD.includes('danganronpa')) {
+      if (engineMatches(engD, 'danganronpa')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         // catturata come const: il narrowing del guard non entra nelle closure
         const gPath: string = game.installPath;
@@ -2355,11 +2381,11 @@ export default function GameDetailPage() {
           onCancel: () => requestDanganronpaStop(gPath),
         });
         if (!dTracker) {
-          toast.info(t('heroJob.alreadyRunning'));
+          runToast.info(t('heroJob.alreadyRunning'));
           setAutoTranslateBusy(false); autoTranslateRunningRef.current = false;
           return;
         }
-        const toastId = toast.loading(t('gameDetail.dr1Extracting'));
+        const toastId = runToast.loading(t('gameDetail.dr1Extracting'));
         try {
           const r = await runDanganronpaTranslation({
             gamePath: gPath,
@@ -2371,13 +2397,13 @@ export default function GameDetailPage() {
             gameId: String(game?.appid ?? game?.name ?? ''),
             onProgress: (p) => {
               if (p.phase === 'translate') {
-                toast.loading(
+                runToast.loading(
                   t('gameDetail.dr1Translating').replace('{done}', String(p.done)).replace('{total}', String(p.total)),
                   { id: toastId }
                 );
                 dTracker.onProgress(p.done, p.total);
               } else if (p.phase === 'rebuild') {
-                toast.loading(t('gameDetail.dr1Rebuilding'), { id: toastId });
+                runToast.loading(t('gameDetail.dr1Rebuilding'), { id: toastId });
               }
             },
           });
@@ -2386,13 +2412,13 @@ export default function GameDetailPage() {
             ? `${r.totalTranslated}/${r.total} · ${r.rebuild.wads_rebuilt.join(', ')} · ${r.rebuild.strings_written} nel WAD · verifica ${r.rebuild.verified_sample}/${r.rebuild.verified_sample_total}`
             : `${r.totalTranslated}/${r.total}`;
           if (r.stopped) {
-            toast.warning(t('gameDetail.dr1Stopped'), { id: toastId, description: detail });
+            runToast.warning(t('gameDetail.dr1Stopped'), { id: toastId, description: detail });
           } else {
-            toast.success(t('gameDetail.dr1Done'), { id: toastId, description: detail });
+            runToast.success(t('gameDetail.dr1Done'), { id: toastId, description: detail });
           }
         } catch (e) {
           await dTracker.fail(e);
-          toast.error(t('gameDetail.dr1Error'), { id: toastId, description: String(e).slice(0, 180) });
+          runToast.error(t('gameDetail.dr1Error'), { id: toastId, description: String(e).slice(0, 180) });
           void tryRuntimeFallback('failure', {}, 'run-failed');
         } finally {
           setAutoTranslateBusy(false);
@@ -2408,7 +2434,7 @@ export default function GameDetailPage() {
     // e registriamo la lingua. Non invasivo (nessun .json toccato).
     {
       const engH = currentEngine().toLowerCase();
-      if (engH.includes('hendrix')) {
+      if (engineMatches(engH, 'hendrix')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const tgtName: Record<string, string> = { it: 'Italiano', en: 'English', fr: 'Français', es: 'Español', sp: 'Español', de: 'Deutsch', pt: 'Português', ja: '日本語', cn: '中文', zh: '中文', ru: 'Русский' };
         // Tracking trasversale: guardia + progress globale + tray + Progetti
@@ -2420,11 +2446,11 @@ export default function GameDetailPage() {
           opDesc: t('heroJob.jobDescBg').replace('{engine}', 'Hendrix'),
         });
         if (!hTracker) {
-          toast.info(t('heroJob.alreadyRunning'));
+          runToast.info(t('heroJob.alreadyRunning'));
           setAutoTranslateBusy(false); autoTranslateRunningRef.current = false;
           return;
         }
-        const toastId = toast.loading(t('gameDetail.loadingHendrixExtract'));
+        const toastId = runToast.loading(t('gameDetail.loadingHendrixExtract'));
         try {
           const r = await runHendrixTranslation({
             gamePath: game.installPath,
@@ -2433,16 +2459,16 @@ export default function GameDetailPage() {
             gameId: game.id || (game.appid ? String(game.appid) : undefined),
             backend: hxBackendChoice,
             onProgress: (p) => {
-              if (p.phase === 'translate') { toast.loading(`Hendrix: traduzione ${p.done}/${p.total}... (ripresa salvata)`, { id: toastId }); hTracker.onProgress(p.done, p.total); }
-              else if (p.phase === 'apply') toast.loading(t('gameDetail.loadingHendrixApply'), { id: toastId });
-              else if (p.phase === 'enable') toast.loading(t('gameDetail.loadingHendrixEnable'), { id: toastId });
+              if (p.phase === 'translate') { runToast.loading(`Hendrix: traduzione ${p.done}/${p.total}... (ripresa salvata)`, { id: toastId }); hTracker.onProgress(p.done, p.total); }
+              else if (p.phase === 'apply') runToast.loading(t('gameDetail.loadingHendrixApply'), { id: toastId });
+              else if (p.phase === 'enable') runToast.loading(t('gameDetail.loadingHendrixEnable'), { id: toastId });
             },
           });
           await hTracker.done(r.applied, r.total);
-          toast.success(`Tradotto: ${r.applied}/${r.total} stringhe in ${tgtName[tgt] || tgt}. Rilancia il gioco.`, { id: toastId });
+          runToast.success(`Tradotto: ${r.applied}/${r.total} stringhe in ${tgtName[tgt] || tgt}. Rilancia il gioco.`, { id: toastId });
         } catch (e) {
           await hTracker.fail(e);
-          toast.error(t('gameDetail.errHendrix'), { id: toastId, description: String(e) });
+          runToast.error(t('gameDetail.errHendrix'), { id: toastId, description: String(e) });
           void tryRuntimeFallback('failure', {}, 'run-failed');
         } finally {
           setAutoTranslateBusy(false);
@@ -2460,7 +2486,7 @@ export default function GameDetailPage() {
     // traduzione nativamente quando il giocatore seleziona la lingua.
     {
       const engR = currentEngine().toLowerCase();
-      if (engR.includes("ren'py") || engR.includes('renpy')) {
+      if (engineMatches(engR, 'renpy')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const t0 = Date.now();
         // Esperienza "hero": stati chiari nel pannello stepper (non solo toast).
@@ -2486,7 +2512,7 @@ export default function GameDetailPage() {
           onCancel: stopRenpyRun,
         });
         if (!rpTracker) {
-          toast.info(t('heroJob.alreadyRunning'));
+          runToast.info(t('heroJob.alreadyRunning'));
           setAutoTranslateBusy(false); autoTranslateRunningRef.current = false;
           return;
         }
@@ -2557,12 +2583,12 @@ export default function GameDetailPage() {
             : `Avvia il gioco e seleziona ${tgt.toUpperCase()} dal menu delle lingue.`;
           const identicalNote = r.identical ? ` (${r.identical} invariate: uguali in ${tgt.toUpperCase()})` : '';
           if (r.stopped) {
-            toast.info(
+            runToast.info(
               `Ren'Py: fermato a ${r.translated}/${r.total} stringhe${identicalNote}. ` +
               `I file tl/ sono stati generati lo stesso — riavviando riprende da qui. ${next}`
             );
           } else {
-            toast.success(`Ren'Py: ${r.translated}/${r.total} stringhe tradotte${identicalNote}. ${next}`);
+            runToast.success(`Ren'Py: ${r.translated}/${r.total} stringhe tradotte${identicalNote}. ${next}`);
           }
         } catch (e) {
           rpStep(2, 'error', String(e));
@@ -2575,7 +2601,7 @@ export default function GameDetailPage() {
               : 'Ollama è avviato?'}`
           );
           await rpTracker.fail(e);
-          toast.error(t('gameDetail.errRenpy'), { description: String(e) });
+          runToast.error(t('gameDetail.errRenpy'), { description: String(e) });
           void tryRuntimeFallback('failure', {}, 'run-failed');
         } finally {
           setAutoTranslateBusy(false);
@@ -2591,7 +2617,7 @@ export default function GameDetailPage() {
     // patch_vis_strings (backup .gs_bak automatico). Checkpoint/resume su idb.
     {
       const engV = currentEngine().toLowerCase();
-      if (engV.includes('visionaire')) {
+      if (engineMatches(engV, 'visionaire')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const t0 = Date.now();
         // catturata come const: il narrowing del guard non entra nelle closure
@@ -2637,7 +2663,7 @@ export default function GameDetailPage() {
           },
         });
         if (!visTracker) {
-          toast.info(t('heroJob.alreadyRunning'));
+          runToast.info(t('heroJob.alreadyRunning'));
           setAutoTranslateBusy(false); autoTranslateRunningRef.current = false;
           return;
         }
@@ -2676,7 +2702,7 @@ export default function GameDetailPage() {
             // e la patch parziale è applicata. Si chiude sobri.
             vStep(2, 'done', `${r.translated}/${r.total} — ${t('heroJob.stoppedByUser')}`);
             await visTracker.stopped(r.translated, r.total);
-            toast.info(t('heroJob.stoppedToast').replace('{n}', String(r.translated)).replace('{total}', String(r.total)));
+            runToast.info(t('heroJob.stoppedToast').replace('{n}', String(r.translated)).replace('{total}', String(r.total)));
             return;
           }
           vStep(3, 'done', `${r.translated}/${r.total} stringhe`);
@@ -2696,7 +2722,7 @@ export default function GameDetailPage() {
             },
           });
           await visTracker.done(r.translated, r.total);
-          toast.success(t('heroJob.visDone').replace('{n}', String(r.translated)).replace('{total}', String(r.total)));
+          runToast.success(t('heroJob.visDone').replace('{n}', String(r.translated)).replace('{total}', String(r.total)));
         } catch (e) {
           vStep(2, 'error', String(e));
           const hint = visBackend === 'cloud' ? t('heroJob.hintApiKey') : t('heroJob.hintOllama');
@@ -2705,7 +2731,7 @@ export default function GameDetailPage() {
           clientLogger.error('[Visionaire] traduzione fallita:', e);
           setAutoTranslateError(_full);
           await visTracker.fail(new Error(_full));
-          toast.error(t('heroJob.visError').replace('{hint}', hint), { description: String(e) });
+          runToast.error(t('heroJob.visError').replace('{hint}', hint), { description: String(e) });
           void tryRuntimeFallback('failure', {}, 'run-failed');
         } finally {
           setAutoTranslateBusy(false);
@@ -2722,7 +2748,7 @@ export default function GameDetailPage() {
     // automatico). Stesso trigger della strategia (riga detection): tyrano/nw.js/electron.
     {
       const engT = currentEngine().toLowerCase();
-      if (engT.includes('tyrano') || engT.includes('nw.js') || engT.includes('electron')) {
+      if (engineMatches(engT, 'tyrano')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const t0 = Date.now();
         // Come Visionaire: la scelta è dell'utente, non dedotta dalla presenza
@@ -2745,7 +2771,7 @@ export default function GameDetailPage() {
           opDesc: t('heroJob.jobDescBg').replace('{engine}', `TyranoScript · ${tyBackend === 'cloud' ? 'Cloud' : 'Ollama'}`),
         });
         if (!tyTracker) {
-          toast.info(t('heroJob.alreadyRunning'));
+          runToast.info(t('heroJob.alreadyRunning'));
           setAutoTranslateBusy(false); autoTranslateRunningRef.current = false;
           return;
         }
@@ -2792,7 +2818,7 @@ export default function GameDetailPage() {
             },
           });
           await tyTracker.done(r.translated, r.total);
-          toast.success(t('heroJob.tyranoDone').replace('{n}', String(r.translated)).replace('{total}', String(r.total)));
+          runToast.success(t('heroJob.tyranoDone').replace('{n}', String(r.translated)).replace('{total}', String(r.total)));
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
           // Errori "parlanti" dell'orchestratore → messaggi onesti e specifici.
@@ -2805,7 +2831,7 @@ export default function GameDetailPage() {
           clientLogger.error(`[Tyrano] traduzione fallita:`, e);
           setAutoTranslateError(friendly);
           await tyTracker.fail(new Error(friendly));
-          toast.error(friendly, { description: msg.startsWith('TYRANO_') ? undefined : msg });
+          runToast.error(friendly, { description: msg.startsWith('TYRANO_') ? undefined : msg });
           void tryRuntimeFallback('failure', {}, 'run-failed');
         } finally {
           setAutoTranslateBusy(false);
@@ -2823,7 +2849,7 @@ export default function GameDetailPage() {
     // serve avviare il gioco per catturare e tradurre le stringhe.
     {
       const engUn = currentEngine().toLowerCase();
-      if (engUn.includes('unity')) {
+      if (engineMatches(engUn, 'unity')) {
         setAutoTranslateError(null);
         setAutoTranslateResult(null);
         setAutoTranslateActive(true);
@@ -2842,7 +2868,7 @@ export default function GameDetailPage() {
           || storeLanguages(game).some(l => (getCountryCode(l) ?? '').toUpperCase() === tgtCc)) {
           const msg = t('stringItPlan.alreadyHasLanguage').replace('{lang}', currentFlag?.label ?? tgt.toUpperCase());
           setAutoTranslateSteps([{ label: `📦 ${t('stringItPlan.unityStaticStep')}`, status: 'done', detail: msg }]);
-          toast.info(msg, { duration: 20000 });
+          runToast.info(msg, { duration: 20000 });
           setAutoTranslateBusy(false);
           setAutoTranslateProgress('');
           autoTranslateRunningRef.current = false;
@@ -2878,7 +2904,7 @@ export default function GameDetailPage() {
               .replace('{files}', String(outcome.report.files_changed.length))
               .replace('{skipped}', String(outcome.report.entries_skipped));
             setAutoTranslateSteps([{ label: stepLabel, status: 'done', detail: `${done} ${detail}` }]);
-            toast.success(done, { description: detail, duration: 20000 });
+            runToast.success(done, { description: detail, duration: 20000 });
             void activityHistory.trackPatch(game.name || game.title || '', game.appid?.toString(), `${done} ${detail}`);
             setAutoTranslateBusy(false);
             setAutoTranslateProgress('');
@@ -2886,7 +2912,7 @@ export default function GameDetailPage() {
             return;
           }
           clientLogger.info(`[StringIt] metodo statico Unity ${outcome.status}: ${outcome.reason}`);
-          toast.info(t('stringItPlan.unityStaticFallback').replace('{reason}', outcome.reason.slice(0, 160)));
+          runToast.info(t('stringItPlan.unityStaticFallback').replace('{reason}', outcome.reason.slice(0, 160)));
         }
         // Secondo passo di XUnity: se è già installato per questa lingua, i
         // testi che ha catturato giocando (tradotti da Google) si ritraducono
@@ -2923,17 +2949,17 @@ export default function GameDetailPage() {
               ? `${done} ${t('stringItPlan.xunityAiFailedPart').replace('{failed}', String(outcome.failed))}`
               : done;
             setAutoTranslateSteps([{ label: stepLabel, status: 'done', detail }]);
-            toast.success(done, { description: detail === done ? undefined : detail, duration: 20000 });
+            runToast.success(done, { description: detail === done ? undefined : detail, duration: 20000 });
             void activityHistory.trackPatch(game.name || game.title || '', game.appid?.toString(), detail);
           } else if (outcome.status === 'no-captures') {
             const msg = t('stringItPlan.xunityAiNoCaptures');
             setAutoTranslateSteps([{ label: stepLabel, status: 'done', detail: msg }]);
-            toast.info(msg, { duration: 20000 });
+            runToast.info(msg, { duration: 20000 });
           } else {
             const msg = t('stringItPlan.xunityAiFailed').replace('{reason}', outcome.reason.slice(0, 160));
             setAutoTranslateSteps([{ label: stepLabel, status: 'error', detail: msg }]);
             setAutoTranslateError(msg);
-            toast.error(msg);
+            runToast.error(msg);
           }
           setAutoTranslateBusy(false);
           setAutoTranslateProgress('');
@@ -2955,7 +2981,7 @@ export default function GameDetailPage() {
           const ok = await handleInstallUnityPatch();
           if (ok) {
             setAutoTranslateSteps([{ label: `🩹 ${t('heroJob.unityRouteStep')}`, status: 'done', detail: `${t('heroJob.unityRouteDone')} ${t('stringItPlan.xunityAiNext')}` }]);
-            toast.success(t('heroJob.unityRouteDone'));
+            runToast.success(t('heroJob.unityRouteDone'));
           } else {
             setAutoTranslateSteps([{ label: `🩹 ${t('heroJob.unityRouteStep')}`, status: 'error', detail: t('heroJob.unityRouteFail') }]);
             setAutoTranslateError(t('heroJob.unityRouteFail'));
@@ -2976,7 +3002,7 @@ export default function GameDetailPage() {
     // progress propri). Senza .locres: messaggio onesto, niente workflow generico.
     {
       const engUe = currentEngine().toLowerCase();
-      if (engUe.includes('unreal')) {
+      if (engineMatches(engUe, 'unreal')) {
         const t0 = Date.now();
         setAutoTranslateError(null);
         setAutoTranslateResult(null);
@@ -3095,7 +3121,7 @@ export default function GameDetailPage() {
             // pannello spiega e il banner sintetizza: due posti, due funzioni.
             setAutoTranslateSteps([{ ...ueSteps[0], status: 'error', detail: t('heroJob.unrealNoLocres') }]);
             setAutoTranslateError(t('heroJob.unrealNoLocresShort'));
-            toast.error(t('heroJob.unrealNoLocresShort'), {
+            runToast.error(t('heroJob.unrealNoLocresShort'), {
               action: {
                 label: t('heroJob.tryLiveOcr'),
                 onClick: () => router.push(`/ocr-translator?gamePath=${encodeURIComponent(game.installPath || '')}`),
@@ -3118,12 +3144,12 @@ export default function GameDetailPage() {
     // il Godot Translator (che ora si precompila via ?gamePath=).
     {
       const engG = currentEngine().toLowerCase();
-      if (engG.includes('godot')) {
+      if (engineMatches(engG, 'godot')) {
         const godotUrl = `/godot-translator?gamePath=${encodeURIComponent(game.installPath)}&gameName=${encodeURIComponent(game.title || game.name || '')}`;
         setAutoTranslateActive(true);
         setAutoTranslateError(t('heroJob.godotRouteMsg'));
         setAutoTranslateSteps([{ label: t('gameDetail.godotDetected'), status: 'error', detail: t('heroJob.godotRouteMsg') }]);
-        toast(t('heroJob.godotRouteToast'), {
+        runToast(t('heroJob.godotRouteToast'), {
           description: t('gameDetail.godotBridgeDesc'),
           action: { label: t('gameDetail.openGodotTranslator'), onClick: () => router.push(godotUrl) },
         });
@@ -3148,7 +3174,7 @@ export default function GameDetailPage() {
         setAutoTranslateResult(null);
         setAutoTranslateError(nomi(t('heroJob.pageRouteMsg')));
         setAutoTranslateSteps([{ label: nomi(t('heroJob.pageRouteDetected')), status: 'error' }]);
-        toast(nomi(t('heroJob.pageRouteToast')), {
+        runToast(nomi(t('heroJob.pageRouteToast')), {
           action: { label: nomi(t('heroJob.pageRouteOpen')), onClick: () => router.push(routeUrl) },
         });
         setAutoTranslateBusy(false);
@@ -3165,7 +3191,7 @@ export default function GameDetailPage() {
     // del font. Per questi instradiamo alla traduzione live OCR (immune alla cache
     // glifi), pre-targettando la finestra del gioco.
     const engLc = currentEngine().toLowerCase();
-    if (engLc.includes('rpg maker') || engLc.includes('rpgmaker')) {
+    if (engineMatches(engLc, 'rpgmaker')) {
       try {
         const rpgInfo = await invoke<{ version?: string }>('detect_rpgmaker_game', { gamePath: game.installPath });
         const v = (rpgInfo?.version || '').toLowerCase();
@@ -3189,7 +3215,7 @@ export default function GameDetailPage() {
           setAutoTranslateActive(true);
           setAutoTranslateError("RPG Maker classico (RPG_RT 2000/2003): questo motore non espone stringhe estraibili dai file, quindi la traduzione automatica file-based non è supportata. Per questi giochi usa la traduzione live OCR (cattura a schermo).");
           setAutoTranslateSteps([{ label: 'RPG Maker classico rilevato', status: 'error', detail: 'Traduzione file-based non disponibile — usa OCR live' }]);
-          toast('RPG Maker classico: usa la traduzione live OCR', {
+          runToast('RPG Maker classico: usa la traduzione live OCR', {
             description: 'Niente stringhe estraibili dai file per questo motore.',
             action: { label: 'Apri OCR', onClick: () => router.push(`/ocr-translator?${params.toString()}`) },
           });
@@ -3222,7 +3248,7 @@ export default function GameDetailPage() {
             opDesc: t('heroJob.jobDescBg').replace('{engine}', 'RPG Maker'),
           });
           if (!rmTracker) {
-            toast.info(t('heroJob.alreadyRunning'));
+            runToast.info(t('heroJob.alreadyRunning'));
             setAutoTranslateBusy(false); autoTranslateRunningRef.current = false;
             return;
           }
@@ -3267,12 +3293,12 @@ export default function GameDetailPage() {
               },
             });
             await rmTracker.done(r.translated, r.total);
-            toast.success(`RPG Maker ${r.version.toUpperCase()}: ${r.translated}/${r.total} stringhe applicate a ${r.files} file. Rilancia il gioco.`);
+            runToast.success(`RPG Maker ${r.version.toUpperCase()}: ${r.translated}/${r.total} stringhe applicate a ${r.files} file. Rilancia il gioco.`);
           } catch (e) {
             rmStep(3, 'error', String(e));
             setAutoTranslateError(`RPG Maker: ${String(e)} — Ollama è avviato?`);
             await rmTracker.fail(e);
-            toast.error(t('gameDetail.errRpgMaker'), { description: String(e) });
+            runToast.error(t('gameDetail.errRpgMaker'), { description: String(e) });
             void tryRuntimeFallback('failure', {}, 'run-failed');
           } finally {
             setAutoTranslateBusy(false);
@@ -3439,7 +3465,7 @@ export default function GameDetailPage() {
         try {
           const restored = await invoke<string>('gm_restore_backup', { gamePath: game.installPath });
           clientLogger.info(`[AutoTranslate] GameMaker: patch fallita, ${restored}`);
-          toast.info(t('heroJob.gmRestored'), { description: restored });
+          runToast.info(t('heroJob.gmRestored'), { description: restored });
         } catch (restoreErr: unknown) {
           const msg = String(restoreErr);
           if (msg.includes('Nessun backup trovato')) {
@@ -3447,7 +3473,7 @@ export default function GameDetailPage() {
             clientLogger.info('[AutoTranslate] GameMaker: patch fallita prima di scrivere, niente da ripristinare');
           } else {
             clientLogger.error(`[AutoTranslate] GameMaker: ripristino backup fallito: ${msg}`);
-            toast.error(t('heroJob.gmRestoreFailed'), { description: msg.slice(0, 180) });
+            runToast.error(t('heroJob.gmRestoreFailed'), { description: msg.slice(0, 180) });
           }
         }
       }
@@ -3483,7 +3509,7 @@ export default function GameDetailPage() {
         setAutoTranslateError(
           `Il motore "${predictionResult?.engine || game.engine || 'sconosciuto'}" non è ancora supportato per la traduzione automatica sui file, oppure non sono state trovate stringhe estraibili. Opzioni: prova l'OCR overlay (per giochi che mostrano testo a runtime) o la traduzione manuale dal patcher dedicato.`
         );
-        toast.error(t('gameDetail.errUnsupported'));
+        runToast.error(t('gameDetail.errUnsupported'));
         // Niente da estrarre dai file non vuol dire niente da tradurre: è
         // esattamente il caso per cui esiste la strada a runtime.
         void tryRuntimeFallback('failure', { injected: 0, total: totalStr });
@@ -3629,7 +3655,7 @@ export default function GameDetailPage() {
       });
       void reportCrash({ error, area: 'pipeline', engine: game.engine, gameKey: compatGame.key });
       setAutoTranslateError(String(error) || 'Errore durante l\'esecuzione del workflow');
-      toast.error(t('common.erroreDuranteLaTraduzioneAutomatica'));
+      runToast.error(t('common.erroreDuranteLaTraduzioneAutomatica'));
       // Cleanup workflow listener on error too
       if (unlistenWorkflow) unlistenWorkflow();
     } finally {
@@ -4112,20 +4138,23 @@ export default function GameDetailPage() {
             <div className="flex flex-col items-stretch">
               <div className="flex items-stretch gap-0">
                 {/* ── Bottone STRING IT! (HERO — azione principale) ── */}
-                <button ref={stringItBtnRef} className={`h-12 flex-1 flex items-center justify-center gap-2 rounded-l-xl bg-gradient-to-r from-rouge-600 to-rouge-500 hover:from-rouge-500 hover:to-rouge-400 text-white font-extrabold text-xs uppercase tracking-widest shadow-xl shadow-rouge-500/40 hover:shadow-rouge-500/60 transition-all border border-rouge-400/30 border-r-0 relative overflow-hidden group${highlightStringIt ? ' first-game-pulse ring-2 ring-rouge-300/70' : ''}`}
+                <button ref={stringItBtnRef} className={`glass-red h-12 flex-1 flex items-center justify-center gap-2 rounded-l-lg text-white font-extrabold text-xs uppercase tracking-widest transition-colors border-r-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rouge-300 disabled:opacity-70${highlightStringIt ? ' first-game-pulse ring-2 ring-rouge-300/70' : ''}`}
                   onClick={() => { setHighlightStringIt(false); handleStringIt(); }}
                   disabled={autoTranslateBusy}
                   title={t('common.avviaLaTraduzioneCompletaDelGioco')}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-                  {autoTranslateBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" fill="currentColor" />} {autoTranslateBusy ? (autoTranslateProgress ? `Traduzione ${autoTranslateProgress}` : (t('gameDetails.translating') || 'Translating...')) : 'String it!'}
+                  {autoTranslateBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" fill="currentColor" />} {autoTranslateBusy ? (autoTranslateProgress ? t('gameDetail.translatingProgress').replace('{progress}', autoTranslateProgress) : t('gameDetails.translating')) : t('common.stringIt')}
                 </button>
                 {/* ── Bandierina lingua target ── */}
                 <div className="relative" ref={langPickerRef}>
                   <button
-                    className="h-12 px-2.5 flex items-center gap-1 rounded-r-xl bg-gradient-to-r from-rouge-500 to-rouge-600 hover:from-rouge-400 hover:to-rouge-500 text-white text-2xs font-bold uppercase tracking-wider shadow-xl shadow-rouge-500/30 transition-all border border-rouge-400/30 border-l-0"
+                    className="glass-red h-12 px-2.5 flex items-center gap-1 rounded-r-lg text-white text-2xs font-bold uppercase tracking-wider transition-colors border-l-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rouge-300"
                     onClick={() => setShowLangPicker(!showLangPicker)}
-                    title={`Lingua: ${currentFlag.label}`}
+                    onKeyDown={(e) => { if (e.key === 'Escape') setShowLangPicker(false); }}
+                    aria-haspopup="listbox"
+                    aria-expanded={showLangPicker}
+                    title={`${t('gameDetail.targetLanguage')}: ${currentFlag.label}`}
+                    aria-label={`${t('gameDetail.targetLanguage')}: ${currentFlag.label}`}
                   >
                     <span className="text-base leading-none">{currentFlag.flag}</span>
                     <ChevronDown className="h-3 w-3 opacity-70" />
@@ -4157,6 +4186,12 @@ export default function GameDetailPage() {
                 </div>
               )}
               {translationPlan && <StringItPlan plan={translationPlan} />}
+              {/* Scelte tecniche (preset di costo, motore locale/online, indice):
+                  i default vanno bene, quindi stanno dietro "Opzioni avanzate". */}
+              <details className="mt-1.5 group/adv">
+                <summary className="cursor-pointer select-none text-center text-micro font-bold uppercase tracking-wider text-noir-500 hover:text-noir-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rouge-300 rounded">
+                  {t('gameDetail.advancedOptions')}
+                </summary>
               {/* ── Motore AI: LOCALE o ONLINE, sceglie l'utente ─────────────
                   Il ramo cloud della pipeline Ren'Py esisteva dal 07/08 ma era
                   pilotabile SOLO da localStorage: nessun pulsante, quindi per
@@ -4252,6 +4287,17 @@ export default function GameDetailPage() {
                       : t('semanticIndex.indexing')}</>
                   : <><Database className="h-3 w-3" /> {t('semanticIndex.button')}</>}
               </button>
+              </details>
+              <StringItResultPanel
+                lastRun={lastRun}
+                gamePath={game.installPath}
+                busy={autoTranslateBusy}
+                onEntry={(entry) => setLastRun(prev => {
+                  const next = appendEntry(prev ?? { startedAt: Date.now(), entries: [] }, entry);
+                  if (gameId) saveRunResult(gameId, next);
+                  return next;
+                })}
+              />
             </div>
             {game.platform === 'Steam' && (game.appid ?? 0) > 0 && (
               <a

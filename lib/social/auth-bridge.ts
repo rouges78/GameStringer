@@ -2,7 +2,7 @@
  * 🔗 Community Auth Bridge — ponte fra l'account locale GameStringer e Supabase.
  *
  * Non è un servizio di chat: si occupa SOLO di autenticare l'utente sul backend
- * community (sign-in/sign-up con password derivata dall'ID GS) e di garantire
+ * community (sign-in/sign-up con un segreto casuale per profilo, salvato in locale) e di garantire
  * l'esistenza della riga in `user_profiles`. È il prerequisito di TUTTO ciò che
  * scrive sul backend: forum, pack, glossari community, classifiche.
  *
@@ -18,7 +18,8 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
 import { clientLogger } from '@/lib/client-logger';
-import { getSupabase as getSharedSupabase } from './community-hub-backend';
+import { isTauri } from '@/lib/tauri-api';
+import { getSupabase as getSharedSupabase, isBackendEnabled } from './community-hub-backend';
 
 // ─── SUPABASE CLIENT HELPER ─────────────────────────────────────
 // Delegates to the shared client from community-hub-backend to avoid
@@ -32,8 +33,6 @@ async function getSupabase(): Promise<SupabaseClient> {
 
 export function isCommunityEnabled(): boolean {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { isBackendEnabled } = require('./community-hub-backend');
     return isBackendEnabled();
   } catch {
     return false;
@@ -117,10 +116,95 @@ function getGSSession(): GSSessionInfo | null {
   }
 }
 
-function derivePassword(gsId: string): string {
-  // Deterministic password from GS user ID — not meant to be "secure" in the
-  // traditional sense since this is a community feature, not a bank.
+// ─── SEGRETO COMMUNITY PER PROFILO ──────────────────────────────
+// La password dell'account community è un segreto casuale (32 byte, base64url)
+// generato una volta per profilo e salvato in locale: nello store cifrato Tauri
+// (AES-256-GCM, chiave legata alla macchina, nessuna password profilo richiesta)
+// e, fuori da Tauri o se lo store non risponde, in localStorage per gsId.
+
+const SECRET_KEY_PREFIX = 'COMMUNITY_AUTH_SECRET_';
+const SECRET_LS_PREFIX = 'communityBridge:secret:';
+
+function generateCommunitySecret(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+// null = nessun segreto. Se lo store cifrato non è leggibile (e non c'è copia in
+// localStorage) LANCIA: il chiamante non deve scambiarlo per "nessun segreto".
+async function loadCommunitySecret(gsId: string): Promise<string | null> {
+  const fromLocal = (): string | null => {
+    try { return localStorage.getItem(SECRET_LS_PREFIX + gsId) || null; } catch { return null; }
+  };
+  if (isTauri()) {
+    const { getSecureKey } = await import('@/lib/secure-key-store');
+    try {
+      const v = await getSecureKey(SECRET_KEY_PREFIX + gsId);
+      if (v) return v;
+    } catch (e: unknown) {
+      const local = fromLocal();
+      if (local) return local;
+      throw e;
+    }
+  }
+  return fromLocal();
+}
+
+async function saveCommunitySecret(gsId: string, secret: string): Promise<boolean> {
+  if (isTauri()) {
+    try {
+      const { setSecureKey } = await import('@/lib/secure-key-store');
+      await setSecureKey(SECRET_KEY_PREFIX + gsId, secret);
+      return true;
+    } catch (e: unknown) {
+      clientLogger.warn(`[Community Bridge] Store cifrato non scrivibile, uso localStorage: ${String(e)}`);
+    }
+  }
+  try { localStorage.setItem(SECRET_LS_PREFIX + gsId, secret); return true; } catch { return false; }
+}
+
+async function forgetCommunitySecret(gsId: string): Promise<void> {
+  if (isTauri()) {
+    try {
+      const { removeSecureKey } = await import('@/lib/secure-key-store');
+      await removeSecureKey(SECRET_KEY_PREFIX + gsId);
+    } catch { /* best effort */ }
+  }
+  try { localStorage.removeItem(SECRET_LS_PREFIX + gsId); } catch { /* best effort */ }
+}
+
+/**
+ * SOLO per la migrazione una-tantum degli account creati prima del 2026-11-25:
+ * la vecchia password deterministica derivata dall'ID GS (indovinabile da chiunque
+ * conosca l'ID). Usata esclusivamente quando non esiste ancora un segreto locale;
+ * dopo il primo accesso riuscito la password viene ruotata e questa non serve più.
+ */
+function legacyDerivedPasswordForMigrationOnly(gsId: string): string {
   return `gs_community_${gsId}_!Str1ng3r`;
+}
+
+/**
+ * Sostituisce la password dell'account (sessione appena aperta con quella legacy)
+ * con un segreto casuale. Il segreto viene salvato PRIMA di updateUser: se poi
+ * updateUser fallisce lo si dimentica, così al prossimo avvio si ritenta la
+ * migrazione invece di restare con un segreto che il server non conosce.
+ */
+async function rotateLegacyPassword(supabase: SupabaseClient, gsId: string): Promise<void> {
+  const secret = generateCommunitySecret();
+  if (!(await saveCommunitySecret(gsId, secret))) {
+    clientLogger.warn('[Community Bridge] Impossibile salvare il segreto community: migrazione rinviata.');
+    return;
+  }
+  const { error } = await supabase.auth.updateUser({ password: secret });
+  if (error) {
+    await forgetCommunitySecret(gsId);
+    clientLogger.warn(`[Community Bridge] Rotazione password community fallita, ritento al prossimo avvio: ${error.message}`);
+    return;
+  }
+  clientLogger.debug('[Community Bridge] Password community migrata a segreto casuale.');
 }
 
 /**
@@ -191,7 +275,6 @@ async function _runAutoSync(): Promise<string | null> {
   }
 
   const supabase = await getSupabase();
-  const password = derivePassword(gs.id);
 
   let authenticatedUserId: string | null = null;
 
@@ -204,17 +287,54 @@ async function _runAutoSync(): Promise<string | null> {
   // Un singolo tentativo completo: già-autenticato → sign-in → sign-up.
   // Ritorna l'uid (solo se c'è una SESSIONE valida) e se l'errore è transitorio.
   const tryAuthOnce = async (): Promise<{ uid: string | null; transient: boolean }> => {
+    // Un errore di LETTURA dello store cifrato propaga (→ transitorio, circuit-breaker):
+    // trattarlo come "nessun segreto" porterebbe a generarne uno nuovo e sovrascrivere
+    // quello vero, chiudendo fuori l'utente.
+    const stored = await loadCommunitySecret(gs.id);
+
+    // 0) Migrazione una-tantum: nessun segreto locale → se l'account esiste ha ancora
+    //    la password legacy. Accedi con quella e ruotala subito. Si fa anche con una
+    //    sessione già persistita, così la password legacy smette di valere per tutti.
+    if (!stored) {
+      const { data: li, error: liErr } = await supabase.auth.signInWithPassword({
+        email: gs.email!,
+        password: legacyDerivedPasswordForMigrationOnly(gs.id),
+      });
+      if (li?.user?.id && li.session) {
+        await rotateLegacyPassword(supabase, gs.id);
+        return { uid: li.user.id, transient: false };
+      }
+      if (liErr && isTransient(liErr.message)) return { uid: null, transient: true };
+    }
+
     // a) Sessione Supabase già presente (persistita tra i riavvii)?
     const { data: current } = await supabase.auth.getUser();
     if (current?.user?.id) return { uid: current.user.id, transient: false };
 
-    // b) Sign-in (utente esistente)
-    const { data: si, error: siErr } = await supabase.auth.signInWithPassword({ email: gs.email!, password });
-    if (si?.user?.id && si.session) {
-      clientLogger.debug(`[Community Bridge] Sign-in riuscito: ${si.user.id}`);
-      return { uid: si.user.id, transient: false };
+    // b) Sign-in (utente esistente) col segreto locale
+    if (stored) {
+      const { data: si, error: siErr } = await supabase.auth.signInWithPassword({ email: gs.email!, password: stored });
+      if (si?.user?.id && si.session) {
+        clientLogger.debug(`[Community Bridge] Sign-in riuscito: ${si.user.id}`);
+        return { uid: si.user.id, transient: false };
+      }
+      if (siErr && isTransient(siErr.message)) return { uid: null, transient: true };
     }
-    if (siErr && isTransient(siErr.message)) return { uid: null, transient: true };
+
+    // Primo accesso su questo profilo: segreto nuovo, salvato PRIMA del sign-up (un
+    // account creato con un segreto non salvato sarebbe irraggiungibile).
+    const fresh = !stored;
+    const password = stored ?? generateCommunitySecret();
+    if (fresh && !(await saveCommunitySecret(gs.id, password))) {
+      clientLogger.warn('[Community Bridge] Impossibile salvare il segreto community: sign-up annullato.');
+      return { uid: null, transient: false };
+    }
+    // Fallimento definitivo con un segreto appena creato → dimenticalo, così il
+    // prossimo avvio riparte pulito (l'account, se esiste, non è stato creato da noi).
+    const giveUp = async (): Promise<{ uid: null; transient: false }> => {
+      if (fresh) await forgetCommunitySecret(gs.id);
+      return { uid: null, transient: false };
+    };
 
     // c) Sign-up (primo accesso)
     const { data: su, error: suErr } = await supabase.auth.signUp({
@@ -224,7 +344,7 @@ async function _runAutoSync(): Promise<string | null> {
     });
     if (suErr) {
       const suStatus = (suErr as { status?: number }).status;
-      // L'utente ESISTE già → retry immediato del sign-in (password deterministica), PRIMA
+      // L'utente ESISTE già → retry immediato del sign-in (stesso segreto), PRIMA
       // del check "transitorio". Il 422 "User already registered" e il 500 transitorio
       // "Database error saving new user" indicano entrambi un account esistente: il secondo
       // capita quando il check-duplicati di GoTrue va in timeout sotto carico e l'INSERT
@@ -233,7 +353,8 @@ async function _runAutoSync(): Promise<string | null> {
       if (/already registered|already exists|user already|database error saving new user/i.test(suErr.message) || suStatus === 422) {
         const { data: si2, error: si2Err } = await supabase.auth.signInWithPassword({ email: gs.email!, password });
         if (si2?.user?.id && si2.session) return { uid: si2.user.id, transient: false };
-        return { uid: null, transient: isTransient(si2Err?.message) };
+        if (isTransient(si2Err?.message)) return { uid: null, transient: true };
+        return giveUp();
       }
       // Altri 5xx/timeout/rete → transitorio, ritenta più tardi (circuit-breaker).
       if (isTransient(suErr.message)) return { uid: null, transient: true };
@@ -242,7 +363,7 @@ async function _runAutoSync(): Promise<string | null> {
       // (verificato 2026-06-17: 817/817 profili, password bcrypt allineate alla derivazione);
       // i 500 residui sono timeout DB transitori, NON un trigger rotto.
       clientLogger.warn(`[Community Bridge] Sign-up Supabase fallito (condizione gestita): ${suErr.message || 'errore senza messaggio'}${suStatus ? ` [status ${suStatus}]` : ''}`);
-      return { uid: null, transient: false };
+      return giveUp();
     }
     if (su?.user?.id && su.session) {
       clientLogger.debug(`[Community Bridge] Sign-up riuscito: ${su.user.id}`);

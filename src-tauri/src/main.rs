@@ -122,10 +122,37 @@ impl log::Log for TerminalLogger {
     }
     fn log(&self, record: &log::Record) {
         if self.enabled(record.metadata()) {
-            println!("[{}] [{}] {}", record.level(), record.target(), record.args());
+            let line = format!("[{}] [{}] {}", record.level(), record.target(), record.args());
+            println!("{}", line);
+            // In release l'app non ha console (windows_subsystem = "windows"):
+            // senza il file, ogni log finiva nel vuoto.
+            if !cfg!(debug_assertions) {
+                if let Some(file) = log_file() {
+                    if let Ok(mut f) = file.lock() {
+                        use std::io::Write;
+                        let _ = writeln!(f, "{} {}", chrono::Local::now().format("%Y-%m-%d %H:%M:%S"), line);
+                    }
+                }
+            }
         }
     }
     fn flush(&self) {}
+}
+
+/// %LOCALAPPDATA%\GameStringer\logs\gamestringer.log, ruotato a 5 MB all'avvio
+/// (il precedente diventa gamestringer.old.log).
+fn log_file() -> Option<&'static std::sync::Mutex<std::fs::File>> {
+    static FILE: std::sync::OnceLock<Option<std::sync::Mutex<std::fs::File>>> = std::sync::OnceLock::new();
+    FILE.get_or_init(|| {
+        let dir = dirs::data_local_dir()?.join("GameStringer").join("logs");
+        std::fs::create_dir_all(&dir).ok()?;
+        let path = dir.join("gamestringer.log");
+        if std::fs::metadata(&path).map(|m| m.len() > 5 * 1024 * 1024).unwrap_or(false) {
+            let _ = std::fs::rename(&path, dir.join("gamestringer.old.log"));
+        }
+        std::fs::OpenOptions::new().create(true).append(true).open(&path).ok().map(std::sync::Mutex::new)
+    })
+    .as_ref()
 }
 
 static TERMINAL_LOGGER: TerminalLogger = TerminalLogger;
@@ -148,8 +175,25 @@ fn main() {
         // In dev, usa una directory temporanea fuori da src-tauri
         std::path::PathBuf::from("../gamestringer_data")
     } else {
-        // In produzione, usa la directory dei dati dell'app
-        std::path::PathBuf::from("profiles")
+        // In produzione: percorso assoluto in %LOCALAPPDATA%\GameStringer\profiles,
+        // dove l'installer per-utente mette già l'app e dove finivano i profili
+        // quando la cartella corrente era quella di installazione. Prima era
+        // "profiles" relativo alla cartella corrente: avviando l'app da un'altra
+        // cartella i profili "sparivano" o l'avvio andava in panic.
+        let legacy = std::path::PathBuf::from("profiles");
+        match dirs::data_local_dir() {
+            Some(base) => {
+                let fixed = base.join("GameStringer").join("profiles");
+                // Profili creati altrove con il vecchio percorso relativo: usali finché
+                // il percorso fisso non esiste, così nessuno perde i propri dati.
+                if !fixed.exists() && legacy.join("profiles").join("profiles.index").exists() {
+                    std::fs::canonicalize(&legacy).unwrap_or(legacy)
+                } else {
+                    fixed
+                }
+            }
+            None => legacy,
+        }
     };
     
     // Inizializza ProfileManager
@@ -631,6 +675,8 @@ fn main() {
             commands::unity_static::unity_static_probe,
             commands::unity_static::unity_static_apply,
             commands::unity_static::unity_static_restore,
+            commands::string_it_restore::string_it_restore,
+            commands::string_it_restore::string_it_restore_probe,
 
             // Godot Engine PCK patcher
             commands::godot_patcher::detect_godot_engine,
@@ -980,7 +1026,8 @@ fn main() {
             commands::audit_log::export_audit_log,
             // Secure Delete System
             commands::secure_delete::secure_delete_file,
-            commands::secure_delete::secure_delete_directory,
+            // secure_delete_directory non è esposto: cancellava qualsiasi cartella
+            // e la UI non lo usa (resta interno a secure_delete_profile_data).
             commands::secure_delete::secure_delete_profile_data,
             commands::secure_delete::secure_delete_api_keys,
             commands::secure_delete::secure_cleanup_temp_data,
@@ -1324,7 +1371,9 @@ fn main() {
 
             // ── Stato Sistema ────────────────────────────────
             let ollama_status = MenuItem::with_id(app, "ollama_status", "🟢 Ollama: Verifica...", false, None::<&str>)?;
-            let version_info = MenuItem::with_id(app, "version_info", "ℹ️ v1.9.1 (build 132)", false, None::<&str>)?;
+            // Versione letta da tauri.conf.json: prima era scritta a mano e diceva 1.9.1 su 1.17.
+            let app_version = app.package_info().version.to_string();
+            let version_info = MenuItem::with_id(app, "version_info", format!("v{}", app_version), false, None::<&str>)?;
 
             let sep4 = PredefinedMenuItem::separator(app)?;
 
@@ -1393,7 +1442,7 @@ fn main() {
                 .icon(app.default_window_icon().cloned().unwrap())
                 .menu(&menu)
                 .show_menu_on_left_click(false)
-                .tooltip("GameStringer v1.9.1 — AI Game Translation")
+                .tooltip(format!("GameStringer v{}", app_version))
                 .on_menu_event(|app, event| {
                     match event.id.as_ref() {
                         // ── Finestra ──

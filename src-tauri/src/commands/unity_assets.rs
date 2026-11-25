@@ -17,6 +17,10 @@ const UABEA_DOWNLOAD_URL: &str =
     "https://github.com/nesrak1/UABEA/releases/latest/download/uabea-windows.zip";
 const UABEA_FALLBACK_URL: &str =
     "https://github.com/nesrak1/UABEA/releases/download/v8/uabea-windows.zip";
+// SHA-256 di uabea-windows.zip v8, calcolato sul file (la release non ha `digest`).
+// Vale per tutti gli URL sopra: oggi puntano tutti alla v8. Una release nuova verrà
+// scartata e si ripiegherà sulla v8 pinnata, finché non si aggiorna l'hash qui.
+const UABEA_SHA256: &str = "0623ab1dc099a6397c3a7e72782b91405e60b286c6825fb6fa21e553ff2ea580";
 
 fn get_uabea_dir() -> PathBuf {
     dirs::data_dir()
@@ -221,6 +225,7 @@ async fn try_download_uabea(client: &Client, url: &str, dir: &std::path::Path) -
     if bytes.len() < 4 || &bytes[..4] != b"PK\x03\x04" {
         return Err(format!("Il file scaricato non è un archivio ZIP valido (URL: {})", url));
     }
+    super::download_verify::verify_sha256(&bytes, UABEA_SHA256, url)?;
 
     let mut archive = ZipArchive::new(Cursor::new(bytes))
         .map_err(|e| format!("Errore ZIP: {}", e))?;

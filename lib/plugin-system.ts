@@ -538,7 +538,12 @@ class PluginRegistry {
     }
   }
 
-  /** Valuta codice plugin in modo sicuro (sandbox limitata) */
+  /**
+   * Valuta il codice di un plugin. Non è una sandbox: il codice gira con lo
+   * stesso accesso a Tauri dell'app. Nella build installata la CSP non permette
+   * `new Function` (niente 'unsafe-eval'), quindi i plugin con codice JS vengono
+   * rifiutati con un errore esplicito.
+   */
   private evaluatePluginCode(code: string): Record<string, unknown> | null {
     try {
       const fn = new Function('exports', code);
@@ -546,6 +551,10 @@ class PluginRegistry {
       fn(exports);
       return exports;
     } catch (e: unknown) {
+      if (e instanceof EvalError) {
+        clientLogger.error('[PluginSystem] Plugin con codice JS disattivati per sicurezza (CSP senza unsafe-eval)');
+        return null;
+      }
       clientLogger.error(`[PluginSystem] Errore valutazione plugin: ${String(e)}`);
       return null;
     }

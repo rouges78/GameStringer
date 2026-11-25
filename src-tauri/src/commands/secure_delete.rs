@@ -108,7 +108,8 @@ pub async fn secure_delete_file(
     passes: Option<u32>,
 ) -> Result<SecureDeleteResult, String> {
     let path = PathBuf::from(&filepath);
-    
+    super::path_guard::ensure_delete_allowed(&path)?;
+
     if !path.exists() {
         return Err("File non trovato".to_string());
     }

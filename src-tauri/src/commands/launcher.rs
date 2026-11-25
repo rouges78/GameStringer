@@ -514,7 +514,8 @@ fn find_gog_galaxy_executable() -> Result<String, String> {
 #[tauri::command]
 pub async fn launch_game_direct(executable_path: String, launch_options: Option<String>) -> Result<LaunchResult, String> {
     info!("🚀 Tentativo di avvio gioco diretto: {}", executable_path);
-    
+    super::path_guard::ensure_launch_allowed(Path::new(&executable_path))?;
+
     // Validazione percorso
     if !Path::new(&executable_path).exists() {
         let error_msg = format!("Eseguibile non trovato: {}", executable_path);

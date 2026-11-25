@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ollamaFetch } from '@/lib/ai/ollama-http';
 import { 
   Gamepad2, 
@@ -10,41 +10,24 @@ import {
   Zap,
   Layers,
   Globe,
-  Newspaper,
   ExternalLink,
   ArrowUp,
   ArrowDown,
   Play,
-  Rss,
-  Settings2,
   Cpu,
-  ArrowUpCircle,
   Wrench
 } from 'lucide-react';
-import { decode } from 'html-entities';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { InstalledGamesPanel, type HomeGame } from '@/components/home/installed-games-panel';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { activityHistory, Activity, activityColors, activityIcons, ActivityType } from '@/lib/activity-history';
 import { useTranslation, translations } from '@/lib/i18n';
-import { blogService, BlogPost } from '@/lib/blog';
 import { storageManager } from '@/lib/storage-manager';
 import { get } from 'idb-keyval';
-import { newsFeedService, type NewsFeedItem, FEED_CATEGORIES } from '@/lib/news-feeds';
 import { clientLogger } from '@/lib/client-logger';
-import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
-// Helper: ritorna un'immagine di fallback (favicon ad alta risoluzione) dato un URL
-function getFaviconFallback(url: string): string {
-  let host = 'gamestringer.ai';
-  try {
-    host = new URL(url).hostname;
-  } catch {
-    // url non valido, usa default
-  }
-  return 'https://www.google.com/s2/favicons?sz=256&domain=' + host;
-}
 
 interface RecentActivityProps {
   color: string;
@@ -112,31 +95,16 @@ export default function Dashboard() {
   const [activities, setActivities] = useState<RecentActivityProps[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [_lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [activityOrder, setActivityOrder] = useState<'newest' | 'oldest'>('newest');
   const [lastGame, setLastGame] = useState<{ id: string; title: string; image: string | null; platform: string; visitedAt: number; appId: string; installPath: string | null } | null>(null);
   const [activeTranslation, setActiveTranslation] = useState<{ percent: number; translated: number; total: number; lang: string } | null>(null);
-  const [newsFilter, setNewsFilter] = useState<string>('all');
-  const [rssNews, setRssNews] = useState<NewsFeedItem[]>([]);
-  const [newsSource, setNewsSource] = useState<'rss' | 'blog'>('rss');
-  const [rssLoading, setRssLoading] = useState(false);
+  const [installedGames, setInstalledGames] = useState<HomeGame[]>([]);
+  const [gamesLoading, setGamesLoading] = useState(true);
   const [ollamaStatus, setOllamaStatus] = useState<{ running: boolean; models: number; bestModel: string } | null>(null);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [ollamaStarting, setOllamaStarting] = useState(false);
-  const newsFeedRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     setIsMounted(true);
-  }, []);
-
-  const handleNewsScroll = useCallback(() => {
-    if (newsFeedRef.current) {
-      setShowScrollTop(newsFeedRef.current.scrollTop > 400);
-    }
-  }, []);
-
-  const scrollToTop = useCallback(() => {
-    newsFeedRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const startOllama = useCallback(async () => {
@@ -177,19 +145,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-    setBlogPosts(blogService.getRecentPosts(5));
-    // Al primo avvio la copia in localStorage è vuota: rilegge dopo aver caricato blog.json
-    blogService.init().then(() => setBlogPosts(blogService.getRecentPosts(5)));
-    // Carica news RSS
-    const cachedNews = newsFeedService.getCachedNews();
-    if (cachedNews.length > 0) {
-      setRssNews(cachedNews);
-    }
-    setRssLoading(true);
-    newsFeedService.fetchNews().then(items => {
-      setRssNews(items);
-      setRssLoading(false);
-    }).catch(() => setRssLoading(false));
     // Ollama status — HTTP diretto (funziona sia in browser che in Tauri)
     (async () => {
       try {
@@ -259,6 +214,9 @@ export default function Dashboard() {
         }
       }
       
+      setInstalledGames((games as HomeGame[]).filter(g => g && (g as { is_installed?: boolean }).is_installed));
+      setGamesLoading(false);
+
       // --- Dati reali: Activity History ---
       let savedTranslations: unknown[] = [];
       let savedPatches: unknown[] = [];
@@ -443,18 +401,6 @@ export default function Dashboard() {
     }
   };
 
-  const filteredPosts = blogPosts.filter(post => 
-    newsFilter === 'all' || post.gameName === newsFilter || post.tag === newsFilter
-  );
-
-  const filteredRss = rssNews.filter(item =>
-    newsFilter === 'all' || item.category === newsFilter || item.sourceId === newsFilter
-  );
-
-  const uniqueGameNames = [...new Set(blogPosts.map(p => p.gameName).filter(Boolean))] as string[];
-  const uniqueTags = [...new Set(blogPosts.map(p => p.tag).filter(Boolean))];
-  const uniqueRssCategories = [...new Set(rssNews.map(n => n.category))];
-
   const totalGames = Object.values(stats.storeStats).reduce((s, v) => s + v.games, 0);
   const totalTranslated = stats.translationStats.completed;
 
@@ -535,226 +481,8 @@ export default function Dashboard() {
       {/* ═══ MAIN CONTENT ═══ */}
       <div className="flex-1 flex min-h-0">
         
-        {/* ── COLONNA SINISTRA — News Feed ── */}
-        <div className="flex-[3] flex flex-col min-h-0 border-r border-noir-700/40">
-          {/* Tab bar */}
-          <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-noir-700/40 bg-noir-950">
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => { setNewsSource('rss'); setNewsFilter('all'); }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all ${
-                  newsSource === 'rss' 
-                    ? 'bg-rouge-500/15 text-rouge-400 shadow-[0_0_8px_rgba(255,59,74,0.1)]' 
-                    : 'text-noir-400 hover:text-noir-200 hover:bg-noir-700/20'
-                }`}
-              >
-                <Rss className="h-3.5 w-3.5" /> Feed
-                {rssNews.length > 0 && <span className={`text-micro ml-0.5 px-1.5 py-0.5 rounded-full ${newsSource === 'rss' ? 'bg-rouge-500/20 text-rouge-400' : 'bg-noir-700/30 text-noir-400'}`}>{rssNews.length}</span>}
-                {rssLoading && <RefreshCw className="h-2.5 w-2.5 animate-spin opacity-50" />}
-              </button>
-              <button
-                onClick={() => { setNewsSource('blog'); setNewsFilter('all'); }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all ${
-                  newsSource === 'blog' 
-                    ? 'bg-rouge-500/15 text-rouge-400 shadow-[0_0_8px_rgba(255,59,74,0.1)]' 
-                    : 'text-noir-400 hover:text-noir-200 hover:bg-noir-700/20'
-                }`}
-              >
-                <Newspaper className="h-3.5 w-3.5" /> {t('common.myNews')}
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              <select
-                value={newsFilter}
-                onChange={(e) => setNewsFilter(e.target.value)}
-                className="text-2xs bg-noir-950 border border-noir-700/60 rounded-md px-2.5 py-1.5 text-noir-200 hover:border-rouge-400/50 focus:border-rouge-400 focus:outline-none focus:ring-1 focus:ring-rouge-400/20 transition-all cursor-pointer"
-              >
-                {newsSource === 'rss' ? (
-                  <>
-                    <option value="all">{t('common.allCategories')}</option>
-                    {uniqueRssCategories.map(cat => {
-                      const info = FEED_CATEGORIES.find(c => c.id === cat);
-                      return info ? <option key={cat} value={cat}>{info.icon} {info.labels?.[language] || info.labels?.['en'] || info.id}</option> : null;
-                    })}
-                  </>
-                ) : (
-                  <>
-                    <option value="all">{t('common.allNews')}</option>
-                    {uniqueGameNames.map(g => <option key={g} value={g}>{g}</option>)}
-                    {uniqueTags.map(tag => <option key={tag} value={tag}>{tag}</option>)}
-                  </>
-                )}
-              </select>
-              <Link href={newsSource === 'rss' ? '/news-feeds' : '/blog'} className="text-rouge-500/60 hover:text-rouge-400 transition-colors">
-                <Settings2 className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </div>
-
-          {/* News Feed scrollabile — altezza fissa adattata alla viewport */}
-          <div ref={newsFeedRef} onScroll={handleNewsScroll} className="relative flex-1 overflow-y-auto custom-scrollbar">
-            <div className="p-4 space-y-1">
-            {newsSource === 'rss' ? (
-              filteredRss.length > 0 ? filteredRss.slice(0, 50).map((item, idx) => (
-                <a href={item.link} target="_blank" rel="noopener noreferrer" key={item.id}>
-                  <div className="group animate-fade-in" style={{ animationDelay: `${Math.min(idx * 25, 250)}ms` }}>
-                    {(idx === 0 || filteredRss[idx - 1]?.pubDate !== item.pubDate) && (
-                      <div className="flex items-center gap-3 py-2.5 mt-1 first:mt-0">
-                        <div className="h-px flex-1 bg-gradient-to-r from-noir-700 to-transparent" />
-                        <span className="text-2xs font-bold text-noir-400 uppercase tracking-[0.2em]">{item.pubDate}</span>
-                        <div className="h-px flex-1 bg-gradient-to-l from-noir-700 to-transparent" />
-                      </div>
-                    )}
-                    
-                    <div className="relative flex gap-3.5 p-3 rounded-lg bg-noir-900 hover:bg-noir-800 border border-noir-700/40 hover:border-noir-600 transition-all cursor-pointer mb-1.5 overflow-hidden group-hover:shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
-                      
-                      {/* Immagine SEMPRE visibile: item.image → favicon ad alta risoluzione → icona sorgente */}
-                      <div className="relative w-[180px] h-[100px] rounded-md flex-shrink-0 border border-black/20 shadow-lg group-hover:shadow-xl transition-shadow overflow-hidden bg-gradient-to-br from-noir-800 to-noir-900">
-                        <ImageWithFallback
-                          src={item.image || getFaviconFallback(item.link)}
-                          fallbackSrc={getFaviconFallback(item.link)}
-                          alt={item.title}
-                          className="w-full h-full object-cover"
-                          fallbackClassName="w-12 h-12 object-contain m-auto absolute inset-0 opacity-80"
-                          placeholder={
-                            <span className="text-4xl opacity-80 drop-shadow-md absolute inset-0 flex items-center justify-center">
-                              {item.sourceIcon}
-                            </span>
-                          }
-                        />
-                      </div>
-
-                      <div className="relative flex-1 min-w-0 flex flex-col py-0.5">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-micro font-bold text-rouge-400 uppercase tracking-widest">{item.sourceName}</span>
-                          {(() => { const ci = FEED_CATEGORIES.find(c => c.id === item.category); return ci ? <span className="text-2xs px-1.5 py-0.5 rounded-md font-semibold" style={{ color: ci.color, backgroundColor: ci.color + '22', border: `1px solid ${ci.color}44` }}>{ci.icon} {ci.labels?.[language] || ci.labels?.['en'] || ci.id}</span> : null; })()}
-                        </div>
-                        <h3 className="text-[13px] font-bold text-noir-100 group-hover:text-white leading-snug transition-colors line-clamp-2">
-                          {decode(item.title)}
-                        </h3>
-                        <p className="text-[11px] text-noir-400 leading-relaxed mt-1.5 line-clamp-2">
-                          {decode(item.description)}
-                        </p>
-                        <div className="flex items-center gap-2 mt-auto pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <ExternalLink className="h-3 w-3 text-rouge-500/60" />
-                          <span className="text-micro text-rouge-500/60">{t('common.readArticle')}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </a>
-              )) : (
-                <div className="flex flex-col items-center justify-center h-full text-noir-400/40 gap-4 py-16">
-                  {rssLoading ? (
-                    <>
-                      <div className="relative">
-                        <RefreshCw className="h-8 w-8 opacity-30 animate-spin" />
-                        <div className="absolute inset-0 blur-lg bg-rouge-500/10 rounded-full animate-pulse" />
-                      </div>
-                      <p className="text-xs text-noir-400/60">{t('common.loadingFeeds')}</p>
-                      <div className="w-full max-w-lg space-y-3 mt-2">
-                        {[1,2,3].map(i => (
-                          <div key={i} className="flex gap-3.5 p-3 rounded-lg bg-noir-900/60 animate-pulse">
-                            <div className="w-[200px] h-[100px] rounded-md bg-noir-700/20 flex-shrink-0" />
-                            <div className="flex-1 space-y-3 py-1">
-                              <div className="h-2 bg-noir-700/20 rounded-full w-1/4" />
-                              <div className="h-3.5 bg-noir-700/25 rounded w-3/4" />
-                              <div className="h-2.5 bg-noir-700/15 rounded w-full" />
-                              <div className="h-2.5 bg-noir-700/15 rounded w-2/3" />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="relative">
-                        <Rss className="h-12 w-12 opacity-20" />
-                        <div className="absolute inset-0 blur-xl bg-rouge-500/5 rounded-full" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-noir-400/50">{t('common.noActiveFeeds')}</p>
-                        <Link href="/news-feeds" className="text-xs text-rouge-500 hover:text-rouge-400 mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rouge-500/10 hover:bg-rouge-500/20 border border-rouge-500/20 transition-all">
-                          <Settings2 className="h-3.5 w-3.5" />
-                          {t('common.configureFeeds')}
-                        </Link>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )
-            ) : (
-              filteredPosts.length > 0 ? filteredPosts.map((post, idx) => (
-                <Link href="/blog" key={post.id}>
-                  <div className="group animate-fade-in" style={{ animationDelay: `${Math.min(idx * 25, 250)}ms` }}>
-                    {(idx === 0 || filteredPosts[idx - 1]?.date !== post.date) && (
-                      <div className="flex items-center gap-3 py-2.5 mt-1 first:mt-0">
-                        <div className="h-px flex-1 bg-gradient-to-r from-noir-700 to-transparent" />
-                        <span className="text-2xs font-bold text-noir-400 uppercase tracking-[0.2em]">{post.date}</span>
-                        <div className="h-px flex-1 bg-gradient-to-l from-noir-700 to-transparent" />
-                      </div>
-                    )}
-                    
-                    <div className="relative flex gap-3.5 p-3 rounded-lg bg-noir-900 hover:bg-noir-800 border border-noir-700/40 hover:border-noir-600 transition-all cursor-pointer mb-1.5 overflow-hidden group-hover:shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
-                      {/* Immagine SEMPRE visibile per i blog post: post.image → icona app → placeholder grafico */}
-                      <div className="relative w-[200px] h-[110px] rounded-md flex-shrink-0 border border-black/20 shadow-lg overflow-hidden"
-                        style={{ background: 'linear-gradient(145deg, #161618 0%, #26262a 50%, #161618 100%)' }}>
-                        <ImageWithFallback
-                          src={post.image || '/icon.png'}
-                          alt={post.title}
-                          className="w-full h-full object-cover"
-                          placeholder={
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              {post.gameName ? (
-                                <span className="text-[11px] font-bold text-rouge-400/70 text-center px-3">{post.gameName}</span>
-                              ) : (
-                                <Newspaper className="h-8 w-8 text-rouge-400/25" />
-                              )}
-                            </div>
-                          }
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                        <div>
-                          <span className="text-micro font-bold text-noir-400 uppercase tracking-widest">{post.tag || (t('common.news'))}</span>
-                          <h3 className="text-[13px] font-bold text-noir-100 group-hover:text-white leading-snug transition-colors line-clamp-2 mt-1">
-                            {post.title}
-                          </h3>
-                        </div>
-                        <p className="text-[11px] text-noir-400 line-clamp-2 leading-relaxed mt-1.5">
-                          {post.description}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              )) : (
-                <div className="flex flex-col items-center justify-center h-full text-noir-400/40 gap-4 py-16">
-                  <Newspaper className="h-12 w-12 opacity-15" />
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-noir-400/50">{t('common.noNewsYet')}</p>
-                    <Link href="/blog" className="text-xs text-rouge-500 hover:text-rouge-400 mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rouge-500/10 hover:bg-rouge-500/20 border border-rouge-500/20 transition-all">
-                      {t('common.writeTheFirstNews')}
-                    </Link>
-                  </div>
-                </div>
-              )
-            )}
-            </div>
-
-            {/* Bottone Torna in cima */}
-            {showScrollTop && (
-              <button
-                onClick={scrollToTop}
-                title={t('common.backToTop')}
-                className="sticky bottom-4 ml-auto mr-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rouge-500/90 hover:bg-rouge-500 text-white text-2xs font-bold shadow-lg shadow-rouge-500/20 hover:shadow-rouge-500/40 transition-all hover:-translate-y-0.5 backdrop-blur-sm z-10"
-              >
-                <ArrowUpCircle className="h-3.5 w-3.5" />
-                {t('common.backToTop')}
-              </button>
-            )}
-          </div>
-        </div>
+        {/* ── COLONNA SINISTRA — giochi installati con String it ── */}
+        <InstalledGamesPanel games={installedGames} loading={gamesLoading} />
 
         {/* ── COLONNA DESTRA — Sidebar ── */}
         <div className="w-[340px] shrink-0 flex flex-col min-h-0 overflow-y-auto custom-scrollbar border-l border-noir-700/40 bg-noir-950">

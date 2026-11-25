@@ -1243,7 +1243,7 @@ function LibraryListView() {
             </div>
 
             {/* Quick Actions Overlay su hover */}
-            <div className="absolute inset-0 bg-gradient-to-t from-noir-950/90 via-noir-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 flex items-end justify-center pb-3 gap-1.5 flex-wrap backdrop-blur-[2px]">
+            <div className="absolute inset-0 bg-gradient-to-t from-noir-950/90 via-noir-900/60 to-transparent opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 z-20 flex items-end justify-center pb-3 gap-1.5 flex-wrap backdrop-blur-[2px]">
               {!game.is_installed && game.platform && (game.platform === 'Steam' || game.platform === 'Epic Games' || game.platform === 'GOG') && (
                 <button
                   onClick={(e) => {
@@ -1271,13 +1271,6 @@ function LibraryListView() {
                   <Download className="h-4 w-4" />
                 </button>
               )}
-              <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `${getGameDetailUrl(game)}&stringit=1`; }}
-                className="bg-rouge-600/90 hover:bg-rouge-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-rouge-500/50 hover:scale-110 border border-rouge-400/30"
-                title={t('common.stringIt')}
-              >
-                <Sparkles className="h-4 w-4" />
-              </button>
               {/* Batch nascosto: /batch dichiara "non implementato" e tiene disabilitato Avvia. */}
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/community-hub?query=${encodeURIComponent(game.title)}`; }}
@@ -1314,11 +1307,26 @@ function LibraryListView() {
               const cachedLangs = languagesCache[gameKey];
               const languages = cachedLangs && cachedLangs.length > 0 ? cachedLangs : game.supported_languages;
               return (
-                <div className="mt-auto pt-1 h-4 flex items-center">
-                  {languages && languages.length > 1 ? (
-                    <LanguageFlags supportedLanguages={languages} maxFlags={8} />
-                  ) : (
-                    <span className="text-2xs text-noir-600 font-medium">{t('libraryPage.nessunaLinguaRilevata')}</span>
+                <div className="mt-auto pt-1 min-h-4 flex items-center gap-2">
+                  <div className="flex-1 min-w-0 flex items-center">
+                    {languages && languages.length > 1 ? (
+                      <LanguageFlags supportedLanguages={languages} maxFlags={8} />
+                    ) : (
+                      <span className="text-2xs text-noir-600 font-medium">{t('libraryPage.nessunaLinguaRilevata')}</span>
+                    )}
+                  </div>
+                  {/* String it sempre visibile e raggiungibile da tastiera: apre la scheda
+                      e avvia il flusso (con i suoi gate), non solo un'evidenziazione. */}
+                  {game.is_installed && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `${getGameDetailUrl(game)}&stringit=1`; }}
+                      className="glass-red shrink-0 inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rouge-300"
+                      aria-label={`${t('common.stringIt')}: ${game.title ?? ''}`}
+                    >
+                      <Sparkles className="h-3 w-3" aria-hidden="true" />
+                      {t('common.stringIt')}
+                    </button>
                   )}
                 </div>
               );
@@ -1548,15 +1556,18 @@ function LibraryListView() {
                       )}
                     </div>
                     {/* Quick actions lista */}
-                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-300 pr-2">
+                    <div className="flex items-center gap-1.5 pr-2">
+                      {game.is_installed && (
                       <button
+                        type="button"
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `${getGameDetailUrl(game)}&stringit=1`; }}
-                        className="flex items-center gap-1 bg-rouge-600/90 hover:bg-rouge-500 px-3 py-1.5 rounded-lg text-2xs font-bold text-white transition-all shadow-md hover:shadow-rouge-500/30"
-                        title={t('common.stringIt')}
+                        className="glass-red flex items-center gap-1 px-3 py-1.5 rounded-md text-2xs font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rouge-300"
+                        aria-label={`${t('common.stringIt')}: ${game.title ?? ''}`}
                       >
-                        <Sparkles className="h-3 w-3" />
-                        String it!
+                        <Sparkles className="h-3 w-3" aria-hidden="true" />
+                        {t('common.stringIt')}
                       </button>
+                      )}
                       {/* Batch nascosto: /batch dichiara "non implementato" e tiene disabilitato Avvia. */}
                     </div>
                   </div>

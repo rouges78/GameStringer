@@ -25,6 +25,11 @@ const REPAK_DOWNLOAD_URL: &str =
     "https://github.com/trumank/repak/releases/latest/download/repak_cli-x86_64-pc-windows-msvc.zip";
 const REPAK_FALLBACK_URL: &str =
     "https://github.com/trumank/repak/releases/download/v0.2.3/repak_cli-x86_64-pc-windows-msvc.zip";
+// SHA-256 dello zip v0.2.3 (campo `digest` dell'API GitHub). Vale per entrambi gli
+// URL: finché /latest è la v0.2.3 corrisponde; quando uscirà una versione nuova il
+// download da /latest verrà scartato e si ripiegherà sul fallback pinnato, finché
+// non si aggiorna l'hash qui.
+const REPAK_SHA256: &str = "6720d602144d75df477a99d5bedb6ea780997546afc335901d4937cafeaa73fa";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Path helpers
@@ -105,6 +110,7 @@ async fn try_download_repak(client: &Client, url: &str, dir: &Path) -> Result<Pa
     if bytes.len() < 4 || &bytes[..4] != b"PK\x03\x04" {
         return Err("Non è uno ZIP valido".to_string());
     }
+    super::download_verify::verify_sha256(&bytes, REPAK_SHA256, url)?;
 
     let mut archive = ZipArchive::new(Cursor::new(bytes))
         .map_err(|e| format!("ZIP: {}", e))?;

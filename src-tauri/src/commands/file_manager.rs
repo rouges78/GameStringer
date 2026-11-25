@@ -11,6 +11,7 @@ pub async fn save_file_with_backup(
     create_backup: bool,
 ) -> Result<SaveResult, String> {
     let path = Path::new(&file_path);
+    super::path_guard::ensure_write_allowed(path)?;
     let mut backup_path: Option<String> = None;
     
     // Se il file esiste e create_backup è true, crea un backup
@@ -144,7 +145,8 @@ pub async fn get_desktop_path() -> Result<String, String> {
 #[command]
 pub async fn save_binary_file(file_path: String, base64_content: String) -> Result<SaveResult, String> {
     use base64::{Engine as _, engine::general_purpose};
-    
+    super::path_guard::ensure_write_allowed(Path::new(&file_path))?;
+
     let bytes = general_purpose::STANDARD
         .decode(&base64_content)
         .map_err(|e| format!("Failed to decode base64: {}", e))?;
@@ -166,7 +168,8 @@ pub async fn save_binary_file(file_path: String, base64_content: String) -> Resu
 #[command]
 pub async fn ensure_directory(path: String) -> Result<EnsureDirectoryResult, String> {
     let dir_path = Path::new(&path);
-    
+    super::path_guard::ensure_write_allowed(dir_path)?;
+
     if dir_path.exists() {
         return Ok(EnsureDirectoryResult {
             success: true,
@@ -193,7 +196,8 @@ pub async fn ensure_directory(path: String) -> Result<EnsureDirectoryResult, Str
 #[command]
 pub async fn write_text_file(path: String, content: String) -> Result<SaveResult, String> {
     let file_path = Path::new(&path);
-    
+    super::path_guard::ensure_write_allowed(file_path)?;
+
     // Crea le directory parent se non esistono
     if let Some(parent) = file_path.parent() {
         if !parent.exists() {
