@@ -3277,34 +3277,29 @@ pub async fn get_steam_games_fast() -> Result<Vec<GameInfo>, String> {
     
     log::info!("📁 Percorso Steam trovato: {}", steam_path);
     
-    // 2. Leggi TUTTI i giochi posseduti (come Rai Pal)
-    match read_all_owned_games(&steam_path).await {
-        Ok(owned_games) => {
-            log::info!("🎮 Trovati {} giochi posseduti totali", owned_games.len());
-            games.extend(owned_games);
+    // 2. I giochi installati, dai manifest di ogni libreria. Vanno letti
+    //    sempre: prima si leggevano solo se falliva la lista dei posseduti,
+    //    che li segna tutti non installati (su una macchina vera: 1 posseduto
+    //    da localconfig.vdf, 13 installati ignorati, home vuota).
+    let library_folders = read_library_folders(&steam_path).await?;
+    log::info!("📚 Trovate {} cartelle libreria Steam", library_folders.len());
+
+    for folder in &library_folders {
+        let steamapps_path = Path::new(folder).join("steamapps");
+        if !steamapps_path.exists() {
+            continue;
         }
-        Err(e) => {
-            log::warn!("⚠️ Errore lettura giochi posseduti: {}, fallback a giochi installati", e);
-            
-            // Fallback: leggi solo giochi installati
-            let library_folders = read_library_folders(&steam_path).await?;
-            log::info!("📚 Trovate {} cartelle libreria Steam", library_folders.len());
-            
-            for folder in &library_folders {
-                let steamapps_path = Path::new(folder).join("steamapps");
-                if !steamapps_path.exists() {
-                    continue;
-                }
-                
-                log::info!("🔍 Scansione cartella: {}", steamapps_path.display());
-                
-                if let Ok(entries) = fs::read_dir(&steamapps_path) {
-                    for entry in entries.flatten() {
-                        if let Some(file_name) = entry.file_name().to_str() {
-                            if file_name.starts_with("appmanifest_") && file_name.ends_with(".acf") {
-                                if let Ok(game) = parse_acf_to_gameinfo(&entry.path(), folder).await {
-                                    games.push(game);
-                                }
+
+        log::info!("🔍 Scansione cartella: {}", steamapps_path.display());
+
+        if let Ok(entries) = fs::read_dir(&steamapps_path) {
+            for entry in entries.flatten() {
+                if let Some(file_name) = entry.file_name().to_str() {
+                    if file_name.starts_with("appmanifest_") && file_name.ends_with(".acf") {
+                        if let Ok(game) = parse_acf_to_gameinfo(&entry.path(), folder).await {
+                            // La cartella principale può comparire due volte (registro e libraryfolders.vdf)
+                            if !games.iter().any(|g: &GameInfo| g.id == game.id) {
+                                games.push(game);
                             }
                         }
                     }
@@ -3312,7 +3307,23 @@ pub async fn get_steam_games_fast() -> Result<Vec<GameInfo>, String> {
             }
         }
     }
-    
+    log::info!("💾 Trovati {} giochi Steam installati", games.len());
+
+    // 3. Poi i posseduti non installati (come Rai Pal)
+    match read_all_owned_games(&steam_path).await {
+        Ok(owned_games) => {
+            log::info!("🎮 Trovati {} giochi posseduti totali", owned_games.len());
+            for game in owned_games {
+                if !games.iter().any(|g| g.id == game.id) {
+                    games.push(game);
+                }
+            }
+        }
+        Err(e) => {
+            log::warn!("⚠️ Errore lettura giochi posseduti: {}, restano i soli installati", e);
+        }
+    }
+
     let elapsed = start_time.elapsed();
     log::info!("✅ Lettura veloce completata: {} giochi in {:?} (metodo Rai Pal)", games.len(), elapsed);
     

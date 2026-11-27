@@ -188,14 +188,13 @@ export default function Dashboard() {
       
       let games: unknown[] = [];
       
-      // Prima prova dalla cache sessione della libreria (già popolata, multi-store)
+      // Prima prova dalla cache della libreria (multi-store), che la Libreria e
+      // la scansione di avvio scrivono in IndexedDB: qui si leggeva
+      // sessionStorage, dove nessuno la scrive, e la home ripiegava sempre su get_games.
       try {
-        const cached = sessionStorage.getItem('gs_library_games');
-        if (cached) {
-          const cachedGames = JSON.parse(cached);
-          if (Array.isArray(cachedGames) && cachedGames.length > 0) {
-            games = cachedGames;
-          }
+        const cachedGames = await get<unknown[]>('gs_library_games');
+        if (Array.isArray(cachedGames) && cachedGames.length > 0) {
+          games = cachedGames;
         }
       } catch {}
 
