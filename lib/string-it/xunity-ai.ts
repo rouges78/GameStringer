@@ -57,33 +57,61 @@ export async function runXUnityAiTranslation(options: XUnityAiOptions): Promise<
   }
 
   // Si ritraduce anche ciò che Google ha già tradotto: è il motivo del passo.
-  const texts = Array.from(new Set(captured.map(e => e.original).filter(t => t.trim() !== '')));
-  if (texts.length === 0) return { status: 'no-captures' };
+  const all = Array.from(new Set(captured.map(e => e.original).filter(t => t.trim() !== '')));
+  if (all.length === 0) return { status: 'no-captures' };
 
-  let results: (string | null)[];
-  try {
-    results = await translate(texts);
-  } catch (e: unknown) {
-    return { status: 'failed', reason: String(e) };
+  // Righe fatte solo di tag o segnaposto (`<sprite index=69 tint=1>`,
+  // `{Submit}`): Google le traduce (`<indice sprite=69 tinta=1>`) e il gioco
+  // stampa il tag invece dell'icona. Non vanno tradotte: si riscrivono uguali,
+  // e il nostro file, che XUnity legge prima del suo, copre quella di Google.
+  const markupOnly = all.filter(t => !hasWords(t));
+  const texts = all.filter(hasWords);
+
+  let results: (string | null)[] = [];
+  if (texts.length > 0) {
+    try {
+      results = await translate(texts);
+    } catch (e: unknown) {
+      return { status: 'failed', reason: String(e) };
+    }
   }
 
   // Una traduzione uguale all'originale non è una traduzione: scriverla
-  // coprirebbe quella di Google con l'inglese.
-  const entries: XUnityEntry[] = [];
+  // coprirebbe quella di Google con l'inglese. Una che perde o cambia un tag
+  // rompe il testo in gioco: resta quella di prima.
+  const entries: XUnityEntry[] = markupOnly.map(original => ({ original, translated: original, line_number: 0 }));
   texts.forEach((original, i) => {
     const translated = results[i]?.trim();
-    if (translated && translated !== original.trim()) {
+    if (translated && translated !== original.trim() && sameMarkup(original, translated)) {
       entries.push({ original, translated, line_number: 0 });
     }
   });
   if (entries.length === 0) {
-    return { status: 'failed', reason: `0 testi tradotti su ${texts.length}` };
+    return { status: 'failed', reason: `0 testi tradotti su ${all.length}` };
   }
 
   try {
     const path = await deps.write(gamePath, lang, gameName, entries);
-    return { status: 'done', changed: entries.length, failed: texts.length - entries.length, total: texts.length, path };
+    return { status: 'done', changed: entries.length, failed: all.length - entries.length, total: all.length, path };
   } catch (e: unknown) {
     return { status: 'failed', reason: String(e) };
   }
+}
+
+/** Tag rich text di Unity/TextMeshPro (`<b>`, `<sprite …>`) e segnaposto `{Nome}`. */
+const MARKUP = /<[^<>]+>|\{[^{}]+\}/g;
+
+function hasWords(text: string): boolean {
+  return /\p{L}/u.test(text.replace(MARKUP, ''));
+}
+
+/** Coppie di tag senza niente dentro: `<color=#b17e0f></color>`. */
+const EMPTY_PAIR = /<([a-z]+)[^<>]*>\s*<\/\1>/gi;
+
+function sameMarkup(original: string, translated: string): boolean {
+  const tags = (s: string) => (s.match(MARKUP) ?? []).sort().join('\u0000');
+  const empty = (s: string) => (s.match(EMPTY_PAIR) ?? []).length;
+  // Stessi tag non basta: su Blake Manor l'AI ha portato "Mindmap" fuori dal
+  // suo <color>, lasciandolo vuoto.
+  return tags(original) === tags(translated) && empty(translated) <= empty(original);
 }

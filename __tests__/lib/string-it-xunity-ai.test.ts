@@ -66,6 +66,49 @@ describe('ritraduzione AI dei testi catturati da XUnity', () => {
     expect(translate).not.toHaveBeenCalled();
   });
 
+  it('le righe di soli tag non vanno all\'AI e si riscrivono uguali, coprendo quelle rotte da Google', async () => {
+    // Visto su The Séance of Blake Manor: Google ha scritto `<indice sprite=69 tinta=1>`.
+    const d = deps({
+      readCaptured: async () => [
+        { original: '<sprite index=69 tint=1>', translated: '<indice sprite=69 tinta=1>', line_number: 1 },
+        { original: '{Submit}', translated: '{Invia}', line_number: 2 },
+        { original: '<sprite index=6 tint=1> Back', translated: '<sprite index=6 tint=1> Indietro', line_number: 3 },
+      ],
+    });
+    const translate = vi.fn(async (texts: string[]) => texts.map(() => '<sprite index=6 tint=1> Indietro'));
+    const out = await runXUnityAiTranslation({ ...base, translate, deps: d });
+
+    expect(translate).toHaveBeenCalledWith(['<sprite index=6 tint=1> Back']);
+    expect(d.write.mock.calls[0][3]).toEqual([
+      { original: '<sprite index=69 tint=1>', translated: '<sprite index=69 tint=1>', line_number: 0 },
+      { original: '{Submit}', translated: '{Submit}', line_number: 0 },
+      { original: '<sprite index=6 tint=1> Back', translated: '<sprite index=6 tint=1> Indietro', line_number: 0 },
+    ]);
+    expect(out).toMatchObject({ status: 'done', changed: 3, failed: 0, total: 3 });
+  });
+
+  it('scarta la traduzione che perde o cambia un tag', async () => {
+    const d = deps({
+      readCaptured: async () => [
+        { original: '<b>Quit</b> game?', translated: '', line_number: 1 },
+        { original: '<sprite index=7 tint=1> Defaults', translated: '', line_number: 2 },
+        { original: 'Actions in the <color=#b17e0f>Mindmap</color>.', translated: '', line_number: 3 },
+      ],
+    });
+    const out = await runXUnityAiTranslation({
+      ...base,
+      translate: async () => [
+        'Uscire dal gioco?',
+        '<indice sprite=7 tinta=1> Predefiniti',
+        // Visto su Blake Manor: stessi tag, ma la parola è uscita dal <color>.
+        'Azioni nella mappa mentale <color=#b17e0f></color>.',
+      ],
+      deps: d,
+    });
+    expect(d.write).not.toHaveBeenCalled();
+    expect(out.status).toBe('failed');
+  });
+
   it('un errore della traduzione o della scrittura è un fallimento, non un successo', async () => {
     expect(await runXUnityAiTranslation({
       ...base, translate: async () => { throw new Error('rate limit'); }, deps: deps(),

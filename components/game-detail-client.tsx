@@ -3713,12 +3713,14 @@ export default function GameDetailPage() {
         const parts = await traduciConSplit(batch.map(e => e.original), lang);
         batch.forEach((e, idx) => {
           const tr = parts[idx];
-          if (tr && tr !== e.original) cambiateOra++; else fallitiOra++;
-          translated.push({
-            original: e.original,
-            translated: tr || e.original,
-            line_number: e.line_number,
-          });
+          // Una non tradotta non si passa: write_translation_file scrive anche
+          // le righe uguali all'originale, e l'inglese coprirebbe Google.
+          if (tr && tr !== e.original) {
+            cambiateOra++;
+            translated.push({ original: e.original, translated: tr, line_number: e.line_number });
+          } else {
+            fallitiOra++;
+          }
         });
 
         setAiUpgradeProgress({ current: Math.min(i + BATCH, total), total });
