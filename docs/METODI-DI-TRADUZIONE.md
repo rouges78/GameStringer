@@ -1022,8 +1022,11 @@ tag si scarta (resta Google).
 
 - **Qualità della catena «free»**: «On → Avanti», «Off → Spegnuto»,
   «Screenshake → Screenshot», «Vignette → Didascalia», «Run Mode → Modalità di
-  Esecuzione», «è un film horror». Il primo giro le ha anche messe nella
-  memoria di traduzione (119 voci en→it), da cui il secondo le riprende.
+  Esecuzione», «è un film horror». Le dà **HY-MT 1.5 7B**, primo della catena:
+  chiamato come lo chiama l'app (una stringa alla volta, senza contesto)
+  restituisce proprio queste, e il secondo giro le ripete perché il modello è
+  deterministico, non per la memoria di traduzione (le sue 119 voci en→it sono
+  tutte di Greed Stays Home, file fermo ad agosto).
 - **Lunghezza**: le schede delle Opzioni si sovrappongono
   («AUDIOMECCANICHE DI GIOCOINTERFACCIA…»): «Meccaniche di gioco» al posto di
   «Gameplay» non entra.
