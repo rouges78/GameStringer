@@ -2931,9 +2931,9 @@ export default function GameDetailPage() {
             gamePath: game.installPath,
             lang: xuLang,
             gameName: xuGameName,
-            translate: async texts => {
+            translate: async (texts, context) => {
               const res = await translateWithFallbackBatched(
-                { texts, targetLanguage: tgt, sourceLanguage: 'en', gameId: game.id || game.appid?.toString() || gameId },
+                { texts, context, targetLanguage: tgt, sourceLanguage: 'en', gameId: game.id || game.appid?.toString() || gameId },
                 20,
                 (done, total) => setAutoTranslateSteps([{
                   label: stepLabel, status: 'running',

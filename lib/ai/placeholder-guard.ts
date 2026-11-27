@@ -196,6 +196,9 @@ export function autoFixLineBreaks(source: string, translation: string): string {
 
   for (let i = 0; i < srcSegs.length - 1; i++) {
     if (!rest) { out.push(''); continue; } // meno testo che righe: righe vuote in coda
+    // Riga vuota nel sorgente (`\n\n` tra paragrafi) → vuota anche qui. Prima le
+    // toccava una parola: su Blake Manor «storia.\nÈ\nstato fatto…».
+    if (!srcSegs[i].trim()) { out.push(''); remainingWeight -= weights[i]; continue; }
     const ideal = Math.round((rest.length * weights[i]) / remainingWeight);
     remainingWeight -= weights[i];
     // Punto di taglio: entro una finestra attorno all'ideale, PREFERISCI lo

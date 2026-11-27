@@ -50,6 +50,21 @@ describe('autoFixLineBreaks', () => {
     expect(autoFixLineBreaks(CRLF_SRC, once)).toBe(once);
   });
 
+  it('tiene vuote le righe vuote tra paragrafi, senza staccare una parola', () => {
+    // The Séance of Blake Manor, avviso iniziale: usciva «storia.\nÈ\nstato fatto…».
+    const src = 'Content Warning: it touches on human tragedies throughout history.\n\n'
+      + 'Every effort has been taken to find a balance with the language used.\n\n'
+      + "The player's discretion is advised.";
+    const flat = 'Avviso sui contenuti: affronta tragedie umane vissute nel corso della storia. '
+      + "È stato fatto ogni sforzo per trovare un equilibrio nell'uso del linguaggio. "
+      + 'Si consiglia la discrezione del giocatore.';
+    expect(autoFixLineBreaks(src, flat)).toBe(
+      'Avviso sui contenuti: affronta tragedie umane vissute nel corso della storia.\n\n'
+      + "È stato fatto ogni sforzo per trovare un equilibrio nell'uso del linguaggio.\n\n"
+      + 'Si consiglia la discrezione del giocatore.',
+    );
+  });
+
   it('eredita LF quando il sorgente usa LF', () => {
     const fixed = autoFixLineBreaks('one\ntwo', 'prima parte seconda parte');
     expect(fixed).toContain('\n');

@@ -40,8 +40,11 @@ export interface XUnityAiOptions {
   /** La lingua come la usa XUnity (`Translation/{lang}/Text`). */
   lang: string;
   gameName: string;
-  /** Restituisce un array lungo quanto l'ingresso, con `null` dove la traduzione non è arrivata. */
-  translate: (texts: string[]) => Promise<(string | null)[]>;
+  /**
+   * Restituisce un array lungo quanto l'ingresso, con `null` dove la traduzione
+   * non è arrivata. `context` è un'istruzione in più per il modello.
+   */
+  translate: (texts: string[], context?: string) => Promise<(string | null)[]>;
   deps?: XUnityAiDeps;
 }
 
@@ -64,8 +67,15 @@ export async function runXUnityAiTranslation(options: XUnityAiOptions): Promise<
   // `{Submit}`): Google le traduce (`<indice sprite=69 tinta=1>`) e il gioco
   // stampa il tag invece dell'icona. Non vanno tradotte: si riscrivono uguali,
   // e il nostro file, che XUnity legge prima del suo, copre quella di Google.
-  const markupOnly = all.filter(t => !hasWords(t));
-  const texts = all.filter(hasWords);
+  //
+  // Righe che Google ha lasciato uguali: su Blake Manor erano tutte da lasciare
+  // così (`v1.1.209.610r`, Audio, VSync, Sprint) o già in italiano: `<b>Inv</b>`
+  // e `<b>Fre</b>` sono Invio e Freccia, i nomi dei tasti che Windows dà nella
+  // lingua della tastiera. L'AI li rendeva «Gioca», «Libro», «Francesi».
+  const googleKept = new Set(captured.filter(e => e.translated.trim() === e.original.trim()).map(e => e.original));
+  const keep = (t: string) => !hasWords(t) || googleKept.has(t);
+  const unchanged = all.filter(keep);
+  const texts = all.filter(t => !keep(t));
 
   let results: (string | null)[] = [];
   if (texts.length > 0) {
@@ -79,7 +89,7 @@ export async function runXUnityAiTranslation(options: XUnityAiOptions): Promise<
   // Una traduzione uguale all'originale non è una traduzione: scriverla
   // coprirebbe quella di Google con l'inglese. Una che perde o cambia un tag
   // rompe il testo in gioco: resta quella di prima.
-  const entries: XUnityEntry[] = markupOnly.map(original => ({ original, translated: original, line_number: 0 }));
+  const entries: XUnityEntry[] = unchanged.map(original => ({ original, translated: original, line_number: 0 }));
   texts.forEach((original, i) => {
     const translated = results[i]?.trim();
     if (translated && translated !== original.trim() && sameMarkup(original, translated)) {
@@ -90,12 +100,77 @@ export async function runXUnityAiTranslation(options: XUnityAiOptions): Promise<
     return { status: 'failed', reason: `0 testi tradotti su ${all.length}` };
   }
 
+  await shortenLongLabels(entries, translate);
+
   try {
     const path = await deps.write(gamePath, lang, gameName, entries);
     return { status: 'done', changed: entries.length, failed: all.length - entries.length, total: all.length, path };
   } catch (e: unknown) {
     return { status: 'failed', reason: String(e) };
   }
+}
+
+/**
+ * Le etichette di menu stanno in spazi a larghezza fissa che XUnity non
+ * allarga: su Blake Manor «Gameplay → Modalità di gioco» ha fatto accavallare
+ * le schede delle Opzioni, e le righe delle impostazioni andavano a capo
+ * tagliate. Un'etichetta molto più lunga dell'originale (~60%: la normale
+ * espansione dell'italiano non conta) si fa accorciare dal modello togliendo
+ * parole alla sua prima traduzione, con un limite di caratteri (~30%); la
+ * nuova vince solo se è più corta, entra nella soglia, tiene i tag e non usa
+ * parole che la prima non aveva. Lasciato libero di abbreviare, in gioco
+ * aveva scritto «Agg» (Crouch), «Moto sfu», «Size Cursore», «Cornice».
+ * (I file `*resizer.txt` di XUnity non bastano: vogliono il percorso esatto di
+ * ogni oggetto, e `AutoResize` su TextMeshPro può anche ingrandire il testo.)
+ */
+async function shortenLongLabels(entries: XUnityEntry[], translate: XUnityAiOptions['translate']): Promise<void> {
+  for (const e of entries) {
+    if (!isLabel(e.original)) continue;
+    const current = visible(e.translated).length;
+    if (current <= labelThreshold(e.original)) continue;
+    let s: string | undefined;
+    try {
+      [s] = (await translate(
+        [e.original],
+        `Short UI label (menu tab, button or settings row) in a fixed-width slot. The Italian translation "${e.translated}" is too long: shorten it to at most ${labelLimit(e.original)} characters by removing its least important words. Keep the remaining words exactly as they are; do not abbreviate or add new words.`,
+      )).map(t => t?.trim());
+    } catch {
+      continue; // resta la prima traduzione
+    }
+    if (
+      s && s !== e.original.trim() && sameMarkup(e.original, s)
+      && visible(s).length < current && visible(s).length <= labelThreshold(e.original)
+      && words(s).every(w => words(e.translated).includes(w))
+    ) {
+      e.translated = s;
+    }
+  }
+}
+
+function visible(text: string): string {
+  return text.replace(MARKUP, '').trim();
+}
+
+function words(text: string): string[] {
+  return visible(text).toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+}
+
+/** Poche parole senza punteggiatura da frase: un'etichetta, non un dialogo. */
+function isLabel(text: string): boolean {
+  const v = visible(text);
+  return v.length > 0 && v.length <= 30 && !/[\n.!?…:]$/.test(v) && !v.includes('\n');
+}
+
+/** Lunghezza a cui puntare: circa il 30% in più dell'originale, mai meno di tre caratteri in più. */
+export function labelLimit(original: string): number {
+  const n = visible(original).length;
+  return Math.max(n + 3, Math.ceil(n * 1.3));
+}
+
+/** Oltre questa (circa +60%) l'etichetta rischia di non entrare e si accorcia. */
+export function labelThreshold(original: string): number {
+  const n = visible(original).length;
+  return Math.max(n + 5, Math.ceil(n * 1.6));
 }
 
 /** Tag rich text di Unity/TextMeshPro (`<b>`, `<sprite …>`) e segnaposto `{Nome}`. */

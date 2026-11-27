@@ -1047,18 +1047,51 @@ riflessione accesa e spenta, Ollama vero) li lascia intatti e dà «No → No»:
 varianti a schermo vengono dal preset Ollama «bilanciato» del profilo
 (temperatura 0,3), che su voci di tre lettere senza contesto non è stabile.
 
+**Lunghezza: le schede delle Opzioni si accavallavano.**
+«AUDIOMODALITÀ DI GIOCOINTERFACCIA…»: le schede hanno larghezza fissa, e
+XUnity non le allarga. I file `*resizer.txt` di XUnity (letti nel sorgente,
+5.6.3) non bastano a un clic generico: il percorso a sinistra si confronta
+segmento per segmento dalla radice della scena (niente jolly, niente
+percorsi parziali), si scopre solo con `EnableTextPathLogging`, e
+`AutoResize` su TextMeshPro imposta `fontSizeMax` (spesso 72) e può
+*ingrandire* il testo. Il default `EnableUIResizing` su TMP cambia solo
+Masking → Truncate.
+
+Rimedio in `xunity-ai.ts`: un'etichetta (≤30 caratteri visibili, senza
+punteggiatura da frase) tradotta oltre ~+60% dell'originale si fa accorciare
+dal modello **togliendo parole alla sua prima traduzione**, con un tetto di
+~+30%. La versione corta vince solo se è più corta, entra nella soglia, tiene
+i tag e **non usa parole che la prima non aveva**. Senza quest'ultimo vincolo
+qwen, libero di abbreviare, in gioco ha scritto «Agg» (Crouch), «Moto sfu»,
+«Size Cursore», «Cornice», «Sx Spostamento». Con il vincolo, su 11 voci
+misurate passano solo Gioco, In pausa, Informativa Privacy, Corsa; le altre
+restano intere (giuste, al più vanno a capo). In gioco: «AUDIO · GIOCO ·
+INTERFACCIA · GRAFICA · COMANDI», separate.
+
+**Trappola: Google lascia uguale ciò che non va tradotto.** Delle 157 righe di
+Google, 9 sono identiche all'originale e tutte giuste così: `v1.1.209.610r`,
+Audio, VSync, Sprint, `<b>Inv</b>`, quattro `<b>Fre</b> / <sprite…>`. Ora
+restano uguali anche nel nostro file e non vanno all'AI.
+
+**Trappola: gli a capo tra paragrafi.** L'avviso iniziale ha `\n\n`. Quando la
+catena appiattisce gli a capo, `autoFixLineBreaks` (placeholder-guard) li
+rimette in proporzione alle righe del sorgente, e alla riga vuota toccava una
+parola: «storia.\nÈ\nstato fatto…», «.\nSi\nconsiglia». Ora una riga vuota
+nel sorgente resta vuota (vale per tutte le traduzioni dell'app).
+
 **Ancora aperto, visto a schermo.**
 
-- **Lunghezza**: le schede delle Opzioni si sovrappongono ancora
-  («AUDIOMODALITÀ DI GIOCOINTERFACCIA…»): hanno larghezza fissa. Molte
-  etichette vanno a capo e si tagliano («Campo visivo della telecamera»).
+- Alcune righe delle impostazioni vanno ancora a capo («Sensibilità della
+  telecamera», «Dimensione testo dialoghi»), leggibili.
 - **Voci senza contesto**: «Draw → Pareggio» (è il modo di tracciare i
   sigilli), «Place → Posizione», «No → Niente» (a volte). Un contesto «testo di
   interfaccia di un videogioco» provato su 22 voci corregge Paused, Place,
   Hold, Cursor Size, ma dà «Draw → Pezza» e «Gameplay → Giocabilità»: non
   basta da solo.
-- L'avviso sui contenuti perde i `\n\n` tra i paragrafi; una scelta di dialogo
-  riceve la traduzione seguita dall'inglese.
+  Allo stesso modo «Vignette → Cornice», «Motion Blur → Moto sfocato» al
+  quinto giro.
+- Una scelta di dialogo ha ricevuto la traduzione seguita dall'inglese.
+- «Quit» nel menu principale resta inglese: XUnity non l'ha mai catturato.
 - Testi nuovi visti dopo il secondo clic (es. «Adjusts the game's vignette.»)
   restano a Google finché non si ripreme String it.
 
