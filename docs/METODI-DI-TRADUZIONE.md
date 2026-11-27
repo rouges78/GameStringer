@@ -1018,18 +1018,47 @@ non tradotte.
 `<color=#b17e0f></color>` vuoto. Una traduzione che perde, cambia o svuota un
 tag si scarta (resta Google).
 
+**Qualità della catena «free»: HY-MT → qwen.** Primo giro: «On → Avanti»,
+«Off → Spegnuto», «Screenshake → Screenshot», «Vignette → Didascalia», «Run
+Mode → Modalità di Esecuzione», «è un film horror». Le dà **HY-MT 1.5 7B**,
+primo della catena: chiamato come lo chiama l'app (una stringa alla volta,
+senza contesto) restituisce proprio queste, e il secondo giro le ripete perché
+il modello è deterministico, non per la memoria di traduzione (le sue 119 voci
+en→it sono tutte di Greed Stays Home, file fermo ad agosto). Stesse 11 voci,
+stesse condizioni: HY-MT 8 sbagliate, gemma4:e4b ~4, **qwen3.5:35b-a3b 0**.
+La catena «free» ora mette `ollama` prima di `hymt`.
+
+**Trappola: qwen3.5 ragiona e risponde vuoto.** Spostato Ollama in testa, il
+secondo clic ha riscritto le stesse frasi di HY-MT. `translateWithOllamaGeneric`
+non passava `think`: qwen3.5 spende tutti i `num_predict` (256 per una voce
+corta) nel ragionamento, `content` arriva vuoto (`done_reason: length`, 4–24 s),
+la stringa torna invariata, >70% invariate → la catena scivola su HY-MT senza
+dirlo. Con `think: false`: «Attivo», «Vignetta», «Scuotimento schermo» in
+~0,2 s. gemma4, HY-MT e llava accettano `think: false` senza errori. Terzo
+clic: 134 testi in pochi secondi, in gioco «Attivo/Disattivato», «Nuova
+Partita», «Sincronizzazione verticale», «Nascondi mirino».
+
+**Trappola: «Inv» e «Fre» sono già italiano.** Nelle Opzioni › Controlli e nei
+pulsanti, `<b>Inv</b>` e `<b>Fre</b> / <sprite…>` sono i nomi dei tasti che
+Windows dà nella lingua della tastiera (*Invio*, *Freccia*), troncati dal
+gioco. Tradurli è sempre sbagliato: «Gioca Sì», «Librofre», «Francesi».
+Lo stesso percorso dell'app rifatto in test (catena free, gruppi da 20,
+riflessione accesa e spenta, Ollama vero) li lascia intatti e dà «No → No»: le
+varianti a schermo vengono dal preset Ollama «bilanciato» del profilo
+(temperatura 0,3), che su voci di tre lettere senza contesto non è stabile.
+
 **Ancora aperto, visto a schermo.**
 
-- **Qualità della catena «free»**: «On → Avanti», «Off → Spegnuto»,
-  «Screenshake → Screenshot», «Vignette → Didascalia», «Run Mode → Modalità di
-  Esecuzione», «è un film horror». Le dà **HY-MT 1.5 7B**, primo della catena:
-  chiamato come lo chiama l'app (una stringa alla volta, senza contesto)
-  restituisce proprio queste, e il secondo giro le ripete perché il modello è
-  deterministico, non per la memoria di traduzione (le sue 119 voci en→it sono
-  tutte di Greed Stays Home, file fermo ad agosto).
-- **Lunghezza**: le schede delle Opzioni si sovrappongono
-  («AUDIOMECCANICHE DI GIOCOINTERFACCIA…»): «Meccaniche di gioco» al posto di
-  «Gameplay» non entra.
+- **Lunghezza**: le schede delle Opzioni si sovrappongono ancora
+  («AUDIOMODALITÀ DI GIOCOINTERFACCIA…»): hanno larghezza fissa. Molte
+  etichette vanno a capo e si tagliano («Campo visivo della telecamera»).
+- **Voci senza contesto**: «Draw → Pareggio» (è il modo di tracciare i
+  sigilli), «Place → Posizione», «No → Niente» (a volte). Un contesto «testo di
+  interfaccia di un videogioco» provato su 22 voci corregge Paused, Place,
+  Hold, Cursor Size, ma dà «Draw → Pezza» e «Gameplay → Giocabilità»: non
+  basta da solo.
+- L'avviso sui contenuti perde i `\n\n` tra i paragrafi; una scelta di dialogo
+  riceve la traduzione seguita dall'inglese.
 - Testi nuovi visti dopo il secondo clic (es. «Adjusts the game's vignette.»)
   restano a Google finché non si ripreme String it.
 

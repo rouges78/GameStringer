@@ -1399,6 +1399,23 @@ async function translateWithModelWiz(
   return allTranslations;
 }
 
+/**
+ * Il modello che il provider Ollama generico usa per tradurre: quello scelto
+ * dall'utente, altrimenti uno adatto alla localizzazione, altrimenti il primo
+ * che sa generare testo. Da quando «ollama» è primo nella catena gratuita, un
+ * modello di visione (llava) o di embedding scelto a caso tradurrebbe tutto.
+ */
+export function pickOllamaModel(available: string[], preferred?: string): string {
+  if (preferred) {
+    const match = available.find(n => n.startsWith(preferred));
+    if (match) return match;
+  }
+  const NOT_FOR_TEXT = /llava|bakllava|moondream|vision|embed|minilm|bge-|clip/i;
+  const textModels = available.filter(n => !NOT_FOR_TEXT.test(n));
+  const specialized = textModels.find(n => n.includes('tower') || n.includes('aya') || n.includes('qwen') || n.includes('llama3'));
+  return specialized || textModels[0] || available[0];
+}
+
 /** Ollama Generico — qualsiasi modello installato in Ollama (llama3, mistral, towerinstruct, qwen, ecc.) */
 async function translateWithOllamaGeneric(
   _apiKey: string,
@@ -1418,13 +1435,7 @@ async function translateWithOllamaGeneric(
     const available = (tagsData.models || []).map((m: { name: string }) => m.name) as string[];
     if (available.length === 0) throw new Error('Nessun modello Ollama installato');
 
-    // Usa modello preferito se disponibile, altrimenti cerca modelli specializzati in localizzazione (towerinstruct, aya, qwen), altrimenti primo
-    if (preferredModel && available.some(n => n.startsWith(preferredModel))) {
-      selectedModel = available.find(n => n.startsWith(preferredModel))!;
-    } else {
-      const specialized = available.find(n => n.includes('tower') || n.includes('aya') || n.includes('qwen') || n.includes('llama3'));
-      selectedModel = specialized || available[0];
-    }
+    selectedModel = pickOllamaModel(available, preferredModel);
   } catch (err: unknown) {
     blockProvider('ollama', false); // Cooldown
     throw err;
@@ -1525,6 +1536,10 @@ ${opts.context ? `\nContext: ${opts.context}` : ''}`;
             model: selectedModel,
             messages,
             stream: false,
+            // I modelli che ragionano (qwen3.5) spendono tutto num_predict nel
+            // ragionamento e rispondono vuoto: la stringa torna invariata e la
+            // catena scivola su HY-MT. I modelli che non ragionano lo ignorano.
+            think: false,
             options: { ...buildOllamaOptions({ temperature: 0.1 }), num_predict: Math.max(256, inputText.length * 3) },
           }),
           timeoutMs: 60000,

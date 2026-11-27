@@ -51,6 +51,12 @@ describe('Chain Presets', () => {
       expect(freePreset!.providers).not.toContain('anthropic');
     });
 
+    it('free preset tries the local Ollama LLM before HY-MT', () => {
+      // Su Blake Manor HY-MT, una stringa alla volta, ha sbagliato 8 voci di menu su 11.
+      const free = CHAIN_PRESETS.find(p => p.id === 'free')!.providers;
+      expect(free.indexOf('ollama')).toBeLessThan(free.indexOf('hymt'));
+    });
+
     it('max_quality preset should include premium providers', () => {
       const maxQuality = CHAIN_PRESETS.find(p => p.id === 'max_quality');
       expect(maxQuality).toBeDefined();
