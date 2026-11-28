@@ -38,10 +38,14 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
   {
     id: 'free',
     name: '🆓 Gratis',
-    description: 'Solo provider gratuiti — HY-MT + TranslateGemma locali, Groq, Cerebras, OpenRouter free',
+    description: 'Solo provider gratuiti — LLM Ollama locale, HY-MT + TranslateGemma locali, Groq, Cerebras, OpenRouter free',
     quality: '⭐⭐⭐⭐',
     speed: '🏎 Media',
-    providers: ['hymt', 'translategemma', 'ollama', 'lmstudio', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'nllb', 'mymemory', 'lingva', 'libretranslate'],
+    // Ollama prima di HY-MT (27/11/2026): l'app chiama HY-MT una stringa alla
+    // volta senza contesto, e sulle voci di menu brevi sbaglia («On → Avanti»,
+    // «Vignette → Didascalia»: 8 errori su 11 su Blake Manor); qwen3.5 via
+    // Ollama, stesse condizioni, 0 su 11. Vedi docs/METODI-DI-TRADUZIONE.md.
+    providers: ['ollama', 'hymt', 'translategemma', 'lmstudio', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'nllb', 'mymemory', 'lingva', 'libretranslate'],
   },
   {
     id: 'privacy',

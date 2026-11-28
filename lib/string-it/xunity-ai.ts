@@ -40,13 +40,26 @@ export interface XUnityAiOptions {
   /** La lingua come la usa XUnity (`Translation/{lang}/Text`). */
   lang: string;
   gameName: string;
-  /** Restituisce un array lungo quanto l'ingresso, con `null` dove la traduzione non è arrivata. */
-  translate: (texts: string[]) => Promise<(string | null)[]>;
+  /**
+   * Restituisce un array lungo quanto l'ingresso, con `null` dove la traduzione
+   * non è arrivata. `context` è un'istruzione in più per il modello.
+   */
+  translate: (texts: string[], context?: string) => Promise<(string | null)[]>;
+  /** Testi già passati al modello, sul totale da tradurre. */
+  onProgress?: (done: number, total: number) => void;
   deps?: XUnityAiDeps;
 }
 
+/** Testi per gruppo: abbastanza da stare su una schermata, pochi per il prompt. */
+const CHUNK = 20;
+
+function neighborsContext(chunk: string[]): string {
+  const shown = chunk.map(t => `"${t.replace(/\s+/g, ' ').trim().slice(0, 60)}"`).join(', ');
+  return `Video game menus, settings, key bindings and dialogue. For reference only, texts from the same screens: ${shown}. Translate only the given text, using the standard terms that video games use for it in the target language.`;
+}
+
 export async function runXUnityAiTranslation(options: XUnityAiOptions): Promise<XUnityAiOutcome> {
-  const { gamePath, lang, gameName, translate, deps = tauriDeps } = options;
+  const { gamePath, lang, gameName, translate, onProgress, deps = tauriDeps } = options;
 
   let captured: XUnityEntry[];
   try {
@@ -57,33 +70,168 @@ export async function runXUnityAiTranslation(options: XUnityAiOptions): Promise<
   }
 
   // Si ritraduce anche ciò che Google ha già tradotto: è il motivo del passo.
-  const texts = Array.from(new Set(captured.map(e => e.original).filter(t => t.trim() !== '')));
-  if (texts.length === 0) return { status: 'no-captures' };
+  const all = Array.from(new Set(captured.map(e => e.original).filter(t => t.trim() !== '')));
+  if (all.length === 0) return { status: 'no-captures' };
 
-  let results: (string | null)[];
-  try {
-    results = await translate(texts);
-  } catch (e: unknown) {
-    return { status: 'failed', reason: String(e) };
+  // Righe fatte solo di tag o segnaposto (`<sprite index=69 tint=1>`,
+  // `{Submit}`): Google le traduce (`<indice sprite=69 tinta=1>`) e il gioco
+  // stampa il tag invece dell'icona. Non vanno tradotte: si riscrivono uguali,
+  // e il nostro file, che XUnity legge prima del suo, copre quella di Google.
+  //
+  // Righe che Google ha lasciato uguali: su Blake Manor erano tutte da lasciare
+  // così (`v1.1.209.610r`, Audio, VSync, Sprint) o già in italiano: `<b>Inv</b>`
+  // e `<b>Fre</b>` sono Invio e Freccia, i nomi dei tasti che Windows dà nella
+  // lingua della tastiera. L'AI li rendeva «Gioca», «Libro», «Francesi».
+  const googleKept = new Set(captured.filter(e => e.translated.trim() === e.original.trim()).map(e => e.original));
+  const keep = (t: string) => !hasWords(t) || googleKept.has(t);
+  const unchanged = all.filter(keep);
+  const texts = all.filter(t => !keep(t));
+
+  // A gruppi nell'ordine di cattura, che segue lo schermo: ogni gruppo va al
+  // modello con i suoi testi come contesto. Da soli, una stringa alla volta,
+  // «Draw» accanto a «Sigil Mode» diventava «Pareggio», «No» usciva vuoto o
+  // «Niente», «Hold» «Mantieni»; col contesto Disegna, No, Tieni premuto.
+  const results: (string | null)[] = [];
+  const contexts: string[] = [];
+  let failedChunks = 0;
+  let lastError: unknown = null;
+  for (let start = 0; start < texts.length; start += CHUNK) {
+    const chunk = texts.slice(start, start + CHUNK);
+    const context = neighborsContext(chunk);
+    chunk.forEach(() => contexts.push(context));
+    try {
+      const got = await translate(chunk, context);
+      chunk.forEach((_, i) => results.push(got[i] ?? null));
+    } catch (e: unknown) {
+      failedChunks++;
+      lastError = e;
+      chunk.forEach(() => results.push(null));
+    }
+    onProgress?.(Math.min(start + CHUNK, texts.length), texts.length);
+  }
+  if (texts.length > 0 && failedChunks === Math.ceil(texts.length / CHUNK)) {
+    return { status: 'failed', reason: String(lastError) };
+  }
+
+  // Una traduzione che rompe tag o parentesi si chiede una seconda volta: su
+  // Blake Manor «Press {InteractionA}» usciva giusto due volte su quattro.
+  for (let i = 0; i < texts.length; i++) {
+    const t = results[i]?.trim();
+    if (!t || t === texts[i].trim() || sameMarkup(texts[i], t)) continue;
+    try {
+      [results[i]] = await translate([texts[i]], contexts[i]);
+    } catch {
+      // resta la prima, che il controllo sotto scarta
+    }
   }
 
   // Una traduzione uguale all'originale non è una traduzione: scriverla
-  // coprirebbe quella di Google con l'inglese.
-  const entries: XUnityEntry[] = [];
+  // coprirebbe quella di Google con l'inglese. Una che perde o cambia un tag
+  // rompe il testo in gioco: resta quella di prima.
+  const entries: XUnityEntry[] = unchanged.map(original => ({ original, translated: original, line_number: 0 }));
   texts.forEach((original, i) => {
     const translated = results[i]?.trim();
-    if (translated && translated !== original.trim()) {
+    if (translated && translated !== original.trim() && sameMarkup(original, translated)) {
       entries.push({ original, translated, line_number: 0 });
     }
   });
   if (entries.length === 0) {
-    return { status: 'failed', reason: `0 testi tradotti su ${texts.length}` };
+    return { status: 'failed', reason: `0 testi tradotti su ${all.length}` };
   }
+
+  await shortenLongLabels(entries, translate);
 
   try {
     const path = await deps.write(gamePath, lang, gameName, entries);
-    return { status: 'done', changed: entries.length, failed: texts.length - entries.length, total: texts.length, path };
+    return { status: 'done', changed: entries.length, failed: all.length - entries.length, total: all.length, path };
   } catch (e: unknown) {
     return { status: 'failed', reason: String(e) };
   }
+}
+
+/**
+ * Le etichette di menu stanno in spazi a larghezza fissa che XUnity non
+ * allarga: su Blake Manor «Gameplay → Modalità di gioco» ha fatto accavallare
+ * le schede delle Opzioni, e le righe delle impostazioni andavano a capo
+ * tagliate. Un'etichetta molto più lunga dell'originale (~60%: la normale
+ * espansione dell'italiano non conta) si fa accorciare dal modello togliendo
+ * parole alla sua prima traduzione, con un limite di caratteri (~30%); la
+ * nuova vince solo se è più corta, entra nella soglia, tiene i tag e non usa
+ * parole che la prima non aveva. Lasciato libero di abbreviare, in gioco
+ * aveva scritto «Agg» (Crouch), «Moto sfu», «Size Cursore», «Cornice».
+ * (I file `*resizer.txt` di XUnity non bastano: vogliono il percorso esatto di
+ * ogni oggetto, e `AutoResize` su TextMeshPro può anche ingrandire il testo.)
+ */
+async function shortenLongLabels(entries: XUnityEntry[], translate: XUnityAiOptions['translate']): Promise<void> {
+  for (const e of entries) {
+    if (!isLabel(e.original)) continue;
+    const current = visible(e.translated).length;
+    if (current <= labelThreshold(e.original)) continue;
+    let s: string | undefined;
+    try {
+      [s] = (await translate(
+        [e.original],
+        `Short UI label (menu tab, button or settings row) in a fixed-width slot. The translation "${e.translated}" is too long: shorten it to at most ${labelLimit(e.original)} characters by removing its least important words. Keep the remaining words exactly as they are; do not abbreviate or add new words.`,
+      )).map(t => t?.trim());
+    } catch {
+      continue; // resta la prima traduzione
+    }
+    if (
+      s && s !== e.original.trim() && sameMarkup(e.original, s)
+      && visible(s).length < current && visible(s).length <= labelThreshold(e.original)
+      && words(s).every(w => words(e.translated).includes(w))
+    ) {
+      e.translated = s;
+    }
+  }
+}
+
+function visible(text: string): string {
+  return text.replace(MARKUP, '').trim();
+}
+
+function words(text: string): string[] {
+  return visible(text).toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+}
+
+/** Poche parole senza punteggiatura da frase: un'etichetta, non un dialogo. */
+function isLabel(text: string): boolean {
+  const v = visible(text);
+  return v.length > 0 && v.length <= 30 && !/[\n.!?…:]$/.test(v) && !v.includes('\n');
+}
+
+/** Lunghezza a cui puntare: circa il 30% in più dell'originale, mai meno di tre caratteri in più. */
+export function labelLimit(original: string): number {
+  const n = visible(original).length;
+  return Math.max(n + 3, Math.ceil(n * 1.3));
+}
+
+/** Oltre questa (circa +60%) l'etichetta rischia di non entrare e si accorcia. */
+export function labelThreshold(original: string): number {
+  const n = visible(original).length;
+  return Math.max(n + 5, Math.ceil(n * 1.6));
+}
+
+/** Tag rich text di Unity/TextMeshPro (`<b>`, `<sprite …>`) e segnaposto `{Nome}`. */
+const MARKUP = /<[^<>]+>|\{[^{}]+\}/g;
+
+function hasWords(text: string): boolean {
+  return /\p{L}/u.test(text.replace(MARKUP, ''));
+}
+
+/** Coppie di tag senza niente dentro: `<color=#b17e0f></color>`. */
+const EMPTY_PAIR = /<([a-z]+)[^<>]*>\s*<\/\1>/gi;
+
+function sameMarkup(original: string, translated: string): boolean {
+  const tags = (s: string) => (s.match(MARKUP) ?? []).sort().join('\u0000');
+  const empty = (s: string) => (s.match(EMPTY_PAIR) ?? []).length;
+  // Parentesi quadre fuori dai tag: la guardia dei segnaposto della catena
+  // prende `[ASK ABOUT …]` per un tag BBCode e, se la traduzione lo cambia, lo
+  // riattacca in inglese in coda («[CHIEDERE…] [ASK ABOUT…]»); i segnaposto
+  // `[[T1]]` storpiati dal modello lasciano una `[` orfana («Premi [»).
+  const brackets = (s: string) => s.replace(MARKUP, '').replace(/[^[\]]/g, '').length;
+  // Stessi tag non basta: su Blake Manor l'AI ha portato "Mindmap" fuori dal
+  // suo <color>, lasciandolo vuoto.
+  return tags(original) === tags(translated) && empty(translated) <= empty(original)
+    && brackets(original) === brackets(translated);
 }

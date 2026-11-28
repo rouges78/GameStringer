@@ -3057,8 +3057,11 @@ pub async fn write_translation_file(
 
     let mut content = String::with_capacity(entries.len() * 80);
     let mut written = 0usize;
+    // Una riga uguale all'originale si scrive: copre una traduzione sbagliata
+    // del file automatico (Google che traduce `<sprite index=6 tint=1>`).
+    // Decide il chiamante cosa passare.
     for e in &entries {
-        if !e.original.is_empty() && !e.translated.is_empty() && e.original != e.translated {
+        if !e.original.is_empty() && !e.translated.is_empty() {
             content.push_str(&xunity_encode(&e.original));
             content.push('=');
             content.push_str(&xunity_encode(&e.translated));
