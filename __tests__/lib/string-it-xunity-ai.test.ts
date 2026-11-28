@@ -29,7 +29,7 @@ describe('ritraduzione AI dei testi catturati da XUnity', () => {
     const translate = vi.fn(translateAll);
     const out = await runXUnityAiTranslation({ ...base, translate, deps: d });
 
-    expect(translate).toHaveBeenCalledWith(['New Game', 'Options', 'Quit']);
+    expect(translate).toHaveBeenCalledWith(['New Game', 'Options', 'Quit'], expect.stringContaining('"Options"'));
     expect(d.write).toHaveBeenCalledWith('C:/game', 'nl', 'Game', [
       { original: 'New Game', translated: 'Nieuw spel (AI)', line_number: 0 },
       { original: 'Options', translated: 'Opties', line_number: 0 },
@@ -78,7 +78,7 @@ describe('ritraduzione AI dei testi catturati da XUnity', () => {
     const translate = vi.fn(async (texts: string[]) => texts.map(() => '<sprite index=6 tint=1> Indietro'));
     const out = await runXUnityAiTranslation({ ...base, translate, deps: d });
 
-    expect(translate).toHaveBeenCalledWith(['<sprite index=6 tint=1> Back']);
+    expect(translate).toHaveBeenCalledWith(['<sprite index=6 tint=1> Back'], expect.any(String));
     expect(d.write.mock.calls[0][3]).toEqual([
       { original: '<sprite index=69 tint=1>', translated: '<sprite index=69 tint=1>', line_number: 0 },
       { original: '{Submit}', translated: '{Submit}', line_number: 0 },
@@ -109,6 +109,33 @@ describe('ritraduzione AI dei testi catturati da XUnity', () => {
     expect(out.status).toBe('failed');
   });
 
+  it('chiede di nuovo le traduzioni che rompono tag o parentesi, e scarta quelle ancora rotte', async () => {
+    // Blake Manor: la guardia dei segnaposto ha riattaccato `[ASK ABOUT …]` in
+    // inglese, e un `[[T1]]` storpiato ha lasciato «Premi [».
+    const press = '<color=#D3991E>Press <color=#FFFFFF>{InteractionA}</color> to proceed.</color>';
+    const ask = "2. [ASK ABOUT MISSUS MANTOVANI'S INVITATION]";
+    const d = deps({
+      readCaptured: async () => [
+        { original: press, translated: '', line_number: 1 },
+        { original: ask, translated: '', line_number: 2 },
+        { original: 'Credits', translated: 'Crediti', line_number: 3 },
+      ],
+    });
+    const broken = "2. [CHIEDERE DELL'INVITO DELLA SIGNORA MANTOVANI] [ASK ABOUT MISSUS MANTOVANI'S INVITATION]";
+    const translate = vi.fn(async (texts: string[]) => (texts.length > 1
+      ? ['<color=#D3991E>Premi [<color=#FFFFFF>{InteractionA}</color> per procedere.</color>', broken, 'Crediti']
+      : texts[0] === press ? ['<color=#D3991E>Premi <color=#FFFFFF>{InteractionA}</color> per procedere.</color>'] : [broken]));
+    const out = await runXUnityAiTranslation({ ...base, translate, deps: d });
+
+    expect(translate.mock.calls.slice(1).map(c => c[0])).toEqual([[press], [ask]]);
+    expect(translate.mock.calls[1][1]).toBe(translate.mock.calls[0][1]);
+    expect(d.write.mock.calls[0][3]).toEqual([
+      { original: press, translated: '<color=#D3991E>Premi <color=#FFFFFF>{InteractionA}</color> per procedere.</color>', line_number: 0 },
+      { original: 'Credits', translated: 'Crediti', line_number: 0 },
+    ]);
+    expect(out).toMatchObject({ status: 'done', changed: 2, failed: 1 });
+  });
+
   it('le righe che Google ha lasciato uguali restano uguali e non vanno all\'AI', async () => {
     // Blake Manor: «Inv» e «Fre» sono Invio e Freccia, già italiano; l'AI li rendeva «Gioca» e «Libro».
     const d = deps({
@@ -122,7 +149,7 @@ describe('ritraduzione AI dei testi catturati da XUnity', () => {
     const translate = vi.fn(async (texts: string[]) => texts.map(() => 'Opzioni (AI)'));
     await runXUnityAiTranslation({ ...base, translate, deps: d });
 
-    expect(translate).toHaveBeenCalledWith(['Options']);
+    expect(translate).toHaveBeenCalledWith(['Options'], expect.any(String));
     expect(d.write.mock.calls[0][3]).toEqual([
       { original: '<b>Inv</b>', translated: '<b>Inv</b>', line_number: 0 },
       { original: '<b>Fre</b> / <sprite index=20 tint=1>', translated: '<b>Fre</b> / <sprite index=20 tint=1>', line_number: 0 },
@@ -147,7 +174,7 @@ describe('ritraduzione AI dei testi catturati da XUnity', () => {
     };
     const short: Record<string, string> = { Gameplay: 'Gioco', Vignette: 'Vignettatura' };
     const translate = vi.fn(async (texts: string[], context?: string) =>
-      texts.map(t => (context ? short[t] : first[t]) ?? null));
+      texts.map(t => (context?.includes('too long') ? short[t] : first[t]) ?? null));
 
     await runXUnityAiTranslation({ ...base, translate, deps: d });
 
@@ -187,7 +214,7 @@ describe('ritraduzione AI dei testi catturati da XUnity', () => {
       Crouch: 'Agg',
     };
     await runXUnityAiTranslation({
-      ...base, deps: d, translate: async (texts, context) => texts.map(t => (context ? short[t] : first[t]) ?? null),
+      ...base, deps: d, translate: async (texts, context) => texts.map(t => (context?.includes('too long') ? short[t] : first[t]) ?? null),
     });
     expect(d.write.mock.calls[0][3].map((e: XUnityEntry) => e.translated))
       .toEqual(['Dimensione del cursore', '<b>Campo visivo della telecamera</b>', 'Messa in pausa', 'Modalità di visualizzazione dello schermo', 'Accovacciati']);
@@ -195,10 +222,37 @@ describe('ritraduzione AI dei testi catturati da XUnity', () => {
     // Se la seconda chiamata fallisce si scrive comunque la prima.
     const d2 = deps({ readCaptured: async () => [{ original: 'Paused', translated: '', line_number: 1 }] });
     const out = await runXUnityAiTranslation({
-      ...base, deps: d2, translate: async (texts, context) => { if (context) throw new Error('rate limit'); return ['Messa in pausa']; },
+      ...base, deps: d2, translate: async (texts, context) => { if (context?.includes('too long')) throw new Error('rate limit'); return ['Messa in pausa']; },
     });
     expect(out).toMatchObject({ status: 'done', changed: 1 });
     expect(d2.write.mock.calls[0][3][0].translated).toBe('Messa in pausa');
+  });
+
+  it('traduce a gruppi di 20 in ordine di cattura, con i testi del gruppo come contesto', async () => {
+    // Blake Manor: da solo «Draw» (accanto a «Sigil Mode», «Hold») diventava «Pareggio».
+    const captured = Array.from({ length: 45 }, (_, i) => ({ original: `Text ${i}`, translated: '', line_number: i }));
+    const d = deps({ readCaptured: async () => captured });
+    const translate = vi.fn(async (texts: string[]) => texts.map(t => `Testo ${t.slice(5)}`));
+    const progress: [number, number][] = [];
+    const out = await runXUnityAiTranslation({ ...base, translate, deps: d, onProgress: (a, b) => progress.push([a, b]) });
+
+    expect(translate.mock.calls.map(c => c[0].length)).toEqual([20, 20, 5]);
+    expect(translate.mock.calls[1][0][0]).toBe('Text 20');
+    expect(translate.mock.calls[1][1]).toContain('"Text 39"');
+    expect(translate.mock.calls[1][1]).not.toContain('"Text 40"');
+    expect(progress).toEqual([[20, 45], [40, 45], [45, 45]]);
+    expect(out).toMatchObject({ status: 'done', changed: 45 });
+  });
+
+  it('un gruppo che fallisce non ferma gli altri', async () => {
+    const captured = Array.from({ length: 25 }, (_, i) => ({ original: `Text ${i}`, translated: '', line_number: i }));
+    const d = deps({ readCaptured: async () => captured });
+    let call = 0;
+    const out = await runXUnityAiTranslation({
+      ...base, deps: d,
+      translate: async texts => { if (call++ === 0) throw new Error('rate limit'); return texts.map(t => `Testo ${t.slice(5)}`); },
+    });
+    expect(out).toMatchObject({ status: 'done', changed: 5, failed: 20, total: 25 });
   });
 
   it('un errore della traduzione o della scrittura è un fallimento, non un successo', async () => {

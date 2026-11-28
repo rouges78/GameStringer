@@ -2935,13 +2935,13 @@ export default function GameDetailPage() {
               const res = await translateWithFallbackBatched(
                 { texts, context, targetLanguage: tgt, sourceLanguage: 'en', gameId: game.id || game.appid?.toString() || gameId },
                 20,
-                (done, total) => setAutoTranslateSteps([{
-                  label: stepLabel, status: 'running',
-                  detail: t('stringItPlan.unityStaticTranslating').replace('{done}', String(done)).replace('{total}', String(total)),
-                }]),
               );
               return res.success ? res.translations : texts.map(() => null);
             },
+            onProgress: (done, total) => setAutoTranslateSteps([{
+              label: stepLabel, status: 'running',
+              detail: t('stringItPlan.unityStaticTranslating').replace('{done}', String(done)).replace('{total}', String(total)),
+            }]),
           });
           if (outcome.status === 'done') {
             const done = t('stringItPlan.xunityAiDone').replace('{changed}', String(outcome.changed));

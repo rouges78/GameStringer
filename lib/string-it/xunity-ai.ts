@@ -45,11 +45,21 @@ export interface XUnityAiOptions {
    * non è arrivata. `context` è un'istruzione in più per il modello.
    */
   translate: (texts: string[], context?: string) => Promise<(string | null)[]>;
+  /** Testi già passati al modello, sul totale da tradurre. */
+  onProgress?: (done: number, total: number) => void;
   deps?: XUnityAiDeps;
 }
 
+/** Testi per gruppo: abbastanza da stare su una schermata, pochi per il prompt. */
+const CHUNK = 20;
+
+function neighborsContext(chunk: string[]): string {
+  const shown = chunk.map(t => `"${t.replace(/\s+/g, ' ').trim().slice(0, 60)}"`).join(', ');
+  return `Video game menus, settings, key bindings and dialogue. For reference only, texts from the same screens: ${shown}. Translate only the given text, using the standard terms that video games use for it in the target language.`;
+}
+
 export async function runXUnityAiTranslation(options: XUnityAiOptions): Promise<XUnityAiOutcome> {
-  const { gamePath, lang, gameName, translate, deps = tauriDeps } = options;
+  const { gamePath, lang, gameName, translate, onProgress, deps = tauriDeps } = options;
 
   let captured: XUnityEntry[];
   try {
@@ -77,12 +87,41 @@ export async function runXUnityAiTranslation(options: XUnityAiOptions): Promise<
   const unchanged = all.filter(keep);
   const texts = all.filter(t => !keep(t));
 
-  let results: (string | null)[] = [];
-  if (texts.length > 0) {
+  // A gruppi nell'ordine di cattura, che segue lo schermo: ogni gruppo va al
+  // modello con i suoi testi come contesto. Da soli, una stringa alla volta,
+  // «Draw» accanto a «Sigil Mode» diventava «Pareggio», «No» usciva vuoto o
+  // «Niente», «Hold» «Mantieni»; col contesto Disegna, No, Tieni premuto.
+  const results: (string | null)[] = [];
+  const contexts: string[] = [];
+  let failedChunks = 0;
+  let lastError: unknown = null;
+  for (let start = 0; start < texts.length; start += CHUNK) {
+    const chunk = texts.slice(start, start + CHUNK);
+    const context = neighborsContext(chunk);
+    chunk.forEach(() => contexts.push(context));
     try {
-      results = await translate(texts);
+      const got = await translate(chunk, context);
+      chunk.forEach((_, i) => results.push(got[i] ?? null));
     } catch (e: unknown) {
-      return { status: 'failed', reason: String(e) };
+      failedChunks++;
+      lastError = e;
+      chunk.forEach(() => results.push(null));
+    }
+    onProgress?.(Math.min(start + CHUNK, texts.length), texts.length);
+  }
+  if (texts.length > 0 && failedChunks === Math.ceil(texts.length / CHUNK)) {
+    return { status: 'failed', reason: String(lastError) };
+  }
+
+  // Una traduzione che rompe tag o parentesi si chiede una seconda volta: su
+  // Blake Manor «Press {InteractionA}» usciva giusto due volte su quattro.
+  for (let i = 0; i < texts.length; i++) {
+    const t = results[i]?.trim();
+    if (!t || t === texts[i].trim() || sameMarkup(texts[i], t)) continue;
+    try {
+      [results[i]] = await translate([texts[i]], contexts[i]);
+    } catch {
+      // resta la prima, che il controllo sotto scarta
     }
   }
 
@@ -132,7 +171,7 @@ async function shortenLongLabels(entries: XUnityEntry[], translate: XUnityAiOpti
     try {
       [s] = (await translate(
         [e.original],
-        `Short UI label (menu tab, button or settings row) in a fixed-width slot. The Italian translation "${e.translated}" is too long: shorten it to at most ${labelLimit(e.original)} characters by removing its least important words. Keep the remaining words exactly as they are; do not abbreviate or add new words.`,
+        `Short UI label (menu tab, button or settings row) in a fixed-width slot. The translation "${e.translated}" is too long: shorten it to at most ${labelLimit(e.original)} characters by removing its least important words. Keep the remaining words exactly as they are; do not abbreviate or add new words.`,
       )).map(t => t?.trim());
     } catch {
       continue; // resta la prima traduzione
@@ -186,7 +225,13 @@ const EMPTY_PAIR = /<([a-z]+)[^<>]*>\s*<\/\1>/gi;
 function sameMarkup(original: string, translated: string): boolean {
   const tags = (s: string) => (s.match(MARKUP) ?? []).sort().join('\u0000');
   const empty = (s: string) => (s.match(EMPTY_PAIR) ?? []).length;
+  // Parentesi quadre fuori dai tag: la guardia dei segnaposto della catena
+  // prende `[ASK ABOUT …]` per un tag BBCode e, se la traduzione lo cambia, lo
+  // riattacca in inglese in coda («[CHIEDERE…] [ASK ABOUT…]»); i segnaposto
+  // `[[T1]]` storpiati dal modello lasciano una `[` orfana («Premi [»).
+  const brackets = (s: string) => s.replace(MARKUP, '').replace(/[^[\]]/g, '').length;
   // Stessi tag non basta: su Blake Manor l'AI ha portato "Mindmap" fuori dal
   // suo <color>, lasciandolo vuoto.
-  return tags(original) === tags(translated) && empty(translated) <= empty(original);
+  return tags(original) === tags(translated) && empty(translated) <= empty(original)
+    && brackets(original) === brackets(translated);
 }
