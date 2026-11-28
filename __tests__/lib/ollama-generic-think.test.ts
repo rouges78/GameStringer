@@ -38,4 +38,23 @@ describe('Ollama generico nella catena gratuita', () => {
     expect(res.provider).toBe('ollama');
     expect(res.translations).toEqual(['Attivo']);
   });
+
+  it('anche il critico della riflessione non ragiona', async () => {
+    const chatBodies: Record<string, unknown>[] = [];
+    ollamaFetchMock.mockImplementation(async (path: string, init?: { body?: string }) => {
+      if (path === '/api/tags') return json({ models: [{ name: 'qwen3.5:35b-a3b' }] });
+      const body = JSON.parse(init?.body || '{}');
+      chatBodies.push(body);
+      return json({ message: { content: 'Inizia una nuova partita' } });
+    });
+
+    await translateWithFallback({
+      texts: ['Start a new game'], targetLanguage: 'it', sourceLanguage: 'en', semanticRag: 'off', reflection: 'always',
+    });
+
+    // Prima la traduzione, poi il critico: senza think:false su Blake Manor
+    // restava appeso 60 secondi per gruppo e veniva scartato.
+    expect(chatBodies).toHaveLength(2);
+    expect(chatBodies[1]?.think).toBe(false);
+  });
 });

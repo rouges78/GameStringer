@@ -361,6 +361,9 @@ const chatOllama: ChatFn = async (_key, system, user) => {
         { role: 'user', content: user },
       ],
       stream: false,
+      // Come in translateWithOllamaGeneric: qwen3.5 ragiona finché scade la
+      // richiesta (60 s a gruppo su Blake Manor) e il critico viene saltato.
+      think: false,
       options: { ...buildOllamaOptions({ temperature: 0.2 }), num_predict: 4096 },
     }),
     timeoutMs: 90000,
